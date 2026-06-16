@@ -5,5 +5,9 @@ export default async function RegisterPage() {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  return <RegisterForm lang={lang} />;
+  return (
+    <div className="flex-grow flex items-center justify-center py-16 px-container-margin-mobile">
+      <RegisterForm lang={lang} />
+    </div>
+  );
 }

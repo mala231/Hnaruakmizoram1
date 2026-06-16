@@ -5,5 +5,9 @@ export default async function LoginPage() {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  return <LoginForm lang={lang} />;
+  return (
+    <div className="flex-grow flex items-center justify-center py-16 px-container-margin-mobile">
+      <LoginForm lang={lang} />
+    </div>
+  );
 }
