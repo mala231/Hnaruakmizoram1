@@ -115,14 +115,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative overflow-hidden" style={{
+      <section className="relative" style={{
         minHeight: "500px",
         background: "radial-gradient(at 0% 0%, rgba(147, 197, 253, 0.45) 0px, transparent 60%), radial-gradient(at 100% 0%, rgba(122, 179, 250, 0.35) 0px, transparent 60%), radial-gradient(at 50% 100%, rgba(245, 248, 255, 1) 0px, transparent 50%), linear-gradient(135deg, #f0f6ff 0%, #ffffff 100%)"
       }}>
 
-        {/* Ambient mesh background shapes */}
-        <div className="absolute top-12 right-[10%] w-72 h-72 rounded-full bg-gradient-to-tr from-secondary/25 to-tertiary/25 blur-3xl animate-float-a" />
-        <div className="absolute left-[5%] bottom-10 w-56 h-56 rounded-full bg-gradient-to-br from-primary/15 to-secondary/15 blur-2xl animate-float-b" />
+        {/* Background animations container (safely clips background blobs without clipping overlapping search bar) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Ambient mesh background shapes */}
+          <div className="absolute top-12 right-[10%] w-72 h-72 rounded-full bg-gradient-to-tr from-secondary/25 to-tertiary/25 blur-3xl animate-float-a" />
+          <div className="absolute left-[5%] bottom-10 w-56 h-56 rounded-full bg-gradient-to-br from-primary/15 to-secondary/15 blur-2xl animate-float-b" />
+        </div>
 
         {/* Floating Glassmorphic UI Card (Mock Job Post) in Right Half */}
         <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-80 h-72 rounded-3xl border border-white/50 bg-white/10 backdrop-blur-xl shadow-2xl shadow-blue-500/5 hidden lg:flex flex-col p-6 gap-4 animate-float-c" style={{ transform: "rotate(2deg)" }}>
