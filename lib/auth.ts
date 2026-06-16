@@ -1,0 +1,33 @@
+import { SignJWT, jwtVerify } from "jose";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "mizoram-jobboard-default-secret-key-2026"
+);
+
+export interface TokenPayload {
+  userId: string;
+  role: "employer" | "admin";
+}
+
+/**
+ * Signs a JWT session token for an employer or admin.
+ */
+export async function signJWT(payload: TokenPayload): Promise<string> {
+  return new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verifies a JWT session token. Returns the decoded payload or null if invalid/expired.
+ */
+export async function verifyJWT(token: string): Promise<TokenPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as TokenPayload;
+  } catch (error) {
+    return null;
+  }
+}

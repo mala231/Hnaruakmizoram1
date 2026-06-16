@@ -1,0 +1,142 @@
+{
+  "nav": {
+    "home": "Bul Tanna",
+    "about": "Kan Chanchin",
+    "contact": "Biak Pawhna",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "refund": "Refund Policy",
+    "post_job": "Hna Puanzar",
+    "employer_login": "Luhna",
+    "admin_login": "Admin Luhna",
+    "dashboard": "Dashboard",
+    "logout": "Chhuahna"
+  },
+  "footer": {
+    "copyright": "© 2026 Mizoram Job Board. Zalenna zawng zawng venhim a ni.",
+    "tagline": "Mizoram a hna awm te zawnna leh puanzarna awlsam leh tlawm ber."
+  },
+  "home": {
+    "hero_title": "Mizoram Hna Directory",
+    "hero_subtitle": "Hna thar ber te awlsam takin zawng rawh. Mizoram district hrang hrang a hna ruak te zawnna.",
+    "search_placeholder": "Hna hming, hmun, emaw company hmingin zawng rawh...",
+    "all_districts": "District Zawng Zawng",
+    "all_categories": "Hna Chi Hrang Zawng Zawng",
+    "search_btn": "Zawng rawh",
+    "latest_ticker": "Thawh thar te:"
+  },
+  "about": {
+    "title": "Mizoram Job Board Chanchin",
+    "description": "Mizoram Job Board hi Mizoram a hna ruak zawng zawng hmun khatah awlsam taka zawn theih nana siam a ni. Hna zawngtute leh hnatuaktute inkar he platform hmang hian kan thlunzawm a ni.",
+    "mission_title": "Kan Thiltum",
+    "mission_desc": "Hna zawngtute leh hnatuaktute awlsam taka thlunzawm. Hna petute'n tlawm takin hna an tar chhuak thei a, hna zawngtute'n a thlawpin in-register lo pawhin an zawng thei a ni.",
+    "why_us_title": "Engvangin nge Mizoram Job Board?",
+    "why_us_1": "Mizo leh English a hman theihna: I duh zawk zawkin awlsam takin i hmang thei.",
+    "why_us_2": "Self-Serve Payment: Razorpay hmanga awlsam taka payment siam.",
+    "why_us_3": "Simple & Direct: Account siam ngai lo a hna zawn nghal theihna."
+  },
+  "contact": {
+    "title": "Biak Pawhna",
+    "subtitle": "Zawhna emaw harsatna i neih chuan a hnuaia kan biak pawhna hmang hian min be pawh thei ang.",
+    "email": "Email Address",
+    "phone": "Contact Phone",
+    "address": "Headquarters",
+    "form_name": "I Hming",
+    "form_email": "I Email",
+    "form_message": "I Thuchah",
+    "form_submit": "Thawn Rawh",
+    "success_msg": "I thuchah thawn a ni ta e. Kan lo chhang thuai dawn nia."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "subtitle": "I chanchin kan enkawl dan.",
+    "section_1_title": "1. Data kan lak khawm te",
+    "section_1_desc": "Employer registered te username, email, phone number, company profile, leh company logo kan la khawm thin. Hna zawngtute mimal chanchin kan la khawm lo.",
+    "section_2_title": "2. Data kan hman dan",
+    "section_2_desc": "I chanchin te hi hna zawnna hmuh theih nana hman chauh a ni thin. Hmun dangah kan hralh lo.",
+    "section_3_title": "3. Account Delete Dan",
+    "section_3_desc": "Employer-in account a delete chuan a hna puanzar te thup vek a ni ang a, transaction history erawh database-ah a la awm reng ang."
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "subtitle": "Mizoram Job Board hman hmaa hriattur pawimawh te.",
+    "section_1_title": "1. Hna Puanzar",
+    "section_1_desc": "Hna puanzar zawng zawng te hi a tak a ni tur a ni. Der leh dawt a nih chuan Admin-in a delete nghal ang.",
+    "section_2_title": "2. Payment leh a hun chhung",
+    "section_2_desc": "Hna puanzar man hi ni 15 chhung atan ₹299 leh ni 30 chhung atan ₹499 a ni. Payment a luh rualin a live nghal ang.",
+    "section_3_title": "3. Admin thuneihna",
+    "section_3_desc": "Admin-in terms of service bawhchhia te account suspend emaw delete theihna thuneihna a nei."
+  },
+  "refund": {
+    "title": "Refund Policy",
+    "subtitle": "Payment refund chungchang.",
+    "section_1_title": "1. Non-Refundable",
+    "section_1_desc": "Hna puanzar a live tawh hnuah pawisa refund theih a ni lo.",
+    "section_2_title": "2. Payment Processing",
+    "section_2_desc": "Razorpay hmanga secured taka process a ni. Payment a luh loh chuan hna tar chhuah a ni lo ang.",
+    "section_3_title": "3. Technical Issues",
+    "section_3_desc": "Harsatna a awm a, pawisa a luh hnuah hna a live loh chuan min be pawh thuai la, darkar 24 chhungin kan lo Chingfel ang."
+  },
+  "jobs": {
+    "no_jobs": "Hna ruak hmuh tur a awm rih lo e.",
+    "active_count": "Hna Hmuh Theih Te",
+    "deadline": "A hun tawp",
+    "category": "Hna Chi",
+    "district": "District",
+    "address": "Awmna Hmun",
+    "interview_time": "Interview Hun",
+    "how_to_apply": "Diltu Tana Hriattur",
+    "apply_btn": "Dil Rawh",
+    "share_title": "He hna hi mi dang lo sem chhawng rawh",
+    "report_btn": "He hna post hi report rawh",
+    "not_found": "I hna zawn hi hmuh a ni lo emaw a hun a ral tawh a ni.",
+    "view_details": "Chipchiar En Rawh"
+  },
+  "report": {
+    "title": "Hna Post Report-na",
+    "reason_label": "Engvangin nge i report",
+    "reason_placeholder": "A chhan thlang rawh...",
+    "reason_spam": "Spam / Hna Der / Hlawhchham",
+    "reason_offensive": "Offensive / Inawm lo",
+    "reason_other": "A dang...",
+    "details_label": "Chipchiar zual",
+    "details_placeholder": "I report chhan lo hrilh fiah rawh...",
+    "submit_btn": "Report Thawn Rawh",
+    "cancel_btn": "Sut Rawh",
+    "success_msg": "I report kan lo dawng e. Kan lo enfiah thuai ang."
+  },
+  "dashboard": {
+    "my_listings": "Hna Ka Post Te",
+    "payment_history": "Phei Kawn Record",
+    "account_settings": "Account Settings",
+    "edit_btn": "Siamtha rawh",
+    "delete_btn": "Delete",
+    "extend_btn": "Pawtsei rawh",
+    "status_live": "Live",
+    "status_expired": "Expired",
+    "status_draft": "Draft/Pending",
+    "amount": "Zat",
+    "date": "Ni",
+    "transaction_id": "Txn ID",
+    "delete_account_btn": "Account Delete Rawh",
+    "delete_account_warn": "I account i delete duh takzet em? I hna post active zawng zawng te an delete ve nghal ang."
+  },
+  "admin": {
+    "tickers": "Manage Ticker",
+    "ads": "Manage Ad Space",
+    "employers": "Moderate Employers",
+    "reports": "User Reports",
+    "add_ticker_btn": "Add Ticker Item",
+    "ticker_placeholder": "Write new ticker message...",
+    "add_ad_btn": "Add Sidebar Ad",
+    "image_placeholder": "Select ad image...",
+    "link_placeholder": "Enter ad destination URL...",
+    "position_label": "Position",
+    "active_label": "Active",
+    "verify_btn": "Verify Employer",
+    "unverify_btn": "Unverify Employer",
+    "suspend_btn": "Suspend/Delete",
+    "dismiss_btn": "Dismiss Report",
+    "delete_job_btn": "Delete Job Post"
+  }
+}
