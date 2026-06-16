@@ -6,7 +6,7 @@ const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || "no-reply@mamawhjobboard.com";
+const SMTP_FROM = process.env.SMTP_FROM || "no-reply@hnaruakmizoram.com";
 
 // Check if credentials exist for a real SMTP client
 const hasSmtpConfig = !!(SMTP_HOST && SMTP_USER && SMTP_PASS);
@@ -70,7 +70,7 @@ export async function sendActivationEmail(
   jobTitle: string,
   durationDays: number
 ) {
-  const subject = "Mamawh: I Hna Puanzar a nung ta e";
+  const subject = "Hnaruak Mizoram: I Hna Puanzar a nung ta e";
   const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
       <h2 style="color: #a20000; margin-bottom: 20px;">Hna Puanzar Active A Ni Ta!</h2>
@@ -79,7 +79,7 @@ export async function sendActivationEmail(
       <p>He hna puanzar hi tlawmngaiin <strong>ni ${durationDays}</strong> chhung public feed ah mi zawng zawng hmuh theih turin a lang dawn a ni.</p>
       <p style="margin-top: 30px;">Hna thar dang dah i duh leh chuan i dashboard-ah i lo lut leh dawn nia.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-      <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Mamawh Job Board. Mizoram.</p>
+      <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Hnaruak Mizoram.</p>
     </div>
   `;
   await sendEmail({ to: toEmail, subject, html });
@@ -111,7 +111,7 @@ export async function sendPreExpiryWarnings(): Promise<number> {
     console.log(`[Cron Task] Found ${expiringJobs.length} listings expiring in 3 days.`);
 
     for (const job of expiringJobs) {
-      const subject = "Mamawh: I Hna Puanzar a tawp tep e";
+      const subject = "Hnaruak Mizoram: I Hna Puanzar a tawp tep e";
       const html = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
           <h2 style="color: #a20000; margin-bottom: 20px;">Hna Puanzar Tawp Tur Hriattirna</h2>
@@ -120,7 +120,7 @@ export async function sendPreExpiryWarnings(): Promise<number> {
           <p>A hun pawtsei (extend) i duh chuan khawngaihin i employer dashboard ah lo lutin i pawtsei leh vat dawn nia.</p>
           <p style="margin-top: 30px;">Dashboard luhna: <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login" style="color: #a20000; font-weight: bold; text-decoration: none;">Dashboard-ah Lut Rawh</a></p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-          <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Mamawh Job Board. Mizoram.</p>
+          <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Hnaruak Mizoram.</p>
         </div>
       `;
       await sendEmail({ to: job.employer.email, subject, html });

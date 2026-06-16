@@ -167,7 +167,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
           key: data.keyId,
           amount: data.amount,
           currency: "INR",
-          name: "Mizoram Job Board",
+          name: "Hnaruak Mizoram",
           description: data.title,
           order_id: data.orderId,
           handler: function () {

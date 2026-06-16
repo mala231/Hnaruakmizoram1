@@ -19,20 +19,20 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-  title: "Mizoram Job Board",
+  title: "Hnaruak Mizoram",
   description: "The most affordable and easiest way to search and post jobs in Mizoram.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "Mizoram Job Board",
+    title: "Hnaruak Mizoram",
     description: "The most affordable and easiest way to search and post jobs in Mizoram.",
     url: "/",
-    siteName: "Mizoram Job Board",
+    siteName: "Hnaruak Mizoram",
     images: [
       {
         url: "/icon-512.png",
         width: 512,
         height: 512,
-        alt: "Mizoram Job Board Logo",
+        alt: "Hnaruak Mizoram Logo",
       },
     ],
     locale: "en_US",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Mizoram Job Board",
+    title: "Hnaruak Mizoram",
     description: "The most affordable and easiest way to search and post jobs in Mizoram.",
     images: ["/icon-512.png"],
   },

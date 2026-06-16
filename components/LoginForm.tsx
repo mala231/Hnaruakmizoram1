@@ -105,7 +105,7 @@ export default function LoginForm({ lang }: LoginFormProps) {
             {lang === "mz" ? "Hna Petu Luhna" : "Employer Login"}
           </h1>
           <p style={{ fontSize: "13px", color: "#6b7280", margin: 0, fontWeight: 500 }}>
-            {lang === "mz" ? "Mizoram Job Board-ah lo lut rawh" : "Log in to Mizoram Job Board"}
+            {lang === "mz" ? "Hnaruak Mizoram-ah lo lut rawh" : "Log in to Hnaruak Mizoram"}
           </p>
         </div>
 

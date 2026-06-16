@@ -109,8 +109,8 @@ export default async function AboutPage() {
           </div>
           <p style={{ fontSize: "16px", color: "#374151", lineHeight: 1.85, margin: 0, fontWeight: 400 }}>
             {lang === "mz"
-              ? "Mizoram Job Board hi Mizoram chhunga hnaruak zawng zawng te hmun khata awlsam taka zawn hmuh theihna tura siam a ni. Hna zawnna kawngah harsatna thleng thin te sukiang turin, a bikin Mizo tawng ngei hman theih a nihna hian hna zawngtu leh hna petu te a chawm let dawn a ni."
-              : "Mizoram Job Board is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language."}
+              ? "Hnaruak Mizoram hi Mizoram chhunga hnaruak zawng zawng te hmun khata awlsam taka zawn hmuh theihna tura siam a ni. Hna zawnna kawngah harsatna thleng thin te sukiang turin, a bikin Mizo tawng ngei hman theih a nihna hian hna zawngtu leh hna petu te a chawm let dawn a ni."
+              : "Hnaruak Mizoram is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language."}
           </p>
         </div>
 

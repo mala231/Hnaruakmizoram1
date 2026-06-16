@@ -528,7 +528,7 @@ export default function AdminDashboard() {
               A
             </span>
             <span className="font-display font-extrabold text-xl text-primary tracking-tight">
-              Mizoram Job Board <span className="text-secondary font-medium text-xs border border-secondary/20 bg-secondary/5 rounded-full px-2 py-0.5 ml-1">Admin Panel</span>
+              Hnaruak Mizoram <span className="text-secondary font-medium text-xs border border-secondary/20 bg-secondary/5 rounded-full px-2 py-0.5 ml-1">Admin Panel</span>
             </span>
           </div>
           
@@ -559,7 +559,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col gap-2">
           <h1 className="headline-lg text-primary">Admin Control Center</h1>
           <p className="text-sm text-on-surface-variant font-medium font-sans">
-            Mizoram Job Board governing tools: Categories, Districts, Tickers, Banners, Verification, and Flag reports.
+            Hnaruak Mizoram governing tools: Categories, Districts, Tickers, Banners, Verification, and Flag reports.
           </p>
         </div>
 

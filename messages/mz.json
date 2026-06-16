@@ -13,11 +13,11 @@
     "logout": "Chhuahna"
   },
   "footer": {
-    "copyright": "© 2026 Mizoram Job Board. Zalenna zawng zawng venhim a ni.",
+    "copyright": "© 2026 Hnaruak Mizoram. Zalenna zawng zawng venhim a ni.",
     "tagline": "Mizoram a hna awm te zawnna leh puanzarna awlsam leh tlawm ber."
   },
   "home": {
-    "hero_title": "Mizoram Hna Directory",
+    "hero_title": "Hnaruak Mizoram",
     "hero_subtitle": "Hna thar ber te awlsam takin zawng rawh. Mizoram district hrang hrang a hna ruak te zawnna.",
     "search_placeholder": "Hna hming, hmun, emaw company hmingin zawng rawh...",
     "all_districts": "District Zawng Zawng",
@@ -26,11 +26,11 @@
     "latest_ticker": "Thawh thar te:"
   },
   "about": {
-    "title": "Mizoram Job Board Chanchin",
-    "description": "Mizoram Job Board hi Mizoram a hna ruak zawng zawng hmun khatah awlsam taka zawn theih nana siam a ni. Hna zawngtute leh hnatuaktute inkar he platform hmang hian kan thlunzawm a ni.",
+    "title": "Hnaruak Mizoram Chanchin",
+    "description": "Hnaruak Mizoram hi Mizoram a hna ruak zawng zawng hmun khatah awlsam taka zawn theih nana siam a ni. Hna zawngtute leh hnatuaktute inkar he platform hmang hian kan thlunzawm a ni.",
     "mission_title": "Kan Thiltum",
     "mission_desc": "Hna zawngtute leh hnatuaktute awlsam taka thlunzawm. Hna petute'n tlawm takin hna an tar chhuak thei a, hna zawngtute'n a thlawpin in-register lo pawhin an zawng thei a ni.",
-    "why_us_title": "Engvangin nge Mizoram Job Board?",
+    "why_us_title": "Engvangin nge Hnaruak Mizoram?",
     "why_us_1": "Mizo leh English a hman theihna: I duh zawk zawkin awlsam takin i hmang thei.",
     "why_us_2": "Self-Serve Payment: Razorpay hmanga awlsam taka payment siam.",
     "why_us_3": "Simple & Direct: Account siam ngai lo a hna zawn nghal theihna."
@@ -59,7 +59,7 @@
   },
   "terms": {
     "title": "Terms of Service",
-    "subtitle": "Mizoram Job Board hman hmaa hriattur pawimawh te.",
+    "subtitle": "Hnaruak Mizoram hman hmaa hriattur pawimawh te.",
     "section_1_title": "1. Hna Puanzar",
     "section_1_desc": "Hna puanzar zawng zawng te hi a tak a ni tur a ni. Der leh dawt a nih chuan Admin-in a delete nghal ang.",
     "section_2_title": "2. Payment leh a hun chhung",

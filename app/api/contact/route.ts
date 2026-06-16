@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     // Send the contact email to support
     await sendEmail({
       to: "massti249@gmail.com",
-      subject: `Mamawh Contact Form: Message from ${name}`,
+      subject: `Hnaruak Mizoram Contact Form: Message from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
           <h2 style="color: #1c7dfa; margin-bottom: 20px; border-bottom: 2px solid #1c7dfa; padding-bottom: 10px;">New Contact Message</h2>
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
             ${message}
           </div>
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-          <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Mamawh Job Board. Mizoram.</p>
+          <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Hnaruak Mizoram.</p>
         </div>
       `,
     });

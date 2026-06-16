@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: JobDetailPageProps): Promise<
 
   if (!job || job.status !== "live" || job.employer.isDeleted) {
     return {
-      title: "Hna Hmuh A Ni Lo - Mizoram Job Board",
+      title: "Hna Hmuh A Ni Lo - Hnaruak Mizoram",
     };
   }
 
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: JobDetailPageProps): Promise<
   const description = `${job.category.name} hna ruak thar, District ${job.location.name}-ah a awm e. Apply deadline: ${new Date(job.deadline).toLocaleDateString()}.`;
 
   return {
-    title: `${title} | Mizoram Job Board`,
+    title: `${title} | Hnaruak Mizoram`,
     description,
     openGraph: {
       title,
@@ -104,7 +104,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const host = headersList.get("host") || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const shareUrl = `${protocol}://${host}/jobs/${job.id}`;
-  const shareText = `"${job.title}" hna ruak thar, Mizoram Job Board-ah hmuh theih a ni e: ${shareUrl}`;
+  const shareText = `"${job.title}" hna ruak thar, Hnaruak Mizoram-ah hmuh theih a ni e: ${shareUrl}`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;

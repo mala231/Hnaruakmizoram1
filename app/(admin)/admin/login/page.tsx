@@ -96,7 +96,7 @@ export default function AdminLoginPage() {
               Admin Luhna
             </h1>
             <p style={{ fontSize: "13px", color: "#6b7280", margin: 0, fontWeight: "500" }}>
-              Mizoram Job Board Dashboard
+              Hnaruak Mizoram Dashboard
             </p>
           </div>
 

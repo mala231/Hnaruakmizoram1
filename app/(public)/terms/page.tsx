@@ -49,7 +49,7 @@ export default async function TermsPage() {
         <div style={{ maxWidth: "760px", margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "100px", padding: "6px 16px", marginBottom: "20px" }}>
             <svg width="12" height="12" fill="white" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" }}>Mizoram Job Board</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" }}>Hnaruak Mizoram</span>
           </div>
           <h1 style={{ fontSize: "clamp(28px,5vw,46px)", fontWeight: 800, color: "white", margin: "0 0 16px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             {t("terms.title", lang)}
@@ -123,13 +123,13 @@ export default async function TermsPage() {
               <>
                 Dan te hi zawhna emaw harsatna i neih chuan{" "}
                 <Link href="/contact" style={{ color: "#1c7dfa", fontWeight: 700 }}>min be pawh rawh</Link>.
-                Mizoram Job Board hian a user zawng zawng an thiante tan a kal ngei dawn a ni.
+                Hnaruak Mizoram hian a user zawng zawng an thiante tan a kal ngei dawn a ni.
               </>
             ) : (
               <>
                 If you have any questions or issues regarding our terms, please{" "}
                 <Link href="/contact" style={{ color: "#1c7dfa", fontWeight: 700 }}>contact us</Link>.
-                Mizoram Job Board will always support and stand by our users.
+                Hnaruak Mizoram will always support and stand by our users.
               </>
             )}
           </p>

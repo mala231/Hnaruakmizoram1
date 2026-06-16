@@ -29,8 +29,8 @@ export default function Footer({ lang }: FooterProps) {
                 </svg>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-display font-extrabold text-lg text-primary tracking-tight">Mamawh</span>
-                <span className="text-[10px] font-bold text-secondary/70 uppercase tracking-widest">Job Board</span>
+                <span className="font-display font-extrabold text-lg text-primary tracking-tight">Hnaruak</span>
+                <span className="text-[10px] font-bold text-secondary/70 uppercase tracking-widest">Mizoram</span>
               </div>
             </Link>
             <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-xs">

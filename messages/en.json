@@ -13,11 +13,11 @@
     "logout": "Logout"
   },
   "footer": {
-    "copyright": "© 2026 Mizoram Job Board. All rights reserved.",
+    "copyright": "© 2026 Hnaruak Mizoram. All rights reserved.",
     "tagline": "The most affordable and easiest way to search and post jobs in Mizoram."
   },
   "home": {
-    "hero_title": "Mizoram Job Directory",
+    "hero_title": "Hnaruak Mizoram",
     "hero_subtitle": "Find the latest jobs easily. Search listings across different districts of Mizoram.",
     "search_placeholder": "Search by job title, location, or company...",
     "all_districts": "All Districts",
@@ -26,11 +26,11 @@
     "latest_ticker": "Latest Updates:"
   },
   "about": {
-    "title": "About Mizoram Job Board",
-    "description": "Mizoram Job Board is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language.",
+    "title": "About Hnaruak Mizoram",
+    "description": "Hnaruak Mizoram is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language.",
     "mission_title": "Our Mission",
     "mission_desc": "To connect job seekers and employers seamlessly. Employers can post vacancies affordably, and job seekers can search for free without registration.",
-    "why_us_title": "Why Mizoram Job Board?",
+    "why_us_title": "Why Hnaruak Mizoram?",
     "why_us_1": "English & Mizo Support: Easy to navigate in your preferred language.",
     "why_us_2": "Self-Serve Payment: Post jobs in minutes via Razorpay integration.",
     "why_us_3": "Simple & Direct: Search for jobs directly without creating an account."
@@ -59,7 +59,7 @@
   },
   "terms": {
     "title": "Terms of Service",
-    "subtitle": "Important guidelines before using Mizoram Job Board.",
+    "subtitle": "Important guidelines before using Hnaruak Mizoram.",
     "section_1_title": "1. Job Postings",
     "section_1_desc": "All job postings must be genuine and reliable. Fake or fraudulent listings will be deleted immediately by the administrator.",
     "section_2_title": "2. Payment and Duration",

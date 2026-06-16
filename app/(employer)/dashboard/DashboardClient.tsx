@@ -166,7 +166,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
           key: data.keyId,
           amount: data.amount,
           currency: "INR",
-          name: "Mizoram Job Board",
+          name: "Hnaruak Mizoram",
           description: `Extend Listing: ${extendingTitle}`,
           order_id: data.orderId,
           handler: function () {
@@ -565,7 +565,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                   I hna puanzar hi he platform tlawh apiangte hmuh theih turin sidebar banner ads ah dah rawh. Contact Admin for pricing.
                 </p>
                 <a
-                  href="mailto:admin@mizoramjobboard.com"
+                  href="mailto:admin@hnaruakmizoram.com"
                   style={{
                     backgroundColor: "#ffffff",
                     color: "#1c7dfa",
