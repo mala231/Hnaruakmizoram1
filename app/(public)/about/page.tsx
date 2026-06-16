@@ -1,40 +1,101 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { t } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 
 export default async function AboutPage() {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  const whyUs = [
-    {
-      icon: (
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-        </svg>
-      ),
-      title: lang === "mz" ? "Mizo & English Hman Theihna" : "English & Mizo Support",
-      desc: t("about.why_us_1", lang),
-    },
-    {
-      icon: (
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-        </svg>
-      ),
-      title: "Self-Serve Payment",
-      desc: t("about.why_us_2", lang),
-    },
-    {
-      icon: (
-        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      ),
-      title: lang === "mz" ? "Awlsam leh Fel" : "Simple & Direct",
-      desc: t("about.why_us_3", lang),
-    },
+  let dbContent: any = null;
+  try {
+    const setting = await prisma.setting.findUnique({
+      where: { key: "page_about" }
+    });
+    if (setting) {
+      dbContent = JSON.parse(setting.value);
+    }
+  } catch (e) {
+    console.error("Error fetching page_about setting:", e);
+  }
+
+  const pageTitle = lang === "mz" 
+    ? (dbContent?.title_mz || t("about.title", lang)) 
+    : (dbContent?.title_en || t("about.title", lang));
+
+  const pageDesc = lang === "mz" 
+    ? (dbContent?.description_mz || t("about.description", lang)) 
+    : (dbContent?.description_en || t("about.description", lang));
+
+  const originTitle = lang === "mz"
+    ? (dbContent?.origin_title_mz || "Kan Bul Tan Dan")
+    : (dbContent?.origin_title_en || "Our Origin Story");
+
+  const originDesc = lang === "mz"
+    ? (dbContent?.origin_desc_mz || "Hnaruak Mizoram hi Mizoram chhunga hnaruak zawng zawng te hmun khata awlsam taka zawn hmuh theihna tura siam a ni. Hna zawnna kawngah harsatna thleng thin te sukiang turin, a bikin Mizo tawng ngei hman theih a nihna hian hna zawngtu leh hna petu te a chawm let dawn a ni.")
+    : (dbContent?.origin_desc_en || "Hnaruak Mizoram is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language.");
+
+  const missionTitle = lang === "mz"
+    ? (dbContent?.mission_title_mz || t("about.mission_title", lang))
+    : (dbContent?.mission_title_en || t("about.mission_title", lang));
+
+  const missionDesc = lang === "mz"
+    ? (dbContent?.mission_desc_mz || t("about.mission_desc", lang))
+    : (dbContent?.mission_desc_en || t("about.mission_desc", lang));
+
+  const whyUsTitle = lang === "mz"
+    ? (dbContent?.why_us_title_mz || t("about.why_us_title", lang))
+    : (dbContent?.why_us_title_en || t("about.why_us_title", lang));
+
+  const defaultWhyIcons = [
+    (
+      <svg key="why-icon-1" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+    ),
+    (
+      <svg key="why-icon-2" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+    (
+      <svg key="why-icon-3" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    )
   ];
+
+  const defaultWhyItems = [
+    {
+      title_mz: "Mizo & English Hman Theihna",
+      title_en: "English & Mizo Support",
+      desc_mz: t("about.why_us_1", "mz"),
+      desc_en: t("about.why_us_1", "en")
+    },
+    {
+      title_mz: "Self-Serve Payment",
+      title_en: "Self-Serve Payment",
+      desc_mz: t("about.why_us_2", "mz"),
+      desc_en: t("about.why_us_2", "en")
+    },
+    {
+      title_mz: "Awlsam leh Fel",
+      title_en: "Simple & Direct",
+      desc_mz: t("about.why_us_3", "mz"),
+      desc_en: t("about.why_us_3", "en")
+    }
+  ];
+
+  const dbWhyItems = dbContent?.why_us_items || defaultWhyItems;
+  const whyUs: { icon: any; title: string; desc: string }[] = dbWhyItems.map((item: any, index: number) => ({
+    icon: defaultWhyIcons[index] || (
+      <svg key={`why-icon-${index}`} width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    title: (lang === "mz" ? item.title_mz : item.title_en) || "",
+    desc: (lang === "mz" ? item.desc_mz : item.desc_en) || ""
+  }));
 
   const stats = [
     { value: "11+", label: "Districts" },
@@ -69,10 +130,10 @@ export default async function AboutPage() {
           </div>
 
           <h1 style={{ fontSize: "clamp(30px,5vw,52px)", fontWeight: 800, color: "white", margin: "0 0 20px", letterSpacing: "-0.02em", lineHeight: 1.12 }}>
-            {t("about.title", lang)}
+            {pageTitle}
           </h1>
           <p style={{ fontSize: "17px", color: "rgba(255,255,255,0.82)", margin: "0 0 36px", fontWeight: 500, lineHeight: 1.75, maxWidth: "600px" }}>
-            {t("about.description", lang)}
+            {pageDesc}
           </p>
 
           {/* Stats row */}
@@ -104,13 +165,11 @@ export default async function AboutPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
             <div style={{ width: "4px", height: "36px", background: "linear-gradient(180deg,#1c7dfa,#0a84ff)", borderRadius: "4px" }} />
             <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#0f1b30", margin: 0 }}>
-              {lang === "mz" ? "Kan Bul Tan Dan" : "Our Origin Story"}
+              {originTitle}
             </h2>
           </div>
           <p style={{ fontSize: "16px", color: "#374151", lineHeight: 1.85, margin: 0, fontWeight: 400 }}>
-            {lang === "mz"
-              ? "Hnaruak Mizoram hi Mizoram chhunga hnaruak zawng zawng te hmun khata awlsam taka zawn hmuh theihna tura siam a ni. Hna zawnna kawngah harsatna thleng thin te sukiang turin, a bikin Mizo tawng ngei hman theih a nihna hian hna zawngtu leh hna petu te a chawm let dawn a ni."
-              : "Hnaruak Mizoram is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language."}
+            {originDesc}
           </p>
         </div>
 
@@ -144,10 +203,10 @@ export default async function AboutPage() {
             </div>
             <div>
               <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#0f1b30", margin: "0 0 12px" }}>
-                {t("about.mission_title", lang)}
+                {missionTitle}
               </h2>
               <p style={{ fontSize: "15px", color: "#374151", lineHeight: 1.85, margin: 0, fontWeight: 400 }}>
-                {t("about.mission_desc", lang)}
+                {missionDesc}
               </p>
             </div>
           </div>
@@ -156,7 +215,7 @@ export default async function AboutPage() {
         {/* Why Us */}
         <div style={{ marginBottom: "28px" }}>
           <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#0f1b30", margin: "0 0 20px", letterSpacing: "-0.01em" }}>
-            {t("about.why_us_title", lang)}
+            {whyUsTitle}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {whyUs.map((item, i) => (

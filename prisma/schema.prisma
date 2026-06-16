@@ -127,3 +127,12 @@ model Advertisement {
 
   @@map("advertisements")
 }
+
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+

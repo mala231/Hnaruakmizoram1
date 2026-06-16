@@ -54,7 +54,14 @@ interface ReportItem {
   };
 }
 
-type TabType = "categories" | "locations" | "tickers" | "ads" | "employers" | "reports";
+type TabType = "categories" | "locations" | "tickers" | "ads" | "employers" | "reports" | "about_page";
+
+interface WhyUsItem {
+  title_en: string;
+  title_mz: string;
+  desc_en: string;
+  desc_mz: string;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -96,16 +103,35 @@ export default function AdminDashboard() {
   const [newAdTargetUrl, setNewAdTargetUrl] = useState("");
   const [newAdPosition, setNewAdPosition] = useState("sidebar");
 
+  // About Page editor states
+  const [aboutTitleEn, setAboutTitleEn] = useState("");
+  const [aboutTitleMz, setAboutTitleMz] = useState("");
+  const [aboutDescEn, setAboutDescEn] = useState("");
+  const [aboutDescMz, setAboutDescMz] = useState("");
+  const [aboutOriginTitleEn, setAboutOriginTitleEn] = useState("");
+  const [aboutOriginTitleMz, setAboutOriginTitleMz] = useState("");
+  const [aboutOriginDescEn, setAboutOriginDescEn] = useState("");
+  const [aboutOriginDescMz, setAboutOriginDescMz] = useState("");
+  const [aboutMissionTitleEn, setAboutMissionTitleEn] = useState("");
+  const [aboutMissionTitleMz, setAboutMissionTitleMz] = useState("");
+  const [aboutMissionDescEn, setAboutMissionDescEn] = useState("");
+  const [aboutMissionDescMz, setAboutMissionDescMz] = useState("");
+  const [aboutWhyTitleEn, setAboutWhyTitleEn] = useState("");
+  const [aboutWhyTitleMz, setAboutWhyTitleMz] = useState("");
+  const [aboutWhyItems, setAboutWhyItems] = useState<WhyUsItem[]>([]);
+  const [aboutLangTab, setAboutLangTab] = useState<"en" | "mz">("mz");
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [catRes, locRes, tickRes, adsRes, empRes, repRes] = await Promise.all([
+      const [catRes, locRes, tickRes, adsRes, empRes, repRes, aboutRes] = await Promise.all([
         fetch("/api/admin/categories"),
         fetch("/api/admin/locations"),
         fetch("/api/admin/tickers"),
         fetch("/api/admin/ads"),
         fetch("/api/admin/employers"),
         fetch("/api/admin/reports"),
+        fetch("/api/admin/settings?key=page_about"),
       ]);
 
       const catData = await catRes.json();
@@ -114,6 +140,7 @@ export default function AdminDashboard() {
       const adsData = await adsRes.json();
       const empData = await empRes.json();
       const repData = await repRes.json();
+      const aboutData = await aboutRes.json();
 
       if (catData.success) setCategories(catData.data);
       if (locData.success) setLocations(locData.data);
@@ -121,6 +148,65 @@ export default function AdminDashboard() {
       if (adsData.success) setAds(adsData.data);
       if (empData.success) setEmployers(empData.data);
       if (repData.success) setReports(repData.data);
+
+      if (aboutData.success && aboutData.data) {
+        try {
+          const parsed = JSON.parse(aboutData.data.value);
+          setAboutTitleEn(parsed.title_en || "");
+          setAboutTitleMz(parsed.title_mz || "");
+          setAboutDescEn(parsed.description_en || "");
+          setAboutDescMz(parsed.description_mz || "");
+          setAboutOriginTitleEn(parsed.origin_title_en || "");
+          setAboutOriginTitleMz(parsed.origin_title_mz || "");
+          setAboutOriginDescEn(parsed.origin_desc_en || "");
+          setAboutOriginDescMz(parsed.origin_desc_mz || "");
+          setAboutMissionTitleEn(parsed.mission_title_en || "");
+          setAboutMissionTitleMz(parsed.mission_title_mz || "");
+          setAboutMissionDescEn(parsed.mission_desc_en || "");
+          setAboutMissionDescMz(parsed.mission_desc_mz || "");
+          setAboutWhyTitleEn(parsed.why_us_title_en || "");
+          setAboutWhyTitleMz(parsed.why_us_title_mz || "");
+          setAboutWhyItems(parsed.why_us_items || []);
+        } catch (e) {
+          console.error("Error parsing page_about setting:", e);
+        }
+      } else {
+        // Defaults if database value is not set
+        setAboutTitleEn("About Hnaruak Mizoram");
+        setAboutTitleMz("Hnaruak Mizoram Chanchin");
+        setAboutDescEn("Hnaruak Mizoram is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language.");
+        setAboutDescMz("Hnaruak Mizoram hi Mizoram chhunga hnaruak zawng zawng te hmun khata awlsam taka zawn hmuh theihna tura siam a ni. Hna zawnna kawngah harsatna thleng thin te sukiang turin, a bikin Mizo tawng ngei hman theih a nihna hian hna zawngtu leh hna petu te a chawm let dawn a ni.");
+        setAboutOriginTitleEn("Our Origin Story");
+        setAboutOriginTitleMz("Kan Bul Tan Dan");
+        setAboutOriginDescEn("Hnaruak Mizoram is a platform built to consolidate all job vacancies in Mizoram in one easy-to-search place. By solving the challenges faced in job discovery, we aim to bridge the gap between job seekers and employers, with support for the Mizo language.");
+        setAboutOriginDescMz("Hnaruak Mizoram hi Mizoram chhunga hnaruak zawng zawng te hmun khata awlsam taka zawn hmuh theihna tura siam a ni. Hna zawnna kawngah harsatna thleng thin te sukiang turin, a bikin Mizo tawng ngei hman theih a nihna hian hna zawngtu leh hna petu te a chawm let dawn a ni.");
+        setAboutMissionTitleEn("Our Mission");
+        setAboutMissionTitleMz("Kan Mission");
+        setAboutMissionDescEn("To connect job seekers and employers seamlessly. Employers can post vacancies affordably, and job seekers can search for free without registration.");
+        setAboutMissionDescMz("Hna zawngtu leh hna petu te awlsam zawka thlunzawm hi kan mission a ni. Hna petuten tlawm zawkin hna an tarh thei anga, hna zawngten a thlawnin in-register ngai lovin hna an zawng thei ang.");
+        setAboutWhyTitleEn("Why Hnaruak Mizoram?");
+        setAboutWhyTitleMz("Why Hnaruak Mizoram?");
+        setAboutWhyItems([
+          {
+            title_en: "English & Mizo Support",
+            title_mz: "Mizo & English Hman Theihna",
+            desc_en: "Easy to navigate in your preferred language.",
+            desc_mz: "Mizo leh English a duhtlan theih avangin hman a awlsam."
+          },
+          {
+            title_en: "Self-Serve Payment",
+            title_mz: "Self-Serve Payment",
+            desc_en: "Post jobs in minutes via Razorpay integration.",
+            desc_mz: "Razorpay hmanga awlsam leh rang taka hna ruak tarhna man pekna."
+          },
+          {
+            title_en: "Simple & Direct",
+            title_mz: "Awlsam leh Fel",
+            desc_en: "Search for jobs directly without creating an account.",
+            desc_mz: "Account siam kher ngai lovin hna ruak te zawn nghal theih a ni."
+          }
+        ]);
+      }
     } catch (err) {
       setErrorMsg("Data lak khawm a harsat rih e.");
     } finally {
@@ -508,6 +594,50 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleSaveAboutPage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const payload = {
+      title_en: aboutTitleEn,
+      title_mz: aboutTitleMz,
+      description_en: aboutDescEn,
+      description_mz: aboutDescMz,
+      origin_title_en: aboutOriginTitleEn,
+      origin_title_mz: aboutOriginTitleMz,
+      origin_desc_en: aboutOriginDescEn,
+      origin_desc_mz: aboutOriginDescMz,
+      mission_title_en: aboutMissionTitleEn,
+      mission_title_mz: aboutMissionTitleMz,
+      mission_desc_en: aboutMissionDescEn,
+      mission_desc_mz: aboutMissionDescMz,
+      why_us_title_en: aboutWhyTitleEn,
+      why_us_title_mz: aboutWhyTitleMz,
+      why_us_items: aboutWhyItems
+    };
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: "page_about",
+          value: JSON.stringify(payload)
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerAlert("success", "About Us page content tlingtla taka khawl a ni e.");
+      } else {
+        triggerAlert("error", data.error || "Khawl a hlawhchham.");
+      }
+    } catch (err) {
+      triggerAlert("error", "Server biak pawh a harsat.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/logout", { method: "POST" });
@@ -581,7 +711,6 @@ export default function AdminDashboard() {
             <span>{errorMsg}</span>
           </div>
         )}
-
         {/* Tab Selection Row */}
         <div className="flex border-b border-outline-variant/30 gap-2 overflow-x-auto select-none">
           {[
@@ -591,6 +720,7 @@ export default function AdminDashboard() {
             { id: "ads", label: t("admin.ads") },
             { id: "employers", label: t("admin.employers") },
             { id: "reports", label: t("admin.reports") },
+            { id: "about_page", label: "About Us Page" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1054,6 +1184,285 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                  )}
+              </div>
+            )}
+
+            {/* ABOUT US PAGE EDITOR TAB */}
+            {activeTab === "about_page" && (
+              <div className="lg:col-span-3 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant/20 pb-4">
+                  <div>
+                    <h3 className="title-md text-primary">About Us Page Content</h3>
+                    <p className="text-xs text-on-surface-variant">Update the contents of your website's About page in English and Mizo.</p>
+                  </div>
+                  
+                  {/* Language Selector inside About tab */}
+                  <div className="flex bg-surface-container rounded-lg p-1 border border-outline-variant/20 select-none self-start">
+                    <button
+                      type="button"
+                      onClick={() => setAboutLangTab("mz")}
+                      className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                        aboutLangTab === "mz"
+                          ? "bg-primary text-on-primary shadow-sm"
+                          : "text-on-surface hover:text-primary"
+                      }`}
+                    >
+                      Mizo Tawng
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAboutLangTab("en")}
+                      className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                        aboutLangTab === "en"
+                          ? "bg-primary text-on-primary shadow-sm"
+                          : "text-on-surface hover:text-primary"
+                      }`}
+                    >
+                      English
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSaveAboutPage} className="flex flex-col gap-6">
+                  {/* Title & Description */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                        {aboutLangTab === "mz" ? "Page Title (Mizo)" : "Page Title (English)"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        disabled={submitting}
+                        value={aboutLangTab === "mz" ? aboutTitleMz : aboutTitleEn}
+                        onChange={(e) => aboutLangTab === "mz" ? setAboutTitleMz(e.target.value) : setAboutTitleEn(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                      />
+                    </div>
+                    <div>
+                      <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                        {aboutLangTab === "mz" ? "Why Us Title (Mizo)" : "Why Us Title (English)"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        disabled={submitting}
+                        value={aboutLangTab === "mz" ? aboutWhyTitleMz : aboutWhyTitleEn}
+                        onChange={(e) => aboutLangTab === "mz" ? setAboutWhyTitleMz(e.target.value) : setAboutWhyTitleEn(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                      {aboutLangTab === "mz" ? "Page Description (Mizo)" : "Page Description (English)"}
+                    </label>
+                    <textarea
+                      required
+                      disabled={submitting}
+                      value={aboutLangTab === "mz" ? aboutDescMz : aboutDescEn}
+                      onChange={(e) => aboutLangTab === "mz" ? setAboutDescMz(e.target.value) : setAboutDescEn(e.target.value)}
+                      className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Origin Story */}
+                  <div className="border border-outline-variant/20 rounded-2xl p-5 bg-surface-container/10 flex flex-col gap-4">
+                    <h4 className="font-bold text-sm text-primary">Origin Story Section</h4>
+                    <div>
+                      <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                        {aboutLangTab === "mz" ? "Origin Story Title (Mizo)" : "Origin Story Title (English)"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        disabled={submitting}
+                        value={aboutLangTab === "mz" ? aboutOriginTitleMz : aboutOriginTitleEn}
+                        onChange={(e) => aboutLangTab === "mz" ? setAboutOriginTitleMz(e.target.value) : setAboutOriginTitleEn(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                      />
+                    </div>
+                    <div>
+                      <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                        {aboutLangTab === "mz" ? "Origin Story Description (Mizo)" : "Origin Story Description (English)"}
+                      </label>
+                      <textarea
+                        required
+                        disabled={submitting}
+                        value={aboutLangTab === "mz" ? aboutOriginDescMz : aboutOriginDescEn}
+                        onChange={(e) => aboutLangTab === "mz" ? setAboutOriginDescMz(e.target.value) : setAboutOriginDescEn(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mission Section */}
+                  <div className="border border-outline-variant/20 rounded-2xl p-5 bg-surface-container/10 flex flex-col gap-4">
+                    <h4 className="font-bold text-sm text-primary">Mission Section</h4>
+                    <div>
+                      <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                        {aboutLangTab === "mz" ? "Mission Title (Mizo)" : "Mission Title (English)"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        disabled={submitting}
+                        value={aboutLangTab === "mz" ? aboutMissionTitleMz : aboutMissionTitleEn}
+                        onChange={(e) => aboutLangTab === "mz" ? setAboutMissionTitleMz(e.target.value) : setAboutMissionTitleEn(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                      />
+                    </div>
+                    <div>
+                      <label className="label-sm text-on-background/80 mb-1.5 block font-bold">
+                        {aboutLangTab === "mz" ? "Mission Description (Mizo)" : "Mission Description (English)"}
+                      </label>
+                      <textarea
+                        required
+                        disabled={submitting}
+                        value={aboutLangTab === "mz" ? aboutMissionDescMz : aboutMissionDescEn}
+                        onChange={(e) => aboutLangTab === "mz" ? setAboutMissionDescMz(e.target.value) : setAboutMissionDescEn(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Why Hnaruak items */}
+                  <div className="border border-outline-variant/20 rounded-2xl p-5 bg-surface-container/10 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-sm text-primary">Why Hnaruak Mizoram? Features</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAboutWhyItems([
+                            ...aboutWhyItems,
+                            { title_en: "", title_mz: "", desc_en: "", desc_mz: "" }
+                          ]);
+                        }}
+                        className="bg-primary hover:bg-primary-container text-white text-xs font-bold px-3 py-1.5 rounded-lg border-none cursor-pointer flex items-center gap-1"
+                      >
+                        + Add Feature
+                      </button>
+                    </div>
+
+                    {aboutWhyItems.length === 0 ? (
+                      <p className="text-xs text-on-surface-variant italic py-2">No features defined. Click add feature to define some.</p>
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        {aboutWhyItems.map((item, idx) => (
+                          <div key={idx} className="border border-outline-variant/20 rounded-xl p-4 bg-surface-container-lowest shadow-sm flex flex-col gap-3 relative">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAboutWhyItems(aboutWhyItems.filter((_, i) => i !== idx));
+                              }}
+                              className="absolute top-4 right-4 text-error hover:text-error/85 bg-transparent border-none cursor-pointer text-xs font-bold"
+                            >
+                              Remove
+                            </button>
+                            <span className="text-xs text-primary font-bold">Feature #{idx + 1}</span>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-[11px] text-on-surface-variant font-bold mb-1 block">Feature Title (Mizo)</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={item.title_mz}
+                                  onChange={(e) => {
+                                    const updated = [...aboutWhyItems];
+                                    updated[idx].title_mz = e.target.value;
+                                    setAboutWhyItems(updated);
+                                  }}
+                                  className="w-full bg-surface-container border border-outline-variant/40 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-primary text-on-background"
+                                  placeholder="e.g. Awlsam leh Fel..."
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] text-on-surface-variant font-bold mb-1 block">Feature Title (English)</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={item.title_en}
+                                  onChange={(e) => {
+                                    const updated = [...aboutWhyItems];
+                                    updated[idx].title_en = e.target.value;
+                                    setAboutWhyItems(updated);
+                                  }}
+                                  className="w-full bg-surface-container border border-outline-variant/40 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-primary text-on-background"
+                                  placeholder="e.g. Simple & Direct..."
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-[11px] text-on-surface-variant font-bold mb-1 block">Feature Description (Mizo)</label>
+                                <textarea
+                                  required
+                                  value={item.desc_mz}
+                                  onChange={(e) => {
+                                    const updated = [...aboutWhyItems];
+                                    updated[idx].desc_mz = e.target.value;
+                                    setAboutWhyItems(updated);
+                                  }}
+                                  className="w-full bg-surface-container border border-outline-variant/40 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-primary text-on-background"
+                                  rows={2}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] text-on-surface-variant font-bold mb-1 block">Feature Description (English)</label>
+                                <textarea
+                                  required
+                                  value={item.desc_en}
+                                  onChange={(e) => {
+                                    const updated = [...aboutWhyItems];
+                                    updated[idx].desc_en = e.target.value;
+                                    setAboutWhyItems(updated);
+                                  }}
+                                  className="w-full bg-surface-container border border-outline-variant/40 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-primary text-on-background"
+                                  rows={2}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="flex justify-end gap-3 border-t border-outline-variant/20 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => fetchData()}
+                      disabled={submitting}
+                      className="bg-surface-container hover:bg-surface-container-high border border-outline/20 text-primary font-bold text-xs px-6 py-3 rounded-full cursor-pointer transition-all"
+                    >
+                      Reset/Reload
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="bg-primary hover:bg-primary-container text-white font-bold text-xs px-8 py-3 rounded-full cursor-pointer transition-all shadow-md flex items-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Khawl mek...
+                        </>
+                      ) : (
+                        "Khawl Rawh (Save Details)"
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
