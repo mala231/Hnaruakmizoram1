@@ -6,6 +6,19 @@ const searchKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || "";
 const adminKey = process.env.ALGOLIA_ADMIN_API_KEY || "";
 const indexName = "job_posts";
 
+/** Safely truncate a string to a max char length */
+function truncate(str: string | null | undefined, maxChars: number): string {
+  if (!str) return "";
+  return str.length > maxChars ? str.slice(0, maxChars) + "…" : str;
+}
+
+/** Strip base64 data URIs — they are too large for Algolia records. Return null so UI falls back to placeholder. */
+function safeLogoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("data:")) return null; // base64 blob — too large
+  return url;
+}
+
 /**
  * Checks if credentials are fully configured and are not placeholder strings.
  */
@@ -49,27 +62,26 @@ export async function syncJobToAlgolia(jobId: string) {
       return;
     }
 
-    // Save/Update index record
+    // Save/Update index record (description excluded — too large for Algolia free tier)
     await client.saveObject({
       indexName,
       body: {
         objectID: job.id,
-        title: job.title,
-        shortDescription: job.shortDescription,
-        description: job.description,
+        title: truncate(job.title, 200),
+        shortDescription: truncate(job.shortDescription, 500),
         categoryId: job.categoryId,
         categoryName: job.category.name,
         locationId: job.locationId,
         locationName: job.location.name,
-        address: job.address,
+        address: truncate(job.address, 200),
         deadline: job.deadline.toISOString(),
-        interviewTime: job.interviewTime,
+        interviewTime: truncate(job.interviewTime, 300),
         status: job.status,
         durationDays: job.durationDays,
         expiresAt: job.expiresAt ? job.expiresAt.toISOString() : null,
         createdAt: job.createdAt.toISOString(),
-        employerName: job.employer.username,
-        employerLogoUrl: job.employer.logoUrl,
+        employerName: truncate(job.employer.username, 100),
+        employerLogoUrl: safeLogoUrl(job.employer.logoUrl),
         employerIsVerified: job.employer.isVerified,
       },
     });
@@ -125,24 +137,24 @@ export async function rebuildAlgoliaIndex() {
       include: { employer: true, category: true, location: true },
     });
 
+    // description excluded — too large for Algolia free tier (10KB/record limit)
     const objects = jobs.map((job) => ({
       objectID: job.id,
-      title: job.title,
-      shortDescription: job.shortDescription,
-      description: job.description,
+      title: truncate(job.title, 200),
+      shortDescription: truncate(job.shortDescription, 500),
       categoryId: job.categoryId,
       categoryName: job.category.name,
       locationId: job.locationId,
       locationName: job.location.name,
-      address: job.address,
+      address: truncate(job.address, 200),
       deadline: job.deadline.toISOString(),
-      interviewTime: job.interviewTime,
+      interviewTime: truncate(job.interviewTime, 300),
       status: job.status,
       durationDays: job.durationDays,
       expiresAt: job.expiresAt ? job.expiresAt.toISOString() : null,
       createdAt: job.createdAt.toISOString(),
-      employerName: job.employer.username,
-      employerLogoUrl: job.employer.logoUrl,
+      employerName: truncate(job.employer.username, 100),
+      employerLogoUrl: safeLogoUrl(job.employer.logoUrl),
       employerIsVerified: job.employer.isVerified,
     }));
 

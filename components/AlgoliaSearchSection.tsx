@@ -119,12 +119,20 @@ function SearchContent({
   const { hits } = useHits();
   const pagination = usePagination();
 
-  // Local query state to handle typing buffer without immediate query firing
+  // Local query state with instant-search debounce
   const [localQuery, setLocalQuery] = useState(query);
 
   useEffect(() => {
     setLocalQuery(query);
   }, [query]);
+
+  // Fire Algolia query 250ms after user stops typing (instant search)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      refineQuery(localQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [localQuery]);
 
   // Determine active refined values
   const activeCategoryId = categoryMenu.items.find((i) => i.isRefined)?.value || "";
@@ -218,55 +226,9 @@ function SearchContent({
         </div>
       </div>
 
-      {/* ── FEATURE STRIP ── */}
-      <section className="relative z-10 bg-white border-b border-blue-100 pt-16 pb-10 w-full">
-        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                ),
-                title: "Easy Job Search",
-                desc: "Search active job vacancies in Mizoram by category and district easily.",
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                ),
-                title: "Verified Employers",
-                desc: "All employers are verified by administrators to ensure listing reliability.",
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                ),
-                title: "Daily Updates",
-                desc: "New vacancies are added daily to keep your search fresh.",
-              },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-4 p-5 rounded-2xl hover:bg-blue-50 transition-colors group">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
-                  {item.icon}
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base text-on-background mb-1">{item.title}</h3>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
-      <section className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col">
+      <section className="pt-16 pb-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col">
         {/* Section header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -454,7 +416,7 @@ function SearchContent({
                       <div className="p-4 flex flex-col flex-grow gap-3">
                         {/* Logo + Category badge */}
                         <div className="flex items-start justify-between gap-2">
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 overflow-hidden flex items-center justify-center shrink-0 shadow-sm relative">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm relative">
                             {hit.employerLogoUrl ? (
                               <Image
                                 src={hit.employerLogoUrl}
@@ -464,8 +426,13 @@ function SearchContent({
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="text-xs font-bold text-primary">
-                                {hit.employerName?.charAt(0)}
+                              <div
+                                className="w-full h-full flex items-center justify-center text-white text-sm font-bold"
+                                style={{
+                                  background: `hsl(${(hit.employerName?.charCodeAt(0) || 65) * 137 % 360}, 55%, 48%)`,
+                                }}
+                              >
+                                {hit.employerName?.charAt(0)?.toUpperCase()}
                               </div>
                             )}
                           </div>
@@ -608,6 +575,53 @@ function SearchContent({
               })}
             </aside>
           )}
+        </div>
+      </section>
+
+      {/* ── FEATURE STRIP (below results for better mobile UX) ── */}
+      <section className="relative z-10 bg-white border-t border-blue-100 py-10 w-full">
+        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                ),
+                title: "Easy Job Search",
+                desc: "Search active job vacancies in Mizoram by category and district easily.",
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                ),
+                title: "Verified Employers",
+                desc: "All employers are verified by administrators to ensure listing reliability.",
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                ),
+                title: "Daily Updates",
+                desc: "New vacancies are added daily to keep your search fresh.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-4 p-5 rounded-2xl hover:bg-blue-50 transition-colors group">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
+                  {item.icon}
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-on-background mb-1">{item.title}</h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </>
