@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { t } from "@/lib/i18n";
 
 interface HeaderProps {
   lang: string;
+  isLoggedIn?: boolean;
+  logoUrl?: string | null;
 }
 
-export default function Header({ lang }: HeaderProps) {
+export default function Header({ lang, isLoggedIn, logoUrl }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -90,12 +93,36 @@ export default function Header({ lang }: HeaderProps) {
             </button>
           </div>
 
-          <Link
-            href="/login"
-            className="text-primary hover:text-primary-container transition-colors text-sm font-bold px-4 py-2 rounded-full hover:bg-primary/8"
-          >
-            {t("nav.employer_login", lang)}
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm block shrink-0"
+              title="Dashboard / Profile"
+            >
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt="Employer Logo"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-blue-50 flex items-center justify-center text-primary">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              )}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-primary hover:text-primary-container transition-colors text-sm font-bold px-4 py-2 rounded-full hover:bg-primary/8"
+            >
+              {t("nav.employer_login", lang)}
+            </Link>
+          )}
           <Link
             href="/post-job"
             className="bg-gradient-to-r from-primary to-secondary hover:from-primary-container hover:to-primary text-white font-bold text-sm px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shadow-primary/25 flex items-center gap-1.5"
@@ -107,21 +134,48 @@ export default function Header({ lang }: HeaderProps) {
           </Link>
         </div>
 
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          type="button"
-          className="lg:hidden text-slate-500 hover:text-primary focus:outline-none p-2 rounded-full hover:bg-primary/8 transition-colors"
-          aria-label="Toggle menu"
-        >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            {isOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
+        {/* Mobile profile icon + menu button */}
+        <div className="lg:hidden flex items-center gap-3 shrink-0">
+          {isLoggedIn && (
+            <Link
+              href="/dashboard"
+              onClick={() => setIsOpen(false)}
+              className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm block shrink-0"
+              title="Dashboard / Profile"
+            >
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt="Employer Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-blue-50 flex items-center justify-center text-primary">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              )}
+            </Link>
+          )}
+
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            type="button"
+            className="text-slate-500 hover:text-primary focus:outline-none p-2 rounded-full hover:bg-primary/8 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {isOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation Drawer */}
@@ -177,13 +231,15 @@ export default function Header({ lang }: HeaderProps) {
 
           <hr className="border-blue-100" />
           <div className="flex flex-col gap-2.5">
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="text-primary font-bold text-sm text-center py-3 border-2 border-primary/30 rounded-2xl hover:bg-primary/8 transition-colors"
-            >
-              {t("nav.employer_login", lang)}
-            </Link>
+            {!isLoggedIn && (
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="text-primary font-bold text-sm text-center py-3 border-2 border-primary/30 rounded-2xl hover:bg-primary/8 transition-colors"
+              >
+                {t("nav.employer_login", lang)}
+              </Link>
+            )}
             <Link
               href="/post-job"
               onClick={() => setIsOpen(false)}

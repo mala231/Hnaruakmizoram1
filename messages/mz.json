@@ -1,12 +1,12 @@
 {
   "nav": {
-    "home": "Bul Tanna",
+    "home": "Home",
     "about": "Kan Chanchin",
     "contact": "Biak Pawhna",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "refund": "Refund Policy",
-    "post_job": "Hna Puanzar",
+    "post_job": "Hna Post",
     "employer_login": "Luhna",
     "admin_login": "Admin Luhna",
     "dashboard": "Dashboard",
@@ -14,7 +14,7 @@
   },
   "footer": {
     "copyright": "© 2026 Hnaruak Mizoram. Zalenna zawng zawng venhim a ni.",
-    "tagline": "Mizoram a hna awm te zawnna leh puanzarna awlsam leh tlawm ber."
+    "tagline": "Mizoram a hna awm te zawnna leh puanzarna awlsam ."
   },
   "home": {
     "hero_title": "Hnaruak Mizoram",
@@ -23,7 +23,7 @@
     "all_districts": "District Zawng Zawng",
     "all_categories": "Hna Chi Hrang Zawng Zawng",
     "search_btn": "Zawng rawh",
-    "latest_ticker": "Thawh thar te:"
+    "latest_ticker": "Fakna:"
   },
   "about": {
     "title": "Hnaruak Mizoram Chanchin",
@@ -49,7 +49,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "subtitle": "I chanchin kan enkawl dan.",
+    "subtitle": "I data kan enkawl dan.",
     "section_1_title": "1. Data kan lak khawm te",
     "section_1_desc": "Employer registered te username, email, phone number, company profile, leh company logo kan la khawm thin. Hna zawngtute mimal chanchin kan la khawm lo.",
     "section_2_title": "2. Data kan hman dan",

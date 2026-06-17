@@ -19,12 +19,12 @@ export default async function AboutPage() {
     console.error("Error fetching page_about setting:", e);
   }
 
-  const pageTitle = lang === "mz" 
-    ? (dbContent?.title_mz || t("about.title", lang)) 
+  const pageTitle = lang === "mz"
+    ? (dbContent?.title_mz || t("about.title", lang))
     : (dbContent?.title_en || t("about.title", lang));
 
-  const pageDesc = lang === "mz" 
-    ? (dbContent?.description_mz || t("about.description", lang)) 
+  const pageDesc = lang === "mz"
+    ? (dbContent?.description_mz || t("about.description", lang))
     : (dbContent?.description_en || t("about.description", lang));
 
   const originTitle = lang === "mz"
@@ -101,7 +101,7 @@ export default async function AboutPage() {
     { value: "11+", label: "Districts" },
     { value: "₹299", label: lang === "mz" ? "A bikin tarh" : "Featured Listings" },
     { value: "100%", label: lang === "mz" ? "Bilingual" : "Bilingual Support" },
-    { value: "24h", label: lang === "mz" ? "Live atang" : "Goes Live" },
+    { value: "24h", label: lang === "mz" ? "Live" : "Goes Live" },
   ];
 
   return (
@@ -123,7 +123,7 @@ export default async function AboutPage() {
         <div style={{ maxWidth: "780px", margin: "0 auto", position: "relative", zIndex: 1 }}>
           {/* Badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "100px", padding: "6px 18px", marginBottom: "24px" }}>
-            <svg width="13" height="13" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            <svg width="13" height="13" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" /></svg>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" }}>
               {lang === "mz" ? "Kan Chanchin" : "About Us"}
             </span>

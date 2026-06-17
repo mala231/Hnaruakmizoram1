@@ -31,3 +31,37 @@ export async function verifyJWT(token: string): Promise<TokenPayload | null> {
     return null;
   }
 }
+
+export interface PendingRegisterPayload {
+  username: string;
+  email: string;
+  phone: string;
+  address: string;
+  passwordHash: string;
+  logoUrl: string;
+  otpHash: string;
+  otpCreatedAt: number;
+}
+
+/**
+ * Signs a short-lived pending registration token (1-hour validation window).
+ */
+export async function signPendingRegisterJWT(payload: PendingRegisterPayload): Promise<string> {
+  return new SignJWT({ ...payload as any })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("1h") // Token is active for 1 hr to allow resends
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verifies a pending registration token. Returns payload or null if invalid/expired.
+ */
+export async function verifyPendingRegisterJWT(token: string): Promise<PendingRegisterPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as PendingRegisterPayload;
+  } catch (error) {
+    return null;
+  }
+}

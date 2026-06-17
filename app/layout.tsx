@@ -6,15 +6,21 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PWARegistration from "@/components/PWARegistration";
 import { cookies } from "next/headers";
+import { verifyJWT } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -57,6 +63,24 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
+  const sessionCookie = cookieStore.get("employer_session")?.value;
+  
+  let isLoggedIn = false;
+  let logoUrl: string | null = null;
+
+  if (sessionCookie) {
+    const payload = await verifyJWT(sessionCookie);
+    if (payload && payload.role === "employer") {
+      isLoggedIn = true;
+      const employer = await prisma.employer.findUnique({
+        where: { id: payload.userId },
+        select: { logoUrl: true },
+      });
+      if (employer) {
+        logoUrl = employer.logoUrl;
+      }
+    }
+  }
 
   return (
     <html
@@ -66,7 +90,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-on-background">
         <PWARegistration />
         <Ticker lang={lang} />
-        <Header lang={lang} />
+        <Header lang={lang} isLoggedIn={isLoggedIn} logoUrl={logoUrl} />
         <main className="flex-grow flex-col flex">
           {children}
         </main>

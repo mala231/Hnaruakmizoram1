@@ -117,9 +117,9 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
       if (!data.success) {
         setErrorMsg(
           data.error ||
-            (lang === "mz"
-              ? "Hna dah khawm a hlawhchham rih."
-              : "Failed to create job listing draft.")
+          (lang === "mz"
+            ? "Hna dah khawm a hlawhchham rih."
+            : "Failed to create job listing draft.")
         );
         setSubmitting(false);
         return;
@@ -133,13 +133,13 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
             ? "Razorpay Key a awm loh vangin payment lem kalpui a ni dawn e. Hna hi active a ni tep..."
             : "No Razorpay Key configured, simulating checkout. Getting your listing active..."
         );
-        
+
         const mockRes = await fetch("/api/payments/mock-success", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ jobId: data.jobId }),
         });
-        
+
         const mockData = await mockRes.json();
         if (mockData.success) {
           setSuccessMsg(
@@ -162,7 +162,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
             ? "Payment bualpui mek a ni, khawngaihin lo nghak lawk rawh..."
             : "Processing payment gateway, please wait..."
         );
-        
+
         const options = {
           key: data.keyId,
           amount: data.amount,
@@ -230,7 +230,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
         padding: "32px",
         boxShadow: "0 12px 40px rgba(28,125,250,0.08)"
       }}>
-        
+
         {/* Header Title */}
         <div style={{ borderBottom: "1px solid var(--color-surface-variant)", paddingBottom: "16px", marginBottom: "32px" }}>
           <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#1c7dfa", margin: 0 }}>
@@ -238,7 +238,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
           </h1>
           <p style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, marginTop: "6px", marginBottom: 0 }}>
             {lang === "mz"
-              ? "Hna ruak thar puanzarna siamna. Khawngaihin a hnuaia form hi fel takin hmang rawh."
+              ? "Hna ruak tlangzarhna. Khawngaihin a hnuaia form hi fel takin hmang rawh."
               : "Publish a new job vacancy. Please complete the form details below."}
           </p>
         </div>
@@ -288,7 +288,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
 
         {/* Post Form */}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          
+
           {/* Job Title */}
           <div>
             <label style={{ fontSize: "13px", fontWeight: 700, color: "#1a2e22", display: "block", marginBottom: "8px" }}>
@@ -343,7 +343,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
               }}
               placeholder={
                 lang === "mz"
-                  ? "Vantlang tana hriat thawi theih tur hna chanchin tawi fel..."
+                  ? "Vantlang tana hriat theih tur hna chanchin tawi fel..."
                   : "A one-sentence summary of the job details..."
               }
             />
@@ -548,7 +548,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
             <label style={{ fontSize: "13px", fontWeight: 700, color: "#1a2e22", display: "block", marginBottom: "12px" }}>
               {lang === "mz" ? "Puanzar duh chhung (Choose Listing Duration)" : "Listing Duration"}
             </label>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -575,7 +575,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
                 </span>
                 <span style={{ fontSize: "20px", fontWeight: 800 }}>₹299</span>
               </button>
-              
+
               <button
                 type="button"
                 disabled={submitting}

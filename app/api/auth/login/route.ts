@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         OR: [
           { username: identity },
           { email: identity.toLowerCase() },
+          { phone: identity },
         ],
         isDeleted: false,
       },

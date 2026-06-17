@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
 import { prisma } from "./prisma";
 
 // SMTP variables configuration
@@ -132,3 +133,87 @@ export async function sendPreExpiryWarnings(): Promise<number> {
     return 0;
   }
 }
+
+// Blocklist of common disposable email domains
+const DISPOSABLE_DOMAINS = new Set([
+  "yopmail.com", "mailinator.com", "tempmail.com", "temp-mail.org", "guerrillamail.com",
+  "dispostable.com", "10minutemail.com", "trashmail.com", "getairmail.com", "sharklasers.com",
+  "guerrillamailblock.com", "guerrillamail.net", "guerrillamail.org", "guerrillamail.biz",
+  "pokemail.net", "grr.la", "teleworm.us", "dayrep.com", "fleckens.hu", "einrot.com",
+  "armyspy.com", "cuvox.de", "superrito.com", "gustr.com", "rhyta.com", "mailnesia.com",
+  "maildrop.cc", "getnada.com", "boun.cr", "incognitomail.com"
+]);
+
+// Blocklist of obvious domain typos that are commonly fake
+const TYPO_DOMAINS = new Set([
+  "gamil.com", "gmaill.com", "gamil.co", "gmal.com", "gmaik.com", "gamil.net",
+  "yaho.com", "yahooo.com", "yahu.com", "hotail.com", "hotmai.com", "hotmial.com"
+]);
+
+/**
+ * Validates the legitimacy of an email address based on syntax,
+ * blocklists (disposable/typo domains), and active DNS MX record verification.
+ */
+export async function validateEmailLegitimacy(email: string): Promise<{
+  isValid: boolean;
+  reason: "format" | "disposable" | "typo" | "no_mx" | null;
+}> {
+  // 1. Basic format syntax verification
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return { isValid: false, reason: "format" };
+  }
+
+  const [, domain] = email.toLowerCase().split("@");
+
+  // 2. Check for obvious typo domains
+  if (TYPO_DOMAINS.has(domain)) {
+    return { isValid: false, reason: "typo" };
+  }
+
+  // 3. Check for disposable/temp email domains
+  if (DISPOSABLE_DOMAINS.has(domain)) {
+    return { isValid: false, reason: "disposable" };
+  }
+
+  // 4. DNS MX record validation (checks if domain actually exists and accepts mail)
+  try {
+    const records = await dns.promises.resolveMx(domain);
+    if (!records || records.length === 0) {
+      return { isValid: false, reason: "no_mx" };
+    }
+  } catch (err: any) {
+    // Gracefully fallback for systems errors (e.g., local ECONNREFUSED/timeout/outage)
+    // Only fail if it's a definitive "not found" / "no data" error code.
+    if (err.code === "ENOTFOUND" || err.code === "ENODATA") {
+      return { isValid: false, reason: "no_mx" };
+    }
+    console.warn(`[Email Validation] DNS MX check skipped for domain "${domain}" due to system error: ${err.message}`);
+  }
+
+  return { isValid: true, reason: null };
+}
+
+/**
+ * Sends a registration verification OTP email to the employer.
+ */
+export async function sendOtpEmail(toEmail: string, otpCode: string): Promise<void> {
+  const subject = "Hnaruak Mizoram: Inziahluhna OTP Verification";
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+      <h2 style="color: #1c7dfa; margin-bottom: 20px; border-bottom: 2px solid #1c7dfa; padding-bottom: 10px;">Verification OTP Code</h2>
+      <p>Dear Employer,</p>
+      <p>Hnaruak Mizoram-a inziahluh nan a hnuaia verification OTP code hi hmang rawh le:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <span style="font-size: 32px; font-weight: 800; color: #1c7dfa; letter-spacing: 5px; padding: 10px 20px; background-color: #f0f7ff; border-radius: 8px; border: 1px solid #1c7dfa;">
+          ${otpCode}
+        </span>
+      </div>
+      <p>He OTP code hi <strong>minute 10</strong> chhung chauh a nung ang.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+      <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Hnaruak Mizoram.</p>
+    </div>
+  `;
+  await sendEmail({ to: toEmail, subject, html });
+}
+

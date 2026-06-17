@@ -21,6 +21,84 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // OTP Verification hooks
+  const [pendingToken, setPendingToken] = useState("");
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+
+  // Geolocation and map states
+  const [locating, setLocating] = useState(false);
+  const [mapCoordinates, setMapCoordinates] = useState<{ lat: number; lon: number } | null>(null);
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError(
+        lang === "mz"
+          ? "I browser-in browser geolocation a support lo."
+          : "Geolocation is not supported by your browser."
+      );
+      return;
+    }
+
+    setLocating(true);
+    setError("");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setMapCoordinates({ lat: latitude, lon: longitude });
+
+        try {
+          // Query OpenStreetMap Nominatim for free reverse geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            {
+              headers: {
+                "Accept-Language": lang === "mz" ? "en" : lang,
+                "User-Agent": "HnaruakMizoramEmployerPortal"
+              }
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Geocoding failed");
+          }
+
+          const data = await response.json();
+          if (data && data.display_name) {
+            setAddress(data.display_name);
+          } else {
+            setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          }
+        } catch (err) {
+          console.error("Reverse geocoding error:", err);
+          // Fallback to coordinates
+          setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        } finally {
+          setLocating(false);
+        }
+      },
+      (geoErr) => {
+        console.error("Geolocation error:", geoErr);
+        let errorMsg = "";
+        if (geoErr.code === geoErr.PERMISSION_DENIED) {
+          errorMsg = lang === "mz"
+            ? "Hmun tak (location) luhna permission i deny a ni. Khawngaihin browser settings-ah a phalna pe rawh."
+            : "Location permission denied. Please allow location access in your browser settings.";
+        } else {
+          errorMsg = lang === "mz"
+            ? "Awnna hmun zawn chhuah a hlawhchham rih."
+            : "Unable to retrieve your current location.";
+        }
+        setError(errorMsg);
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -79,8 +157,13 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
       const data = await res.json();
 
       if (data.success) {
-        router.push("/dashboard");
-        router.refresh();
+        if (data.pendingVerification) {
+          setPendingToken(data.token);
+          setResendSuccess(false);
+        } else {
+          router.push("/dashboard");
+          router.refresh();
+        }
       } else {
         setError(
           data.error ||
@@ -97,6 +180,78 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) {
+      setError(
+        lang === "mz"
+          ? "Khawngaihin OTP digit 6 ziak vek rawh."
+          : "Please enter the complete 6-digit OTP."
+      );
+      return;
+    }
+
+    setVerifying(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/register/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp, token: pendingToken }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setError(data.error || (lang === "mz" ? "OTP verification a hlawhchham." : "OTP verification failed."));
+      }
+    } catch {
+      setError(
+        lang === "mz"
+          ? "Server biak pawh a harsat rih e."
+          : "Server communication error. Please try again."
+      );
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResending(true);
+    setError("");
+    setResendSuccess(false);
+
+    try {
+      const res = await fetch("/api/auth/register/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: pendingToken }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setPendingToken(data.token);
+        setOtp("");
+        setResendSuccess(true);
+      } else {
+        setError(data.error || (lang === "mz" ? "OTP thawn nawnna a hlawhchham." : "Failed to resend OTP."));
+      }
+    } catch {
+      setError(
+        lang === "mz"
+          ? "Server biak pawh a harsat rih e."
+          : "Server communication error. Please try again."
+      );
+    } finally {
+      setResending(false);
     }
   };
 
@@ -134,6 +289,231 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
       e.target.style.boxShadow = "none";
     },
   };
+
+  if (pendingToken) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "480px",
+          background: "#ffffff",
+          borderRadius: "24px",
+          boxShadow: "0 20px 60px rgba(28,125,250,0.15), 0 4px 16px rgba(0,0,0,0.06)",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ height: "4px", background: "linear-gradient(90deg,#1c7dfa,#5856d6,#a5b4fc)" }} />
+
+        <div style={{ padding: "40px 36px 36px" }}>
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: "28px" }}>
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "16px",
+                background: "linear-gradient(135deg,#1c7dfa,#0a84ff)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "16px",
+                boxShadow: "0 8px 20px rgba(28,125,250,0.3)",
+              }}
+            >
+              <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+              </svg>
+            </div>
+            <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#1c7dfa", margin: "0 0 6px", letterSpacing: "-0.01em" }}>
+              {lang === "mz" ? "OTP Verification" : "Verify Your Account"}
+            </h1>
+            <p style={{ fontSize: "13px", color: "#6b7280", margin: 0, fontWeight: 500, lineHeight: 1.4 }}>
+              {lang === "mz"
+                ? `OTP Code hi email (${email}) leh phone (${phone}) ah thawn a ni e.`
+                : `An OTP code has been sent to your email (${email}) and phone (${phone}).`}
+            </p>
+          </div>
+
+          {/* Error Alert */}
+          {error && (
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                color: "#dc2626",
+                fontSize: "13px",
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
+
+          {/* Success Resend Alert */}
+          {resendSuccess && (
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
+                color: "#16a34a",
+                fontSize: "13px",
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {lang === "mz" ? "OTP thawn thar leh a ni ta. Khawngaihin terminal/email lo en leh rawh." : "OTP resent successfully. Please check your inbox or terminal."}
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div>
+              <label style={labelStyle}>
+                {lang === "mz" ? "Verification OTP Code (digit 6)" : "Verification OTP Code (6-digit)"}
+              </label>
+              <input
+                type="text"
+                required
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                placeholder="E.g. 123456"
+                style={{
+                  ...inputStyle,
+                  fontSize: "20px",
+                  letterSpacing: "6px",
+                  textAlign: "center",
+                  padding: "12px",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = "#1c7dfa"; e.target.style.boxShadow = "0 0 0 3px rgba(28,125,250,0.15)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.boxShadow = "none"; }}
+              />
+            </div>
+
+            {/* Verify Button */}
+            <button
+              type="submit"
+              disabled={verifying}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: verifying ? "#dbeafe" : "linear-gradient(135deg,#1c7dfa,#0a84ff)",
+                color: verifying ? "#6b7280" : "#ffffff",
+                fontSize: "14px",
+                fontWeight: 700,
+                border: "none",
+                borderRadius: "12px",
+                cursor: verifying ? "not-allowed" : "pointer",
+                boxShadow: verifying ? "none" : "0 4px 14px rgba(28,125,250,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                fontFamily: "inherit",
+              }}
+            >
+              {verifying ? (
+                <>
+                  <svg style={{ animation: "spin 1s linear infinite" }} width="18" height="18" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="#6b7280" strokeWidth="3" strokeDasharray="60" strokeDashoffset="15" />
+                  </svg>
+                  {lang === "mz" ? "Verifiying..." : "Verifying..."}
+                </>
+              ) : (
+                <>
+                  {lang === "mz" ? "Verify OTP nemnghet rawh" : "Verify Account"}
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4" />
+                  </svg>
+                </>
+              )}
+            </button>
+
+            {/* Resend OTP button */}
+            <button
+              type="button"
+              disabled={resending}
+              onClick={handleResendOtp}
+              style={{
+                width: "100%",
+                padding: "11px",
+                background: "#f8fafc",
+                color: resending ? "#94a3b8" : "#475569",
+                fontSize: "13px",
+                fontWeight: 700,
+                border: "1.5px solid #cbd5e1",
+                borderRadius: "12px",
+                cursor: resending ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                fontFamily: "inherit",
+              }}
+            >
+              {resending ? (
+                <>
+                  <svg style={{ animation: "spin 1s linear infinite" }} width="14" height="14" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="#94a3b8" strokeWidth="3" strokeDasharray="60" strokeDashoffset="15" />
+                  </svg>
+                  {lang === "mz" ? "Sending OTP..." : "Sending OTP..."}
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                  </svg>
+                  {lang === "mz" ? "OTP thawn nawn rawh (Resend)" : "Resend OTP Code"}
+                </>
+              )}
+            </button>
+
+            {/* Cancel & Edit details */}
+            <button
+              type="button"
+              onClick={() => {
+                setPendingToken("");
+                setOtp("");
+                setError("");
+                setResendSuccess(false);
+              }}
+              style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                color: "#dc2626",
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+                textAlign: "center",
+                padding: "6px",
+                fontFamily: "inherit",
+              }}
+            >
+              {lang === "mz" ? "← Inziahluhna tidanglam rawh (Edit Details)" : "← Cancel & Edit Details"}
+            </button>
+          </form>
+        </div>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -344,11 +724,48 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
 
           {/* Address full-width */}
           <div>
-            <label style={labelStyle}>
-              {lang === "mz"
-                ? "Physical Address (Company awmna hmun tak)"
-                : "Physical Address (Company Location)"}
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <label style={{ ...labelStyle, marginBottom: 0 }}>
+                {lang === "mz"
+                  ? "Physical Address (Company awmna hmun tak)"
+                  : "Physical Address (Company Location)"}
+              </label>
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={locating}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#1c7dfa",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: locating ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: 0,
+                  fontFamily: "inherit",
+                }}
+              >
+                {locating ? (
+                  <>
+                    <svg style={{ animation: "spin 1s linear infinite" }} width="12" height="12" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="#1c7dfa" strokeWidth="4" strokeDasharray="40" strokeDashoffset="10" />
+                    </svg>
+                    {lang === "mz" ? "Hmun zawng mek..." : "Locating..."}
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {lang === "mz" ? "Ka Awnna Hmun Hmang Rawh" : "Use Current Location"}
+                  </>
+                )}
+              </button>
+            </div>
             <input
               type="text"
               required
@@ -358,6 +775,21 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
               style={inputStyle}
               {...focusHandlers}
             />
+
+            {mapCoordinates && (
+              <div style={{ marginTop: "12px", borderRadius: "12px", overflow: "hidden", border: "1.5px solid #e5e7eb" }}>
+                <iframe
+                  title="Company Location Map"
+                  width="100%"
+                  height="220"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://maps.google.com/maps?q=${mapCoordinates.lat},${mapCoordinates.lon}&z=16&output=embed`}
+                />
+              </div>
+            )}
           </div>
 
           {/* Submit */}

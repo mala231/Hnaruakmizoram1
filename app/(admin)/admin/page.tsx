@@ -547,6 +547,30 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleHardDeleteEmployer = (id: string, name: string) => {
+    setConfirmDialog({
+      title: "⚠️ Permanent Account Deletion",
+      message: `DANGER: Employer "${name}" account te leh a hna ruak dah zawng zawng hi database atangin CHHIAH THLAK ZAWNG A NI DAWN A. Tichuan hmanah kir theih a ni lo. I duh takzet em?`,
+      onConfirm: async () => {
+        setSubmitting(true);
+        try {
+          const res = await fetch(`/api/admin/employers/${id}?permanent=true`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success) {
+            triggerAlert("success", `Employer "${name}" account permanent delete a ni tawh.`);
+            fetchData();
+          } else {
+            triggerAlert("error", data.error || "Permanent deletion failed.");
+          }
+        } catch (err) {
+          triggerAlert("error", "Server biak pawh a harsat.");
+        } finally {
+          setSubmitting(false);
+        }
+      }
+    });
+  };
+
   // REPORTS LOG MODERATION
   const handleDismissReport = async (id: number) => {
     setSubmitting(true);
@@ -661,7 +685,7 @@ export default function AdminDashboard() {
               Hnaruak Mizoram <span className="text-secondary font-medium text-xs border border-secondary/20 bg-secondary/5 rounded-full px-2 py-0.5 ml-1">Admin Panel</span>
             </span>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Link
               href="/"
@@ -670,7 +694,7 @@ export default function AdminDashboard() {
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11v11a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              Bul Tanna (Home)
+              Home
             </Link>
             <button
               onClick={handleLogout}
@@ -684,7 +708,7 @@ export default function AdminDashboard() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto py-12 px-container-margin-mobile md:px-container-margin-desktop flex flex-col gap-8">
-        
+
         {/* Intro */}
         <div className="flex flex-col gap-2">
           <h1 className="headline-lg text-primary">Admin Control Center</h1>
@@ -702,7 +726,7 @@ export default function AdminDashboard() {
             <span>{successMsg}</span>
           </div>
         )}
-        
+
         {errorMsg && (
           <div className="p-4 rounded-xl bg-error-container border border-error/20 text-on-error-container text-xs font-semibold flex items-center gap-2">
             <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -731,11 +755,10 @@ export default function AdminDashboard() {
                 setEditingId(null);
                 setEditingTickerId(null);
               }}
-              className={`px-5 py-3 font-display font-bold text-xs shrink-0 transition-all relative ${
-                activeTab === tab.id
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-on-surface-variant hover:text-primary"
-              }`}
+              className={`px-5 py-3 font-display font-bold text-xs shrink-0 transition-all relative ${activeTab === tab.id
+                ? "text-primary border-b-2 border-primary"
+                : "text-on-surface-variant hover:text-primary"
+                }`}
             >
               {tab.label}
             </button>
@@ -752,7 +775,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            
+
             {/* CATEGORIES & LOCATIONS PANELS */}
             {(activeTab === "categories" || activeTab === "locations") && (
               <>
@@ -866,7 +889,7 @@ export default function AdminDashboard() {
                 {/* List */}
                 <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md flex flex-col gap-4">
                   <h3 className="title-md text-primary border-b border-outline-variant/20 pb-2">Announcements List</h3>
-                  
+
                   {tickers.length === 0 ? (
                     <div className="py-12 text-center text-on-surface-variant text-sm font-semibold">
                       Ticker text siam a la awm lo.
@@ -888,10 +911,9 @@ export default function AdminDashboard() {
                                 item.text
                               )}
                             </div>
-                            
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              item.isActive ? "bg-success-container text-on-success-container" : "bg-surface-container text-on-surface-variant"
-                            }`}>
+
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.isActive ? "bg-success-container text-on-success-container" : "bg-surface-container text-on-surface-variant"
+                              }`}>
                               {item.isActive ? "Active" : "Inactive"}
                             </span>
                           </div>
@@ -946,7 +968,7 @@ export default function AdminDashboard() {
                         className="w-full text-xs text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-surface-container file:text-primary file:cursor-pointer"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="label-sm text-on-background/80 mb-1.5 block">Target Website URL</label>
                       <input
@@ -986,7 +1008,7 @@ export default function AdminDashboard() {
                 {/* Grid List */}
                 <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md flex flex-col gap-4">
                   <h3 className="title-md text-primary border-b border-outline-variant/20 pb-2">Active Banners</h3>
-                  
+
                   {ads.length === 0 ? (
                     <div className="py-12 text-center text-on-surface-variant text-sm font-semibold">
                       Ad banner dah a la awm lo.
@@ -1003,7 +1025,7 @@ export default function AdminDashboard() {
                           <div className="p-4 flex flex-col gap-2">
                             <p className="text-xs font-mono select-all truncate text-on-surface-variant">URL: {item.targetUrl}</p>
                             <p className="text-[11px] font-bold text-secondary">Position: {item.position}</p>
-                            
+
                             <div className="flex items-center justify-between border-t border-outline-variant/15 pt-3 mt-2 text-xs font-bold">
                               <button
                                 onClick={() => handleToggleAd(item)}
@@ -1034,7 +1056,7 @@ export default function AdminDashboard() {
             {activeTab === "employers" && (
               <div className="lg:col-span-3 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md">
                 <h3 className="title-md text-primary border-b border-outline-variant/20 pb-4 mb-4">Employers Moderation Feed</h3>
-                
+
                 {employers.length === 0 ? (
                   <div className="py-12 text-center text-on-surface-variant text-sm font-semibold">
                     Employer inregistrete an la awm lo.
@@ -1075,9 +1097,8 @@ export default function AdminDashboard() {
                               <p className="mt-0.5 text-on-surface-variant/70">{item.phone}</p>
                             </td>
                             <td className="py-4 px-4">
-                              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
-                                item.isDeleted ? "bg-error-container text-on-error-container" : "bg-success-container text-on-success-container"
-                              }`}>
+                              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${item.isDeleted ? "bg-error-container text-on-error-container" : "bg-success-container text-on-success-container"
+                                }`}>
                                 {item.isDeleted ? "Suspended" : "Active"}
                               </span>
                             </td>
@@ -1101,6 +1122,16 @@ export default function AdminDashboard() {
                                     </button>
                                   </>
                                 )}
+                                {item.isDeleted && (
+                                  <button
+                                    onClick={() => handleHardDeleteEmployer(item.id, item.username)}
+                                    disabled={submitting}
+                                    className="text-xs font-bold px-3 py-1.5 rounded-lg bg-error text-white hover:bg-error/80 cursor-pointer transition-colors"
+                                    title="Permanently delete this employer and all their data from the database"
+                                  >
+                                    Delete Account
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -1116,7 +1147,7 @@ export default function AdminDashboard() {
             {activeTab === "reports" && (
               <div className="lg:col-span-3 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md">
                 <h3 className="title-md text-primary border-b border-outline-variant/20 pb-4 mb-4">Seeker Reports Log</h3>
-                
+
                 {reports.length === 0 ? (
                   <div className="py-12 text-center text-on-surface-variant text-sm font-semibold">
                     Reports a la awm lo e.
@@ -1146,11 +1177,10 @@ export default function AdminDashboard() {
                               {item.details && <p className="mt-1 font-medium text-on-surface-variant/80 select-all">{item.details}</p>}
                             </td>
                             <td className="py-4 px-4">
-                              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
-                                item.status === "pending"
-                                  ? "bg-error-container text-on-error-container"
-                                  : "bg-surface-container text-on-surface-variant"
-                              }`}>
+                              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${item.status === "pending"
+                                ? "bg-error-container text-on-error-container"
+                                : "bg-surface-container text-on-surface-variant"
+                                }`}>
                                 {item.status}
                               </span>
                             </td>
@@ -1183,7 +1213,7 @@ export default function AdminDashboard() {
                       </tbody>
                     </table>
                   </div>
-                 )}
+                )}
               </div>
             )}
 
@@ -1195,28 +1225,26 @@ export default function AdminDashboard() {
                     <h3 className="title-md text-primary">About Us Page Content</h3>
                     <p className="text-xs text-on-surface-variant">Update the contents of your website's About page in English and Mizo.</p>
                   </div>
-                  
+
                   {/* Language Selector inside About tab */}
                   <div className="flex bg-surface-container rounded-lg p-1 border border-outline-variant/20 select-none self-start">
                     <button
                       type="button"
                       onClick={() => setAboutLangTab("mz")}
-                      className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                        aboutLangTab === "mz"
-                          ? "bg-primary text-on-primary shadow-sm"
-                          : "text-on-surface hover:text-primary"
-                      }`}
+                      className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${aboutLangTab === "mz"
+                        ? "bg-primary text-on-primary shadow-sm"
+                        : "text-on-surface hover:text-primary"
+                        }`}
                     >
                       Mizo Tawng
                     </button>
                     <button
                       type="button"
                       onClick={() => setAboutLangTab("en")}
-                      className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                        aboutLangTab === "en"
-                          ? "bg-primary text-on-primary shadow-sm"
-                          : "text-on-surface hover:text-primary"
-                      }`}
+                      className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${aboutLangTab === "en"
+                        ? "bg-primary text-on-primary shadow-sm"
+                        : "text-on-surface hover:text-primary"
+                        }`}
                     >
                       English
                     </button>
@@ -1455,10 +1483,10 @@ export default function AdminDashboard() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          Khawl mek...
+                          Saving...
                         </>
                       ) : (
-                        "Khawl Rawh (Save Details)"
+                        "Save Details"
                       )}
                     </button>
                   </div>

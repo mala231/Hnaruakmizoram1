@@ -138,7 +138,7 @@ export default function LoginForm({ lang }: LoginFormProps) {
           {/* Identity */}
           <div>
             <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#374151", marginBottom: "8px" }}>
-              {lang === "mz" ? "Username emaw Email" : "Username or Email"}
+              {lang === "mz" ? "Username, Email emaw Phone" : "Username, Email or Phone"}
             </label>
             <div style={{ position: "relative" }}>
               <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }}>
@@ -153,7 +153,7 @@ export default function LoginForm({ lang }: LoginFormProps) {
                 autoComplete="username"
                 value={identity}
                 onChange={(e) => setIdentity(e.target.value)}
-                placeholder={lang === "mz" ? "I username emaw email..." : "Your username or email..."}
+                placeholder={lang === "mz" ? "I username, email emaw phone..." : "Your username, email or phone..."}
                 style={inputStyle}
                 onFocus={(e) => { e.target.style.borderColor = "#1c7dfa"; e.target.style.boxShadow = "0 0 0 3px rgba(28,125,250,0.15)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.boxShadow = "none"; }}

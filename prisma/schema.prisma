@@ -104,6 +104,7 @@ model Report {
   details   String?  @db.Text
   status    String   @default("pending") // pending, reviewed, dismissed
   createdAt DateTime @default(now()) @map("created_at")
+  ipAddress String?  @map("ip_address")
 
   @@map("reports")
 }

@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { uploadImage } from "@/lib/cloudinary";
-import { signJWT } from "@/lib/auth";
+import { signPendingRegisterJWT } from "@/lib/auth";
+import { sendOtpEmail } from "@/lib/email";
+import { sendOtpSms } from "@/lib/sms";
 
 export async function POST(request: Request) {
   try {
@@ -43,13 +45,17 @@ export async function POST(request: Request) {
     // 2. Uniqueness Checks
     const existing = await prisma.employer.findFirst({
       where: {
-        OR: [{ username }, { email }],
+        OR: [
+          { username },
+          { email },
+          { phone }
+        ],
       },
     });
 
     if (existing) {
       return NextResponse.json(
-        { success: false, error: "Username emaw Email hi hman tawh a ni." },
+        { success: false, error: "Username, Email, emaw Phone number hi hman tawh a ni." },
         { status: 400 }
       );
     }
@@ -73,45 +79,36 @@ export async function POST(request: Request) {
     // 4. Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 5. Create Employer record
-    const employer = await prisma.employer.create({
-      data: {
-        username,
-        email,
-        phone,
-        address,
-        logoUrl,
-        passwordHash,
-      },
+    // 5. Generate OTP & Hashed OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = await bcrypt.hash(otpCode, 10);
+    const otpCreatedAt = Date.now();
+
+    // 6. Send OTP to email and phone (simulated)
+    try {
+      await sendOtpEmail(email, otpCode);
+      await sendOtpSms(phone, otpCode);
+    } catch (sendErr) {
+      console.error("Failed to dispatch registration OTP:", sendErr);
+    }
+
+    // 7. Sign JWT payload for pending registration
+    const pendingToken = await signPendingRegisterJWT({
+      username,
+      email,
+      phone,
+      address,
+      passwordHash,
+      logoUrl,
+      otpHash,
+      otpCreatedAt,
     });
 
-    // 6. Sign JWT Session
-    const token = await signJWT({
-      userId: employer.id,
-      role: "employer",
-    });
-
-    // 7. Return cookie-based response
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        id: employer.id,
-        username: employer.username,
-        email: employer.email,
-      },
+      pendingVerification: true,
+      token: pendingToken,
     });
-
-    response.cookies.set({
-      name: "employer_session",
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
-
-    return response;
   } catch (err) {
     console.error("Register error:", err);
     return NextResponse.json(

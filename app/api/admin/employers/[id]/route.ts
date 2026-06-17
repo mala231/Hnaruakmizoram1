@@ -51,7 +51,7 @@ export async function PUT(
   }
 }
 
-// DELETE to suspend / soft-delete an employer profile & hide listings
+// DELETE — soft-suspend by default; pass ?permanent=true for full hard deletion
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -66,12 +66,11 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get("permanent") === "true";
 
     // Check if employer exists
-    const employer = await prisma.employer.findUnique({
-      where: { id },
-    });
-
+    const employer = await prisma.employer.findUnique({ where: { id } });
     if (!employer) {
       return NextResponse.json(
         { success: false, error: "Employer hi hmuh a ni lo." },
@@ -79,7 +78,35 @@ export async function DELETE(
       );
     }
 
-    // Perform soft delete transaction
+    if (permanent) {
+      // Hard delete — remove all associated data then the employer row
+      // Order matters: delete child records before parent to satisfy FK constraints
+      await prisma.$transaction(async (tx) => {
+        // 1. Delete all reports on this employer's job posts
+        const jobIds = (
+          await tx.jobPost.findMany({
+            where: { employerId: id },
+            select: { id: true },
+          })
+        ).map((j) => j.id);
+
+        if (jobIds.length > 0) {
+          await tx.report.deleteMany({ where: { jobPostId: { in: jobIds } } });
+          await tx.payment.deleteMany({ where: { jobPostId: { in: jobIds } } });
+          await tx.jobPost.deleteMany({ where: { employerId: id } });
+        }
+
+        // 2. Delete any payments directly on employer
+        await tx.payment.deleteMany({ where: { employerId: id } });
+
+        // 3. Finally delete the employer record
+        await tx.employer.delete({ where: { id } });
+      });
+
+      return NextResponse.json({ success: true, permanent: true });
+    }
+
+    // Soft delete — mark isDeleted and hide listings
     await prisma.$transaction([
       prisma.employer.update({
         where: { id },
@@ -91,12 +118,13 @@ export async function DELETE(
       }),
     ]);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, permanent: false });
   } catch (err) {
     console.error("DELETE admin employer error:", err);
     return NextResponse.json(
-      { success: false, error: "Employer suspend a hlawhchham rih." },
+      { success: false, error: "Employer delete a hlawhchham rih." },
       { status: 500 }
     );
   }
 }
+

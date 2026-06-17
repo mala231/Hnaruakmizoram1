@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { cache } from "react";
 import { headers, cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { t } from "@/lib/i18n";
 import ReportTrigger from "@/components/ReportTrigger";
+
+// ISR: revalidate job detail pages every 2 minutes
+export const revalidate = 120;
 
 interface JobDetailPageProps {
   params: Promise<{
@@ -11,16 +16,21 @@ interface JobDetailPageProps {
   }>;
 }
 
+/**
+ * Cached DB fetch shared by generateMetadata and the page component.
+ * React cache() ensures only one DB query per request regardless of how
+ * many callers invoke this function.
+ */
+const getJobById = cache(async (id: string) =>
+  prisma.jobPost.findUnique({
+    where: { id },
+    include: { employer: true, category: true, location: true },
+  })
+);
+
 export async function generateMetadata({ params }: JobDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const job = await prisma.jobPost.findUnique({
-    where: { id },
-    include: {
-      employer: true,
-      category: true,
-      location: true,
-    },
-  });
+  const job = await getJobById(id);
 
   if (!job || job.status !== "live" || job.employer.isDeleted) {
     return {
@@ -60,15 +70,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  // 1. Fetch job post with relations
-  const job = await prisma.jobPost.findUnique({
-    where: { id },
-    include: {
-      employer: true,
-      category: true,
-      location: true,
-    },
-  });
+  // 1. Fetch job post with relations (shared cache with generateMetadata)
+  const job = await getJobById(id);
 
   // 2. Validate if job exists and is live/non-deleted
   if (!job || job.status !== "live" || job.employer.isDeleted) {
@@ -165,9 +168,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               flexShrink: 0
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={job.employer.logoUrl}
                 alt={`${job.employer.username} logo`}
+                width={80}
+                height={80}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             </div>
@@ -199,21 +204,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               </p>
             </div>
           </div>
-
-          {/* Info Quick Badge */}
-          <span style={{
-            backgroundColor: "#eff6ff",
-            color: "#1c7dfa",
-            fontSize: "12px",
-            fontWeight: 700,
-            padding: "8px 16px",
-            borderRadius: "100px",
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            alignSelf: "center"
-          }}>
-            {job.durationDays} Days Listing
-          </span>
         </div>
 
         {/* Workspace Columns */}

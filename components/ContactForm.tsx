@@ -37,7 +37,7 @@ export default function ContactForm({ lang }: ContactFormProps) {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, lang }),
       });
 
       const data = await res.json();

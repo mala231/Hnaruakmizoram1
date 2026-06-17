@@ -1,8 +1,13 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { t } from "@/lib/i18n";
 import SearchFilterBar from "@/components/SearchFilterBar";
+
+// ISR: revalidate homepage data every 60 seconds
+export const revalidate = 60;
 
 interface HomePageProps {
   searchParams: Promise<{
@@ -162,7 +167,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            Mizoram No.1 Job Directory
+            Mizoram Job Board
           </span>
 
           {/* Main heading */}
@@ -188,7 +193,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         {/* ── Floating Search Bar ── */}
         <div className="relative z-30 w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
           <div className="bg-white rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-100/60 p-2 -mb-8">
-            <SearchFilterBar districts={districts} categories={categories} lang={lang} />
+            {/* Suspense is required: SearchFilterBar uses useSearchParams() which
+                is a dynamic API. Wrapping in Suspense prevents Next.js from
+                triggering synchronous layout reads during hydration (forced reflows). */}
+            <Suspense
+              fallback={
+                <div className="w-full flex flex-col md:flex-row items-stretch gap-0 animate-pulse">
+                  <div className="flex-1 h-12 bg-blue-50 rounded-xl m-1" />
+                  <div className="w-36 h-12 bg-blue-50 rounded-xl m-1" />
+                  <div className="w-36 h-12 bg-blue-50 rounded-xl m-1" />
+                  <div className="w-28 h-12 bg-primary/20 rounded-xl m-1" />
+                </div>
+              }
+            >
+              <SearchFilterBar districts={districts} categories={categories} lang={lang} />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -278,9 +297,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <nav className="flex flex-col py-2">
                 <Link
                   href="/"
-                  className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all ${
-                    !categoryId ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-blue-50 hover:text-primary"
-                  }`}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all ${!categoryId ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-blue-50 hover:text-primary"
+                    }`}
                 >
                   <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -291,11 +309,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <Link
                     key={cat.id}
                     href={`/?categoryId=${cat.id}`}
-                    className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all ${
-                      categoryId === cat.id.toString()
-                        ? "bg-primary/10 text-primary"
-                        : "text-slate-500 hover:bg-blue-50 hover:text-primary"
-                    }`}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all ${categoryId === cat.id.toString()
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-500 hover:bg-blue-50 hover:text-primary"
+                      }`}
                   >
                     <span className="shrink-0 text-current">
                       <CategoryIcon name={cat.name} />
@@ -339,11 +356,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <Link
                     key={d.id}
                     href={`/?locationId=${d.id}`}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all ${
-                      locationId === d.id.toString()
-                        ? "bg-primary text-white"
-                        : "bg-blue-50 hover:bg-primary hover:text-white text-slate-500"
-                    }`}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all ${locationId === d.id.toString()
+                      ? "bg-primary text-white"
+                      : "bg-blue-50 hover:bg-primary hover:text-white text-slate-500"
+                      }`}
                   >
                     {d.name}
                   </Link>
@@ -359,9 +375,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
               <Link
                 href="/"
-                className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all ${
-                  !categoryId ? "bg-primary text-white shadow-sm" : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
-                }`}
+                className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all ${!categoryId ? "bg-primary text-white shadow-sm" : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
+                  }`}
               >
                 All
               </Link>
@@ -369,11 +384,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 <Link
                   key={cat.id}
                   href={`/?categoryId=${cat.id}`}
-                  className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all ${
-                    categoryId === cat.id.toString()
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
-                  }`}
+                  className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all ${categoryId === cat.id.toString()
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
+                    }`}
                 >
                   {cat.name}
                 </Link>
@@ -413,10 +427,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                       {/* Logo + Category badge */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={job.employer.logoUrl}
                             alt={`${job.employer.username} logo`}
+                            width={40}
+                            height={40}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -452,9 +467,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                           </svg>
                           {job.location.name}
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400 bg-blue-50 px-2.5 py-1 rounded-full">
-                          {job.durationDays}d
-                        </span>
                       </div>
                     </div>
 
@@ -472,22 +484,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             {/* Banner Ads — shown below jobs on mobile / below jobs always */}
             {advertisements.length > 0 && (
               <div className="flex flex-col gap-4 mt-4 lg:hidden">
-                {advertisements.map((ad) => (
-                  <a
-                    key={ad.id}
-                    href={ad.targetUrl.startsWith("http") ? ad.targetUrl : `https://${ad.targetUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full rounded-2xl overflow-hidden border border-blue-100 shadow-md hover:scale-[1.02] hover:shadow-lg transition-all bg-white cursor-pointer"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={ad.imageUrl}
-                      alt="Advertisement"
-                      className="w-full h-auto object-cover max-h-40"
-                    />
-                  </a>
-                ))}
+                {advertisements.map((ad) => {
+                  const isSlot2 = ad.position === "sidebar_2";
+                  const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
+                  
+                  return (
+                    <a
+                      key={ad.id}
+                      href={ad.targetUrl.startsWith("http") ? ad.targetUrl : `https://${ad.targetUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`block w-full rounded-2xl overflow-hidden border border-blue-100/80 shadow-md hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/15 transition-all duration-300 bg-white cursor-pointer ad-shine-effect ${effectClass}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={ad.imageUrl}
+                        alt="Advertisement"
+                        className="w-full h-auto object-cover max-h-40"
+                      />
+                    </a>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -496,22 +513,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {advertisements.length > 0 && (
             <aside className="hidden xl:flex flex-col gap-4 w-48 shrink-0 sticky top-20">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Sponsored</p>
-              {advertisements.map((ad) => (
-                <a
-                  key={ad.id}
-                  href={ad.targetUrl.startsWith("http") ? ad.targetUrl : `https://${ad.targetUrl}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full rounded-2xl overflow-hidden border border-blue-100 shadow-md hover:scale-[1.02] hover:shadow-lg transition-all bg-white cursor-pointer"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ad.imageUrl}
-                    alt="Advertisement"
-                    className="w-full h-auto object-cover max-h-64"
-                  />
-                </a>
-              ))}
+              {advertisements.map((ad) => {
+                const isSlot2 = ad.position === "sidebar_2";
+                const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
+                
+                return (
+                  <a
+                    key={ad.id}
+                    href={ad.targetUrl.startsWith("http") ? ad.targetUrl : `https://${ad.targetUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block w-full rounded-2xl overflow-hidden border border-blue-100/80 shadow-md hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/15 transition-all duration-300 bg-white cursor-pointer ad-shine-effect ${effectClass}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ad.imageUrl}
+                      alt="Advertisement"
+                      className="w-full h-auto object-cover max-h-64"
+                    />
+                  </a>
+                );
+              })}
             </aside>
           )}
 

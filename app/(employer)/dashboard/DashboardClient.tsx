@@ -82,7 +82,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
   // Filter listings
   const now = new Date();
-  
+
   const liveJobs = jobs.filter(
     (j) => j.status === "live" && j.expiresAt && new Date(j.expiresAt) > now
   );
@@ -145,7 +145,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
       if (data.isMock) {
         triggerAlert("success", "Razorpay Setup a awm loh vangin payment lem kalpui a ni dawn e...");
-        
+
         const mockRes = await fetch("/api/payments/mock-success", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -208,7 +208,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
       const data = await res.json();
       if (data.success) {
-        alert("Account delete a ni ta. Inhmupui leh vat kan beisei.");
+        alert("Account delete a ni ta.");
         router.push("/login");
         router.refresh();
       } else {
@@ -224,7 +224,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
   return (
     <div style={{ backgroundColor: "#fafbfc", minHeight: "100vh", padding: "48px 24px", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
       <div style={{ maxWidth: "1120px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "32px" }}>
-        
+
         {/* Dynamic Alerts */}
         {successMsg && (
           <div style={{
@@ -245,7 +245,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
             <span>{successMsg}</span>
           </div>
         )}
-        
+
         {errorMsg && (
           <div style={{
             padding: "16px",
@@ -378,7 +378,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
         {/* Dynamic Panels Workspace */}
         {activeTab === "listings" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            
+
             {/* Left/Middle Listings Main Feed */}
             <div style={{
               backgroundColor: "#ffffff",
@@ -390,7 +390,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
               flexDirection: "column",
               gap: "24px"
             }} className="lg:col-span-2">
-              
+
               {/* Inner Tabs selection */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #eef2ff", paddingBottom: "16px" }}>
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -451,8 +451,8 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                       {listingsTab === "live"
                         ? "Puanzar active lai i nei lo e."
                         : listingsTab === "expired"
-                        ? "Hna puanzar hun tawp tawh a awm lo."
-                        : "Hna tawlaili / payment la fel lo a awm lo."}
+                          ? "Hna puanzar hun tawp tawh a awm lo."
+                          : "Hna tawlaili / payment la fel lo a awm lo."}
                     </p>
                   </div>
                 </div>
@@ -519,7 +519,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                         >
                           {t("dashboard.delete_btn")}
                         </button>
-                        
+
                         {(listingsTab === "expired" || listingsTab === "draft") && (
                           <button
                             onClick={() => {
@@ -733,7 +733,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
             backgroundColor: "rgba(0,0,0,0.5)",
             backdropFilter: "blur(4px)"
           }} onClick={() => setExtendingJobId(null)} />
-          
+
           <div style={{
             position: "relative",
             width: "100%",
@@ -745,7 +745,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
             boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
             zIndex: 10,
           }}>
-            
+
             <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #f3f4f6", paddingBottom: "12px", marginBottom: "16px" }}>
               <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#1c7dfa", margin: 0 }}>Listing Renew / Extension</h3>
               <button
@@ -796,7 +796,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                   <span style={{ fontSize: "11px", textTransform: "uppercase" }}>Ni 15 (15 Days)</span>
                   <span style={{ fontSize: "18px", fontWeight: 800 }}>₹299</span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => setExtendingDuration(30)}
