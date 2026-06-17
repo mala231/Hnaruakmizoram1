@@ -65,3 +65,34 @@ export async function verifyPendingRegisterJWT(token: string): Promise<PendingRe
     return null;
   }
 }
+
+export interface PendingContactPayload {
+  name: string;
+  email: string;
+  message: string;
+  otpHash: string;
+  otpCreatedAt: number;
+}
+
+/**
+ * Signs a short-lived pending contact message verification token (10-minute validity window).
+ */
+export async function signPendingContactJWT(payload: PendingContactPayload): Promise<string> {
+  return new SignJWT({ ...payload as any })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("10m") // Token is active for 10 minutes
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verifies a pending contact token. Returns payload or null if invalid/expired.
+ */
+export async function verifyPendingContactJWT(token: string): Promise<PendingContactPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as PendingContactPayload;
+  } catch (error) {
+    return null;
+  }
+}
