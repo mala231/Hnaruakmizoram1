@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
+import { deleteJobFromAlgolia } from "@/lib/algolia";
 
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -104,6 +105,9 @@ export async function DELETE(
         data: { status: "reviewed" },
       }),
     ]);
+
+    // Remove reported job post from Algolia search index
+    await deleteJobFromAlgolia(report.jobPostId);
 
     return NextResponse.json({ success: true });
   } catch (err) {

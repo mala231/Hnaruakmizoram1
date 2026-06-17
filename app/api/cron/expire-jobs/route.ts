@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPreExpiryWarnings } from "@/lib/email";
+import { deleteMultipleJobsFromAlgolia } from "@/lib/algolia";
 
 export async function POST(request: Request) {
   try {
@@ -17,18 +18,32 @@ export async function POST(request: Request) {
 
     const now = new Date();
 
-    // 1. Mark expired job posts
-    const expiredCount = await prisma.jobPost.updateMany({
+    // Fetch IDs of live jobs matching expiry condition to remove from Algolia
+    const jobsToExpire = await prisma.jobPost.findMany({
       where: {
         status: "live",
         expiresAt: {
           lte: now,
         },
       },
+      select: { id: true }
+    });
+    const expiredIds = jobsToExpire.map((job) => job.id);
+
+    // 1. Mark expired job posts
+    const expiredCount = await prisma.jobPost.updateMany({
+      where: {
+        id: { in: expiredIds },
+      },
       data: {
         status: "expired",
       },
     });
+
+    // Remove from Algolia
+    if (expiredIds.length > 0) {
+      await deleteMultipleJobsFromAlgolia(expiredIds);
+    }
 
     // 2. Dispatch warning emails for posts expiring in 3 days
     const warningsSentCount = await sendPreExpiryWarnings();

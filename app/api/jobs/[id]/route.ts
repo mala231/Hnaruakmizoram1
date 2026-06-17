@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
+import { syncJobToAlgolia, deleteJobFromAlgolia } from "@/lib/algolia";
 
 async function verifyEmployer() {
   const cookieStore = await cookies();
@@ -104,6 +105,9 @@ export async function PUT(
       },
     });
 
+    // Sync edited job post to Algolia search index
+    await syncJobToAlgolia(id);
+
     return NextResponse.json({ success: true, data: updatedJob });
   } catch (err) {
     console.error("PUT job error:", err);
@@ -155,6 +159,9 @@ export async function DELETE(
       where: { id },
       data: { status: "deleted" },
     });
+
+    // Remove deleted job post from Algolia search index
+    await deleteJobFromAlgolia(id);
 
     return NextResponse.json({ success: true });
   } catch (err) {

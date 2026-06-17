@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { syncJobToAlgolia } from "@/lib/algolia";
 
 export async function POST(request: Request) {
   try {
@@ -86,6 +87,9 @@ export async function POST(request: Request) {
           },
         }),
       ]);
+
+      // Sync job post to Algolia search index
+      await syncJobToAlgolia(payment.jobPostId);
 
       console.log(`Payment confirmed and Job Post set to Live: ${payment.jobPostId}`);
 

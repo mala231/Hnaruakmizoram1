@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
+import { syncJobToAlgolia } from "@/lib/algolia";
 
 async function verifyEmployer() {
   const cookieStore = await cookies();
@@ -95,6 +96,9 @@ export async function POST(request: Request) {
         },
       }),
     ]);
+
+    // Sync job post to Algolia search index
+    await syncJobToAlgolia(jobPost.id);
 
     // Dispatch mock activation email to employer
     try {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
+import { deleteMultipleJobsFromAlgolia } from "@/lib/algolia";
 
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -78,6 +79,13 @@ export async function DELETE(
       );
     }
 
+    // Find all job IDs for this employer to remove them from Algolia index
+    const employerJobs = await prisma.jobPost.findMany({
+      where: { employerId: id },
+      select: { id: true }
+    });
+    const jobIds = employerJobs.map(j => j.id);
+
     if (permanent) {
       // Hard delete — remove all associated data then the employer row
       // Order matters: delete child records before parent to satisfy FK constraints
@@ -103,6 +111,11 @@ export async function DELETE(
         await tx.employer.delete({ where: { id } });
       });
 
+      // Remove jobs from Algolia
+      if (jobIds.length > 0) {
+        await deleteMultipleJobsFromAlgolia(jobIds);
+      }
+
       return NextResponse.json({ success: true, permanent: true });
     }
 
@@ -117,6 +130,11 @@ export async function DELETE(
         data: { status: "deleted" },
       }),
     ]);
+
+    // Remove jobs from Algolia
+    if (jobIds.length > 0) {
+      await deleteMultipleJobsFromAlgolia(jobIds);
+    }
 
     return NextResponse.json({ success: true, permanent: false });
   } catch (err) {
