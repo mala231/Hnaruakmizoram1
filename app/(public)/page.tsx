@@ -439,14 +439,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                       <div className="p-4 flex flex-col flex-grow gap-3">
                         {/* Logo + Category badge */}
                         <div className="flex items-start justify-between gap-2">
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
-                            <Image
-                              src={job.employer.logoUrl}
-                              alt={`${job.employer.username} logo`}
-                              width={40}
-                              height={40}
-                              className="w-full h-full object-cover"
-                            />
+                          {/* Bug #6 fix: guard nullable logoUrl */}
+                          <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
+                            {job.employer.logoUrl ? (
+                              <Image
+                                src={job.employer.logoUrl}
+                                alt={`${job.employer.username} logo`}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="w-full h-full flex items-center justify-center text-white text-sm font-bold"
+                                style={{ background: `hsl(${(job.employer.username?.charCodeAt(0) || 65) * 137 % 360}, 55%, 48%)` }}
+                              >
+                                {job.employer.username?.charAt(0)?.toUpperCase()}
+                              </div>
+                            )}
                           </div>
                           <span className="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">
                             {job.category.name}

@@ -57,6 +57,126 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Profile settings state
+  const [profileUsername, setProfileUsername] = useState(employer.username);
+  const [profileEmail, setProfileEmail] = useState(employer.email);
+  const [profilePhone, setProfilePhone] = useState(employer.phone);
+  const [profileAddress, setProfileAddress] = useState(employer.address);
+  const [profileLogo, setProfileLogo] = useState<File | null>(null);
+  const [profileLogoPreview, setProfileLogoPreview] = useState(employer.logoUrl);
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  const [locatingProfile, setLocatingProfile] = useState(false);
+  const [profileMapCoords, setProfileMapCoords] = useState<{ lat: number; lon: number } | null>(null);
+
+  const handleProfileLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileLogo(file);
+      setProfileLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleProfileUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      triggerAlert("error", "I browser-in geolocation a support lo.");
+      return;
+    }
+
+    setLocatingProfile(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setProfileMapCoords({ lat: latitude, lon: longitude });
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            {
+              headers: {
+                "Accept-Language": "en",
+                "User-Agent": "HnaruakMizoramEmployerPortal"
+              }
+            }
+          );
+
+          if (!response.ok) throw new Error("Geocoding failed");
+
+          const data = await response.json();
+          if (data && data.display_name) {
+            setProfileAddress(data.display_name);
+          } else {
+            setProfileAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          }
+        } catch (err) {
+          setProfileAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        } finally {
+          setLocatingProfile(false);
+        }
+      },
+      (geoErr) => {
+        let errorMsg = "Awnna hmun zawn chhuah a hlawhchham rih.";
+        if (geoErr.code === geoErr.PERMISSION_DENIED) {
+          errorMsg = "Hmun tak (location) luhna permission i deny a ni.";
+        }
+        triggerAlert("error", errorMsg);
+        setLocatingProfile(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingProfile(true);
+
+    // Validate email
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(profileEmail)) {
+      triggerAlert("error", "Email format a dik lo.");
+      setUpdatingProfile(false);
+      return;
+    }
+
+    // Validate phone
+    const phoneRegex = /^(?:\+91|0)?[6-9]\d{9}$/;
+    if (!phoneRegex.test(profilePhone.replace(/\s+/g, ""))) {
+      triggerAlert("error", "Phone number a dik lo (digit 10 a ni tur a ni).");
+      setUpdatingProfile(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("username", profileUsername);
+      formData.append("email", profileEmail);
+      formData.append("phone", profilePhone);
+      formData.append("address", profileAddress);
+      if (profileLogo) {
+        formData.append("logo", profileLogo);
+      }
+
+      const res = await fetch("/api/employer/update-profile", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        triggerAlert("success", "Profile thlak a hlawhtling ta!");
+        router.refresh();
+      } else {
+        triggerAlert("error", data.error || "Profile update a hlawhchham.");
+      }
+    } catch (err) {
+      triggerAlert("error", "Server biak pawh a harsat rih e.");
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
+
   // Dynamically load Razorpay script
   useEffect(() => {
     const script = document.createElement("script");
@@ -650,60 +770,329 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
         )}
 
         {activeTab === "settings" && (
-          <div style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid rgba(28,125,250,0.1)",
-            borderRadius: "24px",
-            padding: "32px",
-            boxShadow: "0 10px 30px rgba(28,125,250,0.06)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px"
-          }}>
-            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ef4444", borderBottom: "1px solid #fee2e2", paddingBottom: "16px", margin: 0 }}>
-              Account Hluai Leh Deletion
-            </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+            {/* Profile Edit Panel */}
+            <div style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(28,125,250,0.1)",
+              borderRadius: "24px",
+              padding: "32px",
+              boxShadow: "0 10px 30px rgba(28,125,250,0.06)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1c7dfa", borderBottom: "1px solid #f0f9ff", paddingBottom: "16px", margin: 0 }}>
+                Profile Tihdanglamna (Edit Profile)
+              </h2>
 
-            <div
-              style={{
-                padding: "24px",
-                borderRadius: "16px",
-                backgroundColor: "#fee2e2",
-                border: "1px solid rgba(239,68,68,0.15)",
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "24px"
-              }}
-              className="flex-col md:flex-row items-start md:items-center"
-            >
-              <div style={{ maxWidth: "560px" }}>
-                <h3 style={{ fontSize: "15px", color: "#b91c1c", fontWeight: 700, margin: "0 0 6px" }}>
-                  Account Delete Rawh (Soft-Delete Profile)
-                </h3>
-                <p style={{ fontSize: "13px", color: "#7f1d1d", fontWeight: 500, lineHeight: 1.5, margin: 0 }}>
-                  I account i delete chuan i profile leh hna ruak puanzar zawng zawngte hi public feed atangin thup nghal vek an ni ang. I payments records te erawh financial history tan khek rih an ni thung dawn nia.
-                </p>
-              </div>
+              <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                {/* Logo Upload */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                    Company Logo (Thlalak)
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                    {/* Preview */}
+                    <div
+                      style={{
+                        width: "80px",
+                        height: "80px",
+                        borderRadius: "16px",
+                        border: "2px dashed #d1d5db",
+                        background: "#f9fafb",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {profileLogoPreview ? (
+                        <img src={profileLogoPreview} alt="Logo preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#9ca3af">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </div>
+                    {/* Upload button */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfileLogoChange}
+                        style={{ display: "none" }}
+                        id="profile-logo-upload"
+                      />
+                      <label
+                        htmlFor="profile-logo-upload"
+                        style={{
+                          display: "inline-block",
+                          padding: "9px 18px",
+                          background: "#f1f5f9",
+                          border: "1.5px solid #cbd5e1",
+                          borderRadius: "10px",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#1c7dfa",
+                          cursor: "pointer",
+                          textAlign: "center"
+                        }}
+                      >
+                        Thlalak thlang rawh (Choose Image)
+                      </label>
+                      <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500 }}>
+                        PNG, JPG emaw WEBP (Max 2MB)
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-              <button
-                onClick={handleDeleteAccount}
-                disabled={submitting}
+                {/* Form fields in a 2x2 grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#374151", marginBottom: "8px" }}>
+                      Username (Mimal Hming)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={profileUsername}
+                      onChange={(e) => setProfileUsername(e.target.value)}
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#111827",
+                        background: "#f9fafb",
+                        border: "1.5px solid #e5e7eb",
+                        borderRadius: "12px",
+                        outline: "none",
+                        fontFamily: "inherit"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#374151", marginBottom: "8px" }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={profileEmail}
+                      onChange={(e) => setProfileEmail(e.target.value)}
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#111827",
+                        background: "#f9fafb",
+                        border: "1.5px solid #e5e7eb",
+                        borderRadius: "12px",
+                        outline: "none",
+                        fontFamily: "inherit"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#374151", marginBottom: "8px" }}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={profilePhone}
+                      onChange={(e) => setProfilePhone(e.target.value)}
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#111827",
+                        background: "#f9fafb",
+                        border: "1.5px solid #e5e7eb",
+                        borderRadius: "12px",
+                        outline: "none",
+                        fontFamily: "inherit"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <label style={{ fontSize: "13px", fontWeight: 700, color: "#374151", margin: 0 }}>
+                        Physical Address (Awmna Hmun)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleProfileUseCurrentLocation}
+                        disabled={locatingProfile}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#1c7dfa",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: locatingProfile ? "not-allowed" : "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: 0,
+                          fontFamily: "inherit"
+                        }}
+                      >
+                        {locatingProfile ? (
+                          <>
+                            <svg style={{ animation: "spin 1s linear infinite" }} width="12" height="12" fill="none" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10" stroke="#1c7dfa" strokeWidth="4" strokeDasharray="40" strokeDashoffset="10" />
+                            </svg>
+                            Hmun zawng mek...
+                          </>
+                        ) : (
+                          <>
+                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Ka Hmun Hmang Rawh
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={profileAddress}
+                      onChange={(e) => setProfileAddress(e.target.value)}
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#111827",
+                        background: "#f9fafb",
+                        border: "1.5px solid #e5e7eb",
+                        borderRadius: "12px",
+                        outline: "none",
+                        fontFamily: "inherit"
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {profileMapCoords && (
+                  <div style={{ borderRadius: "12px", overflow: "hidden", border: "1.5px solid #e5e7eb" }}>
+                    <iframe
+                      title="Profile Location Map"
+                      width="100%"
+                      height="220"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://maps.google.com/maps?q=${profileMapCoords.lat},${profileMapCoords.lon}&z=16&output=embed`}
+                    />
+                  </div>
+                )}
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={updatingProfile}
+                  style={{
+                    alignSelf: "flex-start",
+                    background: updatingProfile ? "#dbeafe" : "linear-gradient(135deg,#1c7dfa,#0a84ff)",
+                    color: updatingProfile ? "#6b7280" : "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    padding: "12px 28px",
+                    borderRadius: "100px",
+                    border: "none",
+                    cursor: updatingProfile ? "not-allowed" : "pointer",
+                    boxShadow: updatingProfile ? "none" : "0 4px 14px rgba(28,125,250,0.25)",
+                    fontFamily: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}
+                >
+                  {updatingProfile ? (
+                    <>
+                      <svg style={{ animation: "spin 1s linear infinite" }} width="16" height="16" fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="#6b7280" strokeWidth="3" strokeDasharray="60" strokeDashoffset="15" />
+                      </svg>
+                      Tihthar mek...
+                    </>
+                  ) : (
+                    "Profile Update Rawh"
+                  )}
+                </button>
+              </form>
+              <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+            </div>
+
+            {/* Account Deletion Panel */}
+            <div style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(28,125,250,0.1)",
+              borderRadius: "24px",
+              padding: "32px",
+              boxShadow: "0 10px 30px rgba(28,125,250,0.06)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ef4444", borderBottom: "1px solid #fee2e2", paddingBottom: "16px", margin: 0 }}>
+                Account Hluai Leh Deletion
+              </h2>
+
+              <div
                 style={{
-                  backgroundColor: "#ef4444",
-                  color: "#ffffff",
-                  fontWeight: 700,
-                  fontSize: "12px",
-                  padding: "12px 24px",
-                  borderRadius: "100px",
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                  flexShrink: 0,
-                  fontFamily: "inherit"
+                  padding: "24px",
+                  borderRadius: "16px",
+                  backgroundColor: "#fee2e2",
+                  border: "1px solid rgba(239,68,68,0.15)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "24px"
                 }}
+                className="flex-col md:flex-row items-start md:items-center"
               >
-                {submitting ? "Tih mek..." : t("dashboard.delete_account_btn")}
-              </button>
+                <div style={{ maxWidth: "560px" }}>
+                  <h3 style={{ fontSize: "15px", color: "#b91c1c", fontWeight: 700, margin: "0 0 6px" }}>
+                    Account Delete Rawh (Soft-Delete Profile)
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "#7f1d1d", fontWeight: 500, lineHeight: 1.5, margin: 0 }}>
+                    I account i delete chuan i profile leh hna ruak puanzar zawng zawngte hi public feed atangin thup nghal vek an ni ang. I payments records te erawh financial history tan khek rih an ni thung dawn nia.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={submitting}
+                  style={{
+                    backgroundColor: "#ef4444",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    padding: "12px 24px",
+                    borderRadius: "100px",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    flexShrink: 0,
+                    fontFamily: "inherit"
+                  }}
+                >
+                  {submitting ? "Tih mek..." : t("dashboard.delete_account_btn")}
+                </button>
+              </div>
             </div>
           </div>
         )}

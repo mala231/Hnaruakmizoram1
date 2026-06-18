@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   InstantSearch,
+  Configure,
+  useInstantSearch,
   useSearchBox,
   useMenu,
   useHits,
@@ -96,6 +98,8 @@ export default function AlgoliaSearchSection({
       indexName="job_posts"
       routing={true}
     >
+      {/* Lock results to 10 per page */}
+      <Configure hitsPerPage={10} />
       <SearchContent
         categories={categories}
         districts={districts}
@@ -113,14 +117,41 @@ function SearchContent({
   lang,
 }: AlgoliaSearchSectionProps) {
   // Access Algolia search tools using hooks
+  const { setIndexUiState } = useInstantSearch();
   const { query, refine: refineQuery } = useSearchBox();
   const categoryMenu = useMenu({ attribute: "categoryId" });
   const locationMenu = useMenu({ attribute: "locationId" });
   const { hits } = useHits();
   const pagination = usePagination();
 
+  /** Safely clear a single menu facet via setIndexUiState — avoids refine("") crash */
+  const clearMenuFacet = (attribute: "categoryId" | "locationId") => {
+    setIndexUiState((prev: any) => {
+      const menu = { ...(prev.menu || {}) };
+      delete menu[attribute];
+      return { ...prev, menu };
+    });
+  };
+
   // Local query state with instant-search debounce
   const [localQuery, setLocalQuery] = useState(query);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Local filter state — explicitly controlled so that sidebar tags and
+  // the search-bar dropdowns always stay in sync with each other.
+  const [localLocationId, setLocalLocationId] = useState(locationMenu.currentRefinement || "");
+  const [localCategoryId, setLocalCategoryId] = useState(categoryMenu.currentRefinement || "");
+
+  // Keep local filter state in sync when Algolia's URL routing changes state externally
+  useEffect(() => {
+    setLocalLocationId(locationMenu.currentRefinement || "");
+  }, [locationMenu.currentRefinement]);
+
+  useEffect(() => {
+    setLocalCategoryId(categoryMenu.currentRefinement || "");
+  }, [categoryMenu.currentRefinement]);
 
   useEffect(() => {
     setLocalQuery(query);
@@ -134,9 +165,62 @@ function SearchContent({
     return () => clearTimeout(timer);
   }, [localQuery]);
 
-  // Determine active refined values
-  const activeCategoryId = categoryMenu.items.find((i) => i.isRefined)?.value || "";
-  const activeLocationId = locationMenu.items.find((i) => i.isRefined)?.value || "";
+  // Collapse suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+        setActiveSuggestion(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Unique suggestion titles from hits (max 7) — Bug #1 fix: useMemo, not useCallback
+  const suggestions = useMemo(() => {
+    if (!localQuery.trim()) return [];
+    const seen = new Set<string>();
+    return hits
+      .filter((h: any) => {
+        const title = (h.title || "").toLowerCase();
+        const q = localQuery.toLowerCase();
+        if (!title.includes(q)) return false;
+        if (seen.has(title)) return false;
+        seen.add(title);
+        return true;
+      })
+      .slice(0, 7);
+  }, [hits, localQuery]);
+
+  const handleSuggestionClick = (hit: any) => {
+    setLocalQuery(hit.title);
+    refineQuery(hit.title);
+    setShowSuggestions(false);
+    setActiveSuggestion(-1);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveSuggestion((prev) => Math.min(prev + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveSuggestion((prev) => Math.max(prev - 1, -1));
+    } else if (e.key === "Enter" && activeSuggestion >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[activeSuggestion]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setActiveSuggestion(-1);
+    }
+  };
+
+  // Derive active IDs from local controlled state (not currentRefinement directly)
+  // This ensures dropdowns + tags are always in sync.
+  const activeCategoryId = localCategoryId;
+  const activeLocationId = localLocationId;
 
   const isFiltered = !!(query || activeCategoryId || activeLocationId);
 
@@ -146,9 +230,13 @@ function SearchContent({
   };
 
   const handleClearFilters = () => {
+    setLocalQuery("");
+    setLocalLocationId("");
+    setLocalCategoryId("");
     refineQuery("");
-    categoryMenu.refine("");
-    locationMenu.refine("");
+    clearMenuFacet("categoryId");
+    clearMenuFacet("locationId");
+    pagination.refine(0);
   };
 
   return (
@@ -160,18 +248,116 @@ function SearchContent({
             onSubmit={handleSearchSubmit}
             className="w-full flex flex-col md:flex-row items-stretch md:items-center gap-0"
           >
-            {/* Search text input */}
-            <div className="flex items-center gap-2 px-4 py-3 flex-1 border-b md:border-b-0 md:border-r border-outline-variant/20">
+            {/* Search text input with suggestions dropdown */}
+            <div ref={searchWrapperRef} className="relative flex items-center gap-2 px-4 py-3 flex-1 border-b md:border-b-0 md:border-r border-outline-variant/20">
               <svg className="w-5 h-5 text-primary/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
                 type="text"
                 value={localQuery}
-                onChange={(e) => setLocalQuery(e.target.value)}
+                onChange={(e) => {
+                  setLocalQuery(e.target.value);
+                  setShowSuggestions(true);
+                  setActiveSuggestion(-1);
+                }}
+                onFocus={() => {
+                  if (localQuery.trim()) setShowSuggestions(true);
+                }}
+                onKeyDown={handleInputKeyDown}
                 placeholder={t("home.search_placeholder", lang)}
+                autoComplete="off"
                 className="w-full bg-transparent border-none focus:outline-none text-sm font-medium text-on-background placeholder-on-surface-variant/50"
               />
+              {/* Clear button */}
+              {localQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocalQuery("");
+                    refineQuery("");
+                    setShowSuggestions(false);
+                  }}
+                  className="shrink-0 w-5 h-5 rounded-full bg-slate-200 hover:bg-primary/20 flex items-center justify-center transition-colors cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <svg className="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+
+              {/* Suggestions dropdown */}
+              {showSuggestions && localQuery.trim() && suggestions.length > 0 && (
+                <div
+                  className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-2xl shadow-2xl shadow-blue-900/15 border border-blue-100/80 z-50 overflow-hidden"
+                  style={{ minWidth: "260px" }}
+                >
+                  {/* Header */}
+                  <div className="px-4 py-2 border-b border-blue-50 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Suggestions</span>
+                  </div>
+
+                  {suggestions.map((hit: any, idx: number) => {
+                    const isActive = activeSuggestion === idx;
+                    // Highlight matching portion
+                    const title: string = hit.title || "";
+                    const q = localQuery.trim();
+                    const matchIdx = title.toLowerCase().indexOf(q.toLowerCase());
+                    const before = matchIdx >= 0 ? title.slice(0, matchIdx) : title;
+                    const match = matchIdx >= 0 ? title.slice(matchIdx, matchIdx + q.length) : "";
+                    const after = matchIdx >= 0 ? title.slice(matchIdx + q.length) : "";
+                    return (
+                      <button
+                        key={hit.objectID}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSuggestionClick(hit)}
+                        onMouseEnter={() => setActiveSuggestion(idx)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer group ${
+                          isActive ? "bg-primary/8" : "hover:bg-blue-50/70"
+                        }`}
+                      >
+                        {/* Job icon avatar */}
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-white text-xs font-bold shadow-sm"
+                          style={{
+                            background: `hsl(${((hit.employerName || "A").charCodeAt(0) * 137) % 360}, 55%, 48%)`,
+                          }}
+                        >
+                          {(hit.employerName || "J").charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-on-background truncate leading-tight">
+                            {before}
+                            <span className="text-primary font-bold">{match}</span>
+                            {after}
+                          </p>
+                          <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                            {hit.employerName}{hit.locationName ? ` · ${hit.locationName}` : ""}
+                          </p>
+                        </div>
+                        <svg className={`w-3.5 h-3.5 shrink-0 transition-opacity ${ isActive ? "text-primary opacity-100" : "text-slate-300 opacity-0 group-hover:opacity-100" }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+
+                  {/* Footer hint */}
+                  <div className="px-4 py-2 border-t border-blue-50 flex items-center gap-1.5">
+                    <kbd className="text-[9px] font-bold text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5">↑↓</kbd>
+                    <span className="text-[10px] text-slate-400">navigate</span>
+                    <kbd className="ml-1.5 text-[9px] font-bold text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5">Enter</kbd>
+                    <span className="text-[10px] text-slate-400">select</span>
+                    <kbd className="ml-1.5 text-[9px] font-bold text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5">Esc</kbd>
+                    <span className="text-[10px] text-slate-400">close</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* District dropdown filter */}
@@ -181,8 +367,17 @@ function SearchContent({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <select
-                value={activeLocationId}
-                onChange={(e) => locationMenu.refine(e.target.value)}
+                value={localLocationId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setLocalLocationId(val);
+                  if (val) {
+                    locationMenu.refine(val);
+                  } else {
+                    clearMenuFacet("locationId");
+                  }
+                  pagination.refine(0);
+                }}
                 className="bg-transparent border-none focus:outline-none text-sm font-medium text-on-background cursor-pointer w-full md:w-36"
               >
                 <option value="">{t("home.all_districts", lang)}</option>
@@ -200,8 +395,17 @@ function SearchContent({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 10V5a2 2 0 012-2z" />
               </svg>
               <select
-                value={activeCategoryId}
-                onChange={(e) => categoryMenu.refine(e.target.value)}
+                value={localCategoryId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setLocalCategoryId(val);
+                  if (val) {
+                    categoryMenu.refine(val);
+                  } else {
+                    clearMenuFacet("categoryId");
+                  }
+                  pagination.refine(0);
+                }}
                 className="bg-transparent border-none focus:outline-none text-sm font-medium text-on-background cursor-pointer w-full md:w-36"
               >
                 <option value="">{t("home.all_categories", lang)}</option>
@@ -236,7 +440,8 @@ function SearchContent({
               {isFiltered ? "Search Results" : "Featured Job Listings"}
             </h2>
             <p className="text-sm text-slate-500 font-medium mt-0.5">
-              {hits.length} {hits.length === 1 ? "job opening" : "job openings"} found
+              {/* Bug #3 fix: use nbHits (total across all pages) not hits.length (current page only) */}
+              {pagination.nbHits} {pagination.nbHits === 1 ? "job opening" : "job openings"} found
             </p>
           </div>
           {isFiltered && (
@@ -263,7 +468,11 @@ function SearchContent({
               </div>
               <nav className="flex flex-col py-2">
                 <button
-                  onClick={() => categoryMenu.refine("")}
+                  onClick={() => {
+                    // Clear category via setIndexUiState — refine("") crashes
+                    clearMenuFacet("categoryId");
+                    pagination.refine(0);
+                  }}
                   className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-left transition-all w-full cursor-pointer ${
                     !activeCategoryId
                       ? "bg-primary/10 text-primary"
@@ -280,7 +489,17 @@ function SearchContent({
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => categoryMenu.refine(isActive ? "" : cat.id.toString())}
+                      onClick={() => {
+                        if (activeCategoryId === cat.id.toString()) {
+                          // Already selected — deselect
+                          setLocalCategoryId("");
+                          clearMenuFacet("categoryId");
+                        } else {
+                          setLocalCategoryId(cat.id.toString());
+                          categoryMenu.refine(cat.id.toString());
+                        }
+                        pagination.refine(0);
+                      }}
                       className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-left transition-all w-full cursor-pointer ${
                         isActive
                           ? "bg-primary/10 text-primary"
@@ -331,7 +550,17 @@ function SearchContent({
                   return (
                     <button
                       key={d.id}
-                      onClick={() => locationMenu.refine(isActive ? "" : d.id.toString())}
+                      onClick={() => {
+                        if (activeLocationId === d.id.toString()) {
+                          // Already selected — deselect
+                          setLocalLocationId("");
+                          clearMenuFacet("locationId");
+                        } else {
+                          setLocalLocationId(d.id.toString());
+                          locationMenu.refine(d.id.toString());
+                        }
+                        pagination.refine(0);
+                      }}
                       className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
                         isActive
                           ? "bg-primary text-white"
@@ -351,7 +580,11 @@ function SearchContent({
             {/* Mobile category scroll bar */}
             <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
               <button
-                onClick={() => categoryMenu.refine("")}
+                onClick={() => {
+                  // Clear category via setIndexUiState — refine("") crashes
+                  clearMenuFacet("categoryId");
+                  pagination.refine(0);
+                }}
                 className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all cursor-pointer ${
                   !activeCategoryId
                     ? "bg-primary text-white shadow-sm"
@@ -365,7 +598,16 @@ function SearchContent({
                 return (
                   <button
                     key={cat.id}
-                    onClick={() => categoryMenu.refine(isActive ? "" : cat.id.toString())}
+                    onClick={() => {
+                      if (activeCategoryId === cat.id.toString()) {
+                        setLocalCategoryId("");
+                        clearMenuFacet("categoryId");
+                      } else {
+                        setLocalCategoryId(cat.id.toString());
+                        categoryMenu.refine(cat.id.toString());
+                      }
+                      pagination.refine(0);
+                    }}
                     className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all cursor-pointer ${
                       isActive
                         ? "bg-primary text-white shadow-sm"
@@ -481,48 +723,115 @@ function SearchContent({
                   ))}
                 </div>
 
-                {/* ─── Premium Client-Side Pagination ─── */}
+                {/* ─── Pagination ─── */}
                 {pagination.nbPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-blue-100">
-                    {/* Previous Button */}
-                    <button
-                      onClick={() => pagination.refine(pagination.currentRefinement - 1)}
-                      disabled={pagination.isFirstPage}
-                      className="w-10 h-10 rounded-xl border border-blue-100 bg-white flex items-center justify-center text-slate-500 font-bold hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:hover:bg-white cursor-pointer"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
+                  <div className="mt-8 pt-6 border-t border-blue-100 flex flex-col items-center gap-4">
+                    {/* Page info */}
+                    <p className="text-xs font-semibold text-slate-400">
+                      Page{" "}
+                      <span className="text-primary font-bold">{pagination.currentRefinement + 1}</span>
+                      {" "}of{" "}
+                      <span className="font-bold text-slate-600">{pagination.nbPages}</span>
+                      {" "}·{" "}
+                      <span className="font-bold text-slate-600">{hits.length}</span> jobs on this page
+                    </p>
 
-                    {/* Page Numbers */}
-                    {pagination.pages.map((p) => {
-                      const isActive = pagination.currentRefinement === p;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => pagination.refine(p)}
-                          className={`w-10 h-10 rounded-xl font-bold text-sm transition-all cursor-pointer ${
-                            isActive
-                              ? "bg-primary text-white shadow-md shadow-primary/20 scale-105"
-                              : "border border-blue-100 bg-white text-slate-600 hover:bg-blue-50"
-                          }`}
-                        >
-                          {p + 1}
-                        </button>
-                      );
-                    })}
+                    <div className="flex items-center gap-1.5">
+                      {/* First page */}
+                      <button
+                        onClick={() => { pagination.refine(0); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        disabled={pagination.isFirstPage}
+                        title="First page"
+                        className="w-9 h-9 rounded-xl border border-blue-100 bg-white flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+                        </svg>
+                      </button>
 
-                    {/* Next Button */}
-                    <button
-                      onClick={() => pagination.refine(pagination.currentRefinement + 1)}
-                      disabled={pagination.isLastPage}
-                      className="w-10 h-10 rounded-xl border border-blue-100 bg-white flex items-center justify-center text-slate-500 font-bold hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:hover:bg-white cursor-pointer"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                      {/* Previous */}
+                      <button
+                        onClick={() => { pagination.refine(pagination.currentRefinement - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        disabled={pagination.isFirstPage}
+                        title="Previous page"
+                        className="w-9 h-9 rounded-xl border border-blue-100 bg-white flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Page numbers with ellipsis */}
+                      {(() => {
+                        const current = pagination.currentRefinement;
+                        const total = pagination.nbPages;
+                        // Bug #2 fix: build page list safely, avoiding duplicate entries
+                        const pageSet = new Set<number>();
+                        const result: (number | "...")[] = [];
+                        const delta = 1;
+                        const rangeStart = Math.max(1, current - delta);
+                        const rangeEnd = Math.min(total - 2, current + delta);
+
+                        // Always show first page
+                        pageSet.add(0);
+                        result.push(0);
+
+                        if (rangeStart > 1) result.push("...");
+                        for (let i = rangeStart; i <= rangeEnd; i++) {
+                          if (!pageSet.has(i)) { pageSet.add(i); result.push(i); }
+                        }
+                        if (rangeEnd < total - 2) result.push("...");
+
+                        // Always show last page (only if different from first)
+                        if (total > 1 && !pageSet.has(total - 1)) {
+                          result.push(total - 1);
+                        }
+
+                        return result.map((p, idx) =>
+                          p === "..." ? (
+                            <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-slate-400 text-sm font-bold select-none">
+                              ···
+                            </span>
+                          ) : (
+                            <button
+                              key={`page-${p}`}
+                              onClick={() => { pagination.refine(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                              className={`w-9 h-9 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                                current === p
+                                  ? "bg-primary text-white shadow-md shadow-primary/25 scale-110"
+                                  : "border border-blue-100 bg-white text-slate-600 hover:bg-blue-50 hover:text-primary hover:border-primary/30"
+                              }`}
+                            >
+                              {(p as number) + 1}
+                            </button>
+                          )
+                        );
+                      })()}
+
+                      {/* Next */}
+                      <button
+                        onClick={() => { pagination.refine(pagination.currentRefinement + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        disabled={pagination.isLastPage}
+                        title="Next page"
+                        className="w-9 h-9 rounded-xl border border-blue-100 bg-white flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+
+                      {/* Last page */}
+                      <button
+                        onClick={() => { pagination.refine(pagination.nbPages - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        disabled={pagination.isLastPage}
+                        title="Last page"
+                        className="w-9 h-9 rounded-xl border border-blue-100 bg-white flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M6 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
