@@ -8,6 +8,7 @@ import PWARegistration from "@/components/PWARegistration";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import NextTopLoader from "nextjs-toploader";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -88,6 +89,7 @@ export default async function RootLayout({
       className={`${plusJakarta.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-on-background">
+        <NextTopLoader color="#1c7dfa" showSpinner={false} height={3} shadow="0 0 10px #1c7dfa,0 0 5px #1c7dfa" />
         <PWARegistration />
         <Ticker lang={lang} />
         <Header lang={lang} isLoggedIn={isLoggedIn} logoUrl={logoUrl} />
