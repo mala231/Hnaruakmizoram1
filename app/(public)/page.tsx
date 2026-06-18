@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import SearchFilterBar from "@/components/SearchFilterBar";
 import { isAlgoliaConfigured } from "@/lib/algolia";
 import AlgoliaSearchSection from "@/components/AlgoliaSearchSection";
+import FallbackJobList from "@/components/FallbackJobList";
 
 // ISR: revalidate homepage data every 60 seconds
 export const revalidate = 60;
@@ -425,83 +426,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {jobs.map((job, i) => (
-                    <Link
-                      key={job.id}
-                      href={`/jobs/${job.id}`}
-                      style={{ animationDelay: `${i * 40}ms` }}
-                      className="animate-fade-in-up bg-white border border-blue-100 hover:border-primary/40 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 group flex flex-col cursor-pointer"
-                    >
-                      {/* Top accent bar */}
-                      <div className="h-1 bg-gradient-to-r from-primary via-secondary to-tertiary" />
-
-                      <div className="p-4 flex flex-col flex-grow gap-3">
-                        {/* Logo + Category badge */}
-                        <div className="flex items-start justify-between gap-2">
-                          {/* Bug #6 fix: guard nullable logoUrl */}
-                          <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
-                            {job.employer.logoUrl ? (
-                              <Image
-                                src={job.employer.logoUrl}
-                                alt={`${job.employer.username} logo`}
-                                width={40}
-                                height={40}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div
-                                className="w-full h-full flex items-center justify-center text-white text-sm font-bold"
-                                style={{ background: `hsl(${(job.employer.username?.charCodeAt(0) || 65) * 137 % 360}, 55%, 48%)` }}
-                              >
-                                {job.employer.username?.charAt(0)?.toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <span className="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">
-                            {job.category.name}
-                          </span>
-                        </div>
-
-                        {/* Text */}
-                        <div className="flex-grow">
-                          <h3 className="font-display font-bold text-sm text-on-background group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                            {job.title}
-                          </h3>
-                          <div className="flex items-center gap-1 mt-1">
-                            {job.employer.isVerified && (
-                              <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                            <p className="text-[11px] text-secondary font-bold">{job.employer.username}</p>
-                          </div>
-                          <p className="text-xs text-slate-400 font-medium mt-2 line-clamp-2 leading-relaxed">
-                            {job.shortDescription}
-                          </p>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="pt-3 border-t border-blue-50 flex items-center justify-between">
-                          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {job.location.name}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* View button */}
-                      <div className="px-4 pb-4">
-                        <div className="w-full bg-blue-50 group-hover:bg-primary text-primary group-hover:text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 text-center">
-                          {t("jobs.view_details", lang)}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                <FallbackJobList jobs={jobs} lang={lang} />
               )}
 
               {/* Banner Ads — shown below jobs on mobile / below jobs always */}

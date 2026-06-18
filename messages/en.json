@@ -81,6 +81,7 @@
     "no_jobs": "No job vacancies found at the moment.",
     "active_count": "Active Jobs",
     "deadline": "Deadline",
+    "expires": "Expires",
     "category": "Category",
     "district": "District",
     "address": "Location/Address",
