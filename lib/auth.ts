@@ -96,3 +96,33 @@ export async function verifyPendingContactJWT(token: string): Promise<PendingCon
     return null;
   }
 }
+
+export interface ResetPasswordPayload {
+  email: string;
+  otpHash: string;
+  otpCreatedAt: number;
+}
+
+/**
+ * Signs a short-lived pending reset password token (15-minute validity window).
+ */
+export async function signResetPasswordJWT(payload: ResetPasswordPayload): Promise<string> {
+  return new SignJWT({ ...payload as any })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("15m") // Token is active for 15 minutes
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verifies a reset password token. Returns payload or null if invalid/expired.
+ */
+export async function verifyResetPasswordJWT(token: string): Promise<ResetPasswordPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as ResetPasswordPayload;
+  } catch (error) {
+    return null;
+  }
+}
+

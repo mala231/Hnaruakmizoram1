@@ -217,3 +217,27 @@ export async function sendOtpEmail(toEmail: string, otpCode: string): Promise<vo
   await sendEmail({ to: toEmail, subject, html });
 }
 
+/**
+ * Sends a password reset OTP verification email to the employer.
+ */
+export async function sendForgotPasswordOtpEmail(toEmail: string, otpCode: string): Promise<void> {
+  const subject = "Hnaruak Mizoram: Password Thlakna OTP Code";
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+      <h2 style="color: #1c7dfa; margin-bottom: 20px; border-bottom: 2px solid #1c7dfa; padding-bottom: 10px;">Password Reset OTP</h2>
+      <p>Dear Employer,</p>
+      <p>I password thlakna (reset) tur verification OTP code hnuaia mi hi hmang rawh le:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <span style="font-size: 32px; font-weight: 800; color: #1c7dfa; letter-spacing: 5px; padding: 10px 20px; background-color: #f0f7ff; border-radius: 8px; border: 1px solid #1c7dfa;">
+          ${otpCode}
+        </span>
+      </div>
+      <p>He OTP code hi <strong>minute 10</strong> chhung chauh a nung ang. I nih loh chuan he email hi ngaihthah rawh.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+      <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Hnaruak Mizoram.</p>
+    </div>
+  `;
+  await sendEmail({ to: toEmail, subject, html });
+}
+
+
