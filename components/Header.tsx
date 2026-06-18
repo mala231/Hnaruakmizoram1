@@ -228,6 +228,12 @@ export default function Header({
    SUB-COMPONENT: HeaderSearchForm
    Displays Districts dropdown (left), query input (middle), and orange search button (right)
    ────────────────────────────────────────────────────────────────────────── */
+type Suggestion = {
+  type: "job" | "category" | "location";
+  label: string;
+  id?: number;
+};
+
 function HeaderSearchForm({
   districts,
   lang,
@@ -241,7 +247,14 @@ function HeaderSearchForm({
   const [query, setQuery] = useState(searchParams?.get("query") || "");
   const [locationId, setLocationId] = useState(searchParams?.get("locationId") || "");
 
-  // Tracks whether user is actively typing — prevents URL sync from overwriting input
+  // Auto-suggest state
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const userIsTypingRef = useRef(false);
 
   // Build URL params helper (preserves active categoryId)
@@ -254,8 +267,19 @@ function HeaderSearchForm({
     return params;
   };
 
-  // Sync state from URL changes caused by external navigation (category pills, Clear Filters, etc.)
-  // Skipped while the user is actively typing to avoid overwriting the input
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+        setActiveIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Sync state from URL changes caused by external navigation (category pills, etc.)
   useEffect(() => {
     if (!userIsTypingRef.current) {
       setQuery(searchParams?.get("query") || "");
@@ -263,8 +287,31 @@ function HeaderSearchForm({
     }
   }, [searchParams]);
 
+  // Fetch auto-suggestions with 200ms debounce
+  useEffect(() => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    setIsFetchingSuggestions(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+        setShowSuggestions(data.suggestions?.length > 0);
+        setActiveIndex(-1);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsFetchingSuggestions(false);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   // Debounced instant search — fires 350ms after user stops typing
-  // Uses router.replace so keystrokes don't spam browser history
   useEffect(() => {
     userIsTypingRef.current = true;
     const timer = setTimeout(() => {
@@ -277,84 +324,259 @@ function HeaderSearchForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  // Explicit submit (orange button / Enter) — uses router.push for a history entry
+  // Explicit submit — closes suggestions and pushes to history
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     userIsTypingRef.current = false;
+    setShowSuggestions(false);
     const params = buildParams(query, locationId);
     const searchStr = params.toString();
     router.push(searchStr ? `/?${searchStr}` : "/");
   };
 
+  // Handle suggestion click
+  const handleSuggestionClick = (s: Suggestion) => {
+    setShowSuggestions(false);
+    setActiveIndex(-1);
+    if (s.type === "category" && s.id) {
+      // Navigate to category filter directly
+      const params = new URLSearchParams();
+      if (query.trim()) params.set("query", query.trim());
+      if (locationId) params.set("locationId", locationId);
+      params.set("categoryId", s.id.toString());
+      router.push(`/?${params.toString()}`);
+    } else if (s.type === "location" && s.id) {
+      // Set location filter
+      const params = new URLSearchParams();
+      if (query.trim()) params.set("query", query.trim());
+      params.set("locationId", s.id.toString());
+      const activeCategoryId = searchParams?.get("categoryId");
+      if (activeCategoryId) params.set("categoryId", activeCategoryId);
+      router.push(`/?${params.toString()}`);
+    } else {
+      // Job title — fill input and search
+      setQuery(s.label);
+      userIsTypingRef.current = false;
+      const params = buildParams(s.label, locationId);
+      router.push(`/?${params.toString()}`);
+    }
+    inputRef.current?.blur();
+  };
+
+  // Keyboard navigation inside dropdown
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.max(prev - 1, -1));
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[activeIndex]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setActiveIndex(-1);
+    }
+  };
+
+  // Icon per suggestion type
+  const typeIcon = (type: Suggestion["type"]) => {
+    if (type === "category") return (
+      <svg className="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h7" />
+      </svg>
+    );
+    if (type === "location") return (
+      <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    );
+    return (
+      <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    );
+  };
+
+  const typeLabel = (type: Suggestion["type"]) => {
+    if (type === "category") return "Category";
+    if (type === "location") return "District";
+    return null;
+  };
+
+  // Group suggestions by type for section headers
+  const jobSuggestions = suggestions.filter((s) => s.type === "job");
+  const categorySuggestions = suggestions.filter((s) => s.type === "category");
+  const locationSuggestions = suggestions.filter((s) => s.type === "location");
+
+  // Flat ordered list for keyboard navigation
+  const orderedSuggestions: Suggestion[] = [
+    ...jobSuggestions,
+    ...categorySuggestions,
+    ...locationSuggestions,
+  ];
+
   return (
-    <form
-      onSubmit={handleSearch}
-      className="w-full flex items-center border border-slate-200/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-xl overflow-hidden bg-white shadow-sm transition-all h-9 md:h-10"
-    >
-      {/* District Dropdown Selector */}
-      <div className="relative h-full flex items-center bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors shrink-0">
-        <span className="absolute left-2.5 pointer-events-none text-[10px]">📍</span>
-        <select
-          value={locationId}
+    <div ref={wrapperRef} className="relative w-full">
+      <form
+        onSubmit={handleSearch}
+        className="w-full flex items-center border border-slate-200/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-xl overflow-hidden bg-white shadow-sm transition-all h-9 md:h-10"
+      >
+        {/* District Dropdown Selector */}
+        <div className="relative h-full flex items-center bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors shrink-0">
+          <span className="absolute left-2.5 pointer-events-none text-[10px]">📍</span>
+          <select
+            value={locationId}
+            onChange={(e) => {
+              const val = e.target.value;
+              setLocationId(val);
+              const params = buildParams(query, val);
+              const searchStr = params.toString();
+              router.push(searchStr ? `/?${searchStr}` : "/");
+            }}
+            className="appearance-none bg-transparent h-full pl-7 pr-7 text-[11px] font-extrabold text-slate-600 cursor-pointer focus:outline-none"
+          >
+            <option value="">{lang === "mz" ? "District tin" : "All Districts"}</option>
+            {districts.map((d) => (
+              <option key={d.id} value={d.id.toString()}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+          <span className="absolute right-2.5 pointer-events-none text-[7px] text-slate-400">▼</span>
+        </div>
+
+        {/* Text search query — instant search + autocomplete */}
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          autoComplete="off"
           onChange={(e) => {
-            const val = e.target.value;
-            setLocationId(val);
-            // District changes are instant — no debounce
-            const params = buildParams(query, val);
-            const searchStr = params.toString();
-            router.push(searchStr ? `/?${searchStr}` : "/");
+            userIsTypingRef.current = true;
+            setQuery(e.target.value);
           }}
-          className="appearance-none bg-transparent h-full pl-7 pr-7 text-[11px] font-extrabold text-slate-600 cursor-pointer focus:outline-none"
-        >
-          <option value="">{lang === "mz" ? "District tin" : "All Districts"}</option>
-          {districts.map((d) => (
-            <option key={d.id} value={d.id.toString()}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-        <span className="absolute right-2.5 pointer-events-none text-[7px] text-slate-400">▼</span>
-      </div>
+          onFocus={() => {
+            if (suggestions.length > 0) setShowSuggestions(true);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={lang === "mz" ? "Hna hming, hmun, company..." : "Search jobs, location, company..."}
+          className="flex-grow h-full bg-transparent px-3 text-xs md:text-sm text-slate-800 focus:outline-none placeholder-slate-400 font-medium min-w-0"
+        />
 
-      {/* Text search query — instant search on change */}
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={lang === "mz" ? "Hna hming, hmun, company..." : "Search jobs, location, company..."}
-        className="flex-grow h-full bg-transparent px-3 text-xs md:text-sm text-slate-800 focus:outline-none placeholder-slate-400 font-medium min-w-0"
-      />
+        {/* Clear (✕) button */}
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setSuggestions([]);
+              setShowSuggestions(false);
+              const params = buildParams("", locationId);
+              const searchStr = params.toString();
+              router.replace(searchStr ? `/?${searchStr}` : "/");
+            }}
+            className="h-full px-2 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+            aria-label="Clear search"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
 
-      {/* Clear (✕) button — visible when query has text */}
-      {query && (
+        {/* Orange search submit button */}
         <button
-          type="button"
-          onClick={() => {
-            setQuery("");
-            const params = buildParams("", locationId);
-            const searchStr = params.toString();
-            router.replace(searchStr ? `/?${searchStr}` : "/");
-          }}
-          className="h-full px-2 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
-          aria-label="Clear search"
+          type="submit"
+          className="h-full px-4 md:px-5 bg-amber-500 hover:bg-amber-600 text-white transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+          aria-label="Search"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-3.5 md:w-4 h-3.5 md:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </button>
-      )}
+      </form>
 
-      {/* Orange search submit button */}
-      <button
-        type="submit"
-        className="h-full px-4 md:px-5 bg-amber-500 hover:bg-amber-600 text-white transition-colors flex items-center justify-center shrink-0 cursor-pointer"
-        aria-label="Search"
-      >
-        <svg className="w-3.5 md:w-4 h-3.5 md:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </button>
-    </form>
+      {/* ── SUGGESTION DROPDOWN ── */}
+      {showSuggestions && orderedSuggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          {/* Job title suggestions */}
+          {jobSuggestions.length > 0 && (
+            <div>
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                Jobs
+              </div>
+              {jobSuggestions.map((s) => {
+                const idx = orderedSuggestions.indexOf(s);
+                return (
+                  <button
+                    key={`job-${s.label}`}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(s); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-slate-700 hover:bg-primary/5 transition-colors cursor-pointer ${activeIndex === idx ? "bg-primary/8 text-primary" : ""}`}
+                  >
+                    {typeIcon(s.type)}
+                    <span className="flex-1 truncate">{s.label}</span>
+                    <span className="text-[10px] text-slate-300">↵</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Category suggestions */}
+          {categorySuggestions.length > 0 && (
+            <div>
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-y border-slate-100">
+                Categories
+              </div>
+              {categorySuggestions.map((s) => {
+                const idx = orderedSuggestions.indexOf(s);
+                return (
+                  <button
+                    key={`cat-${s.id}`}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(s); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-slate-700 hover:bg-primary/5 transition-colors cursor-pointer ${activeIndex === idx ? "bg-primary/8 text-primary" : ""}`}
+                  >
+                    {typeIcon(s.type)}
+                    <span className="flex-1 truncate">{s.label}</span>
+                    <span className="text-[10px] font-medium text-blue-400 bg-blue-50 px-1.5 py-0.5 rounded">Category</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Location suggestions */}
+          {locationSuggestions.length > 0 && (
+            <div>
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-y border-slate-100">
+                Districts
+              </div>
+              {locationSuggestions.map((s) => {
+                const idx = orderedSuggestions.indexOf(s);
+                return (
+                  <button
+                    key={`loc-${s.id}`}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(s); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-slate-700 hover:bg-primary/5 transition-colors cursor-pointer ${activeIndex === idx ? "bg-primary/8 text-primary" : ""}`}
+                  >
+                    {typeIcon(s.type)}
+                    <span className="flex-1 truncate">{s.label}</span>
+                    <span className="text-[10px] font-medium text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">District</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
