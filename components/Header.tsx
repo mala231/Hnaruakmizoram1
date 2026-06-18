@@ -46,15 +46,15 @@ export default function Header({ lang, isLoggedIn, logoUrl }: HeaderProps) {
         {/* Desktop CTA + Language Toggle */}
         <div className="flex items-center gap-3 shrink-0 ml-auto">
           {/* Language Toggle Dropdown */}
-          <div className="relative flex items-center bg-blue-50 border border-blue-200/60 rounded-full px-3 py-1.5 text-xs font-bold text-slate-600 gap-1.5 hover:border-primary/50 transition-colors">
-            <span>🌐</span>
+          <div className="relative flex items-center bg-blue-50 border border-blue-200/60 rounded-full px-2 py-1 text-[11px] font-bold text-slate-600 gap-1 hover:border-primary/50 transition-colors">
+            <span className="text-xs">🌐</span>
             <select
               value={lang}
               onChange={(e) => setLangCookie(e.target.value)}
-              className="bg-transparent border-none focus:outline-none text-xs font-bold text-slate-600 cursor-pointer pr-1"
+              className="bg-transparent border-none focus:outline-none text-[11px] font-bold text-slate-600 cursor-pointer pr-0.5"
             >
-              <option value="mz">Mizo</option>
-              <option value="en">English</option>
+              <option value="mz">Mz</option>
+              <option value="en">En</option>
             </select>
           </div>
 
@@ -156,8 +156,8 @@ export default function Header({ lang, isLoggedIn, logoUrl }: HeaderProps) {
               onChange={(e) => setLangCookie(e.target.value)}
               className="bg-white border border-blue-200/60 focus:outline-none rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600 cursor-pointer"
             >
-              <option value="mz">Mizo</option>
-              <option value="en">English</option>
+              <option value="mz">Mz</option>
+              <option value="en">En</option>
             </select>
           </div>
 
