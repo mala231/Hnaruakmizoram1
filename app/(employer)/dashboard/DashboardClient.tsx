@@ -423,18 +423,9 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }} className="justify-center md:justify-start">
                 <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#0f1b30", margin: 0, lineHeight: 1.2 }}>{employer.username}</h1>
                 {employer.isVerified && (
-                  <span style={{
-                    backgroundColor: "#e0f2fe",
-                    color: "#1c7dfa",
-                    fontSize: "9px",
-                    fontWeight: 800,
-                    padding: "3px 8px",
-                    borderRadius: "100px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em"
-                  }}>
-                    Verified
-                  </span>
+                  <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{ color: "#1c7dfa", width: "20px", height: "20px" }} title="Verified Employer">
+                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
                 )}
               </div>
               <p style={{ fontSize: "14px", color: "#4b5563", fontWeight: 600, marginTop: "6px", marginBottom: 0 }}>
