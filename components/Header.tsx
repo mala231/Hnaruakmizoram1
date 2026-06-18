@@ -26,13 +26,6 @@ export default function Header({ lang, isLoggedIn, logoUrl }: HeaderProps) {
     window.location.reload();
   };
 
-  const navLinks = [
-    { href: "/", label: t("nav.home", lang) },
-    { href: "/about", label: t("nav.about", lang) },
-    { href: "/contact", label: t("nav.contact", lang) },
-    { href: "/privacy", label: t("nav.privacy", lang) },
-  ];
-
   return (
     <header className="sticky top-0 z-40 w-full bg-white/96 backdrop-blur-lg shadow-[0_2px_16px_rgba(79,142,247,0.06)] border-b border-blue-100/70 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop h-16 flex items-center justify-between gap-6">
@@ -50,47 +43,19 @@ export default function Header({ lang, isLoggedIn, logoUrl }: HeaderProps) {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                pathname === link.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-slate-500 hover:text-primary hover:bg-primary/8"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
         {/* Desktop CTA + Language Toggle */}
-        <div className="hidden lg:flex items-center gap-3 shrink-0">
-          {/* Language Toggle */}
-          <div className="flex items-center bg-blue-50 border border-blue-200/60 rounded-full p-0.5">
-            <button
-              onClick={() => setLangCookie("mz")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
-                lang === "mz"
-                  ? "bg-primary text-white shadow-sm shadow-primary/30"
-                  : "text-slate-500 hover:text-primary"
-              }`}
+        <div className="flex items-center gap-3 shrink-0 ml-auto">
+          {/* Language Toggle Dropdown */}
+          <div className="relative flex items-center bg-blue-50 border border-blue-200/60 rounded-full px-3 py-1.5 text-xs font-bold text-slate-600 gap-1.5 hover:border-primary/50 transition-colors">
+            <span>🌐</span>
+            <select
+              value={lang}
+              onChange={(e) => setLangCookie(e.target.value)}
+              className="bg-transparent border-none focus:outline-none text-xs font-bold text-slate-600 cursor-pointer pr-1"
             >
-              Mizo
-            </button>
-            <button
-              onClick={() => setLangCookie("en")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
-                lang === "en"
-                  ? "bg-primary text-white shadow-sm shadow-primary/30"
-                  : "text-slate-500 hover:text-primary"
-              }`}
-            >
-              English
-            </button>
+              <option value="mz">Mizo</option>
+              <option value="en">English</option>
+            </select>
           </div>
 
           {isLoggedIn ? (
@@ -181,52 +146,19 @@ export default function Header({ lang, isLoggedIn, logoUrl }: HeaderProps) {
       {/* Mobile Navigation Drawer */}
       {isOpen && (
         <div className="lg:hidden bg-white border-b border-blue-100 py-4 px-container-margin-mobile flex flex-col gap-4 shadow-lg">
-          <nav className="flex flex-col gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className={`px-4 py-3 rounded-2xl text-sm font-semibold transition-colors ${
-                  pathname === link.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-slate-500 hover:text-primary hover:bg-primary/8"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <hr className="border-blue-100" />
-
-          {/* Mobile Language Switcher */}
-          <div className="flex items-center justify-between px-4 py-1.5 bg-blue-50 rounded-2xl border border-blue-100">
+          {/* Mobile Language Switcher Dropdown */}
+          <div className="flex items-center justify-between px-4 py-2 bg-blue-50 rounded-2xl border border-blue-100">
             <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
               🌐 Language
             </span>
-            <div className="flex items-center bg-white border border-blue-200/60 rounded-full p-0.5">
-              <button
-                onClick={() => setLangCookie("mz")}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all duration-300 ${
-                  lang === "mz"
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-slate-500 hover:text-primary"
-                }`}
-              >
-                Mizo
-              </button>
-              <button
-                onClick={() => setLangCookie("en")}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all duration-300 ${
-                  lang === "en"
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-slate-500 hover:text-primary"
-                }`}
-              >
-                English
-              </button>
-            </div>
+            <select
+              value={lang}
+              onChange={(e) => setLangCookie(e.target.value)}
+              className="bg-white border border-blue-200/60 focus:outline-none rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600 cursor-pointer"
+            >
+              <option value="mz">Mizo</option>
+              <option value="en">English</option>
+            </select>
           </div>
 
           <hr className="border-blue-100" />
