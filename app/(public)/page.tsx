@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { t } from "@/lib/i18n";
-import SearchFilterBar from "@/components/SearchFilterBar";
 import { isAlgoliaConfigured } from "@/lib/algolia";
 import AlgoliaSearchSection from "@/components/AlgoliaSearchSection";
 import FallbackJobList from "@/components/FallbackJobList";
@@ -199,28 +198,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </Link>
         </div>
 
-        {/* ── Floating Search Bar ── */}
-        {!useAlgolia && (
-          <div className="relative z-30 w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
-            <div className="bg-white rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-100/60 p-2 -mb-8">
-              {/* Suspense is required: SearchFilterBar uses useSearchParams() which
-                  is a dynamic API. Wrapping in Suspense prevents Next.js from
-                  triggering synchronous layout reads during hydration (forced reflows). */}
-              <Suspense
-                fallback={
-                  <div className="w-full flex flex-col md:flex-row items-stretch gap-0 animate-pulse">
-                    <div className="flex-1 h-12 bg-blue-50 rounded-xl m-1" />
-                    <div className="w-36 h-12 bg-blue-50 rounded-xl m-1" />
-                    <div className="w-36 h-12 bg-blue-50 rounded-xl m-1" />
-                    <div className="w-28 h-12 bg-primary/20 rounded-xl m-1" />
-                  </div>
-                }
-              >
-                <SearchFilterBar districts={districts} categories={categories} lang={lang} />
-              </Suspense>
-            </div>
-          </div>
-        )}
+
       </section>
 
       {/* ── FEATURE STRIP ── */}
@@ -274,7 +252,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
       {!useAlgolia && (
-        <section className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col">
+        <section
+          className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
+        >
 
           {/* Section header */}
           <div className="flex items-center justify-between mb-8">
@@ -491,12 +471,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* ── Algolia Content (if configured) ── */}
       {useAlgolia && (
-        <AlgoliaSearchSection
-          categories={categories}
-          districts={districts}
-          advertisements={advertisements}
-          lang={lang}
-        />
+        <Suspense fallback={
+          <div className="w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop py-12 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        }>
+          <AlgoliaSearchSection
+            categories={categories}
+            districts={districts}
+            advertisements={advertisements}
+            lang={lang}
+          />
+        </Suspense>
       )}
 
     </div>

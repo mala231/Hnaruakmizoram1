@@ -83,6 +83,11 @@ export default async function RootLayout({
     }
   }
 
+  const [categories, districts] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.location.findMany({ orderBy: { name: "asc" } }),
+  ]);
+
   return (
     <html
       lang={lang}
@@ -92,7 +97,13 @@ export default async function RootLayout({
         <NextTopLoader color="#1c7dfa" showSpinner={false} height={3} shadow="0 0 10px #1c7dfa,0 0 5px #1c7dfa" />
         <PWARegistration />
         <Ticker lang={lang} />
-        <Header lang={lang} isLoggedIn={isLoggedIn} logoUrl={logoUrl} />
+        <Header
+          lang={lang}
+          isLoggedIn={isLoggedIn}
+          logoUrl={logoUrl}
+          categories={categories}
+          districts={districts}
+        />
         <main className="flex-grow flex-col flex">
           {children}
         </main>
