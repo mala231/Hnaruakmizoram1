@@ -12,6 +12,7 @@ interface JobPost {
   status: string;
   durationDays: number;
   expiresAt: string | null;
+  deadline: string;
   createdAt: string;
   category: { name: string };
   location: { name: string };
@@ -590,9 +591,9 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                         <p style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, marginTop: "4px", marginBottom: 0 }}>
                           {job.category.name} • District: {job.location.name}
                         </p>
-                        {job.expiresAt && (
+                        {job.deadline && (
                           <p style={{ fontSize: "11px", color: "#1c7dfa", fontWeight: 700, marginTop: "6px", marginBottom: 0 }}>
-                            Expires: {new Date(job.expiresAt).toLocaleDateString()}
+                            Deadline: {new Date(job.deadline).toLocaleDateString()}
                           </p>
                         )}
                       </div>

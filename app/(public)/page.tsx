@@ -4,8 +4,6 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { t } from "@/lib/i18n";
-import { isAlgoliaConfigured } from "@/lib/algolia";
-import AlgoliaSearchSection from "@/components/AlgoliaSearchSection";
 import FallbackJobList from "@/components/FallbackJobList";
 
 // ISR: revalidate homepage data every 60 seconds
@@ -13,9 +11,7 @@ export const revalidate = 60;
 
 interface HomePageProps {
   searchParams: Promise<{
-    query?: string;
-    locationId?: string;
-    categoryId?: string;
+    sortBy?: string;
   }>;
 }
 
@@ -74,7 +70,7 @@ function CategoryIcon({ name }: { name: string }) {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const { query, locationId, categoryId } = await searchParams;
+  const { sortBy } = await searchParams;
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
@@ -88,90 +84,69 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     }),
   ]);
 
-  // 2. Build where filter clauses (only if not using Algolia fallback)
-  const useAlgolia = isAlgoliaConfigured();
-  let jobs: any[] = [];
-  let isFiltered = false;
+  let orderByClause: any = { createdAt: "desc" };
+  if (sortBy === "name") {
+    orderByClause = { title: "asc" };
+  } else if (sortBy === "deadline") {
+    orderByClause = { deadline: "asc" };
+  }
 
-  if (!useAlgolia) {
-    const whereClause: any = {
+  // 2. Fetch live listings
+  const jobs = await prisma.jobPost.findMany({
+    where: {
       status: "live",
       employer: { isDeleted: false },
-    };
-
-    if (locationId) {
-      const locId = parseInt(locationId, 10);
-      if (!isNaN(locId)) whereClause.locationId = locId;
-    }
-    if (categoryId) {
-      const catId = parseInt(categoryId, 10);
-      if (!isNaN(catId)) whereClause.categoryId = catId;
-    }
-    if (query && query.trim()) {
-      whereClause.OR = [
-        { title: { contains: query.trim(), mode: "insensitive" } },
-        { shortDescription: { contains: query.trim(), mode: "insensitive" } },
-      ];
-    }
-
-    // 3. Fetch filtered live listings
-    jobs = await prisma.jobPost.findMany({
-      where: whereClause,
-      include: { employer: true, category: true, location: true },
-      orderBy: { createdAt: "desc" },
-    });
-
-    isFiltered = !!(query || locationId || categoryId);
-  }
+    },
+    include: { employer: true, category: true, location: true },
+    orderBy: orderByClause,
+  });
 
   return (
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
 
       {/* ── HERO SECTION ── */}
       <section className="relative" style={{
-        minHeight: "500px",
         background: "radial-gradient(at 0% 0%, rgba(147, 197, 253, 0.45) 0px, transparent 60%), radial-gradient(at 100% 0%, rgba(122, 179, 250, 0.35) 0px, transparent 60%), radial-gradient(at 50% 100%, rgba(245, 248, 255, 1) 0px, transparent 50%), linear-gradient(135deg, #f0f6ff 0%, #ffffff 100%)"
       }}>
 
         {/* Background animations container (safely clips background blobs without clipping overlapping search bar) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Ambient mesh background shapes */}
-          <div className="absolute top-12 right-[10%] w-72 h-72 rounded-full bg-gradient-to-tr from-secondary/25 to-tertiary/25 blur-3xl animate-float-a" />
-          <div className="absolute left-[5%] bottom-10 w-56 h-56 rounded-full bg-gradient-to-br from-primary/15 to-secondary/15 blur-2xl animate-float-b" />
+          <div className="absolute top-6 right-[10%] w-48 h-48 rounded-full bg-gradient-to-tr from-secondary/20 to-tertiary/20 blur-3xl animate-float-a" />
+          <div className="absolute left-[5%] bottom-4 w-36 h-36 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 blur-2xl animate-float-b" />
         </div>
 
-        {/* Floating Glassmorphic UI Card (Mock Job Post) in Right Half */}
-        <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-80 h-72 rounded-3xl border border-white/50 bg-white/10 backdrop-blur-xl shadow-2xl shadow-blue-500/5 hidden lg:flex flex-col p-6 gap-4 animate-float-c" style={{ transform: "rotate(2deg)" }}>
+        {/* Floating Glassmorphic UI Card */}
+        <div className="absolute right-[8%] top-1/2 -translate-y-1/2 w-56 h-52 rounded-2xl border border-white/50 bg-white/10 backdrop-blur-xl shadow-2xl shadow-blue-500/5 hidden xl:flex flex-col p-4 gap-3 animate-float-c" style={{ transform: "rotate(2deg)" }}>
           <div className="flex items-center justify-between">
-            <span className="bg-primary/20 text-primary text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+            <span className="bg-primary/20 text-primary text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
               Featured vacancy
             </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
           </div>
-          <div className="flex gap-3 items-center">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center font-extrabold text-primary text-sm shadow-sm">
+          <div className="flex gap-2.5 items-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center font-extrabold text-primary text-xs shadow-sm">
               M
             </div>
             <div className="flex-grow flex flex-col gap-1">
-              <div className="h-3 w-32 bg-slate-800/20 rounded-full" />
-              <div className="h-2 w-20 bg-slate-800/10 rounded-full" />
+              <div className="h-2.5 w-24 bg-slate-800/20 rounded-full" />
+              <div className="h-1.5 w-16 bg-slate-800/10 rounded-full" />
             </div>
           </div>
-          <div className="space-y-2 mt-2">
-            <div className="h-2 w-full bg-slate-800/10 rounded-full" />
-            <div className="h-2 w-11/12 bg-slate-800/10 rounded-full" />
-            <div className="h-2 w-4/5 bg-slate-800/10 rounded-full" />
+          <div className="space-y-1.5 mt-1">
+            <div className="h-1.5 w-full bg-slate-800/10 rounded-full" />
+            <div className="h-1.5 w-11/12 bg-slate-800/10 rounded-full" />
+            <div className="h-1.5 w-4/5 bg-slate-800/10 rounded-full" />
           </div>
-          <div className="flex justify-between items-center mt-auto pt-3 border-t border-slate-900/5">
-            <div className="h-3.5 w-16 bg-slate-800/15 rounded-full" />
-            <div className="h-7 w-20 bg-primary/20 text-primary rounded-xl" />
+          <div className="flex justify-between items-center mt-auto pt-2.5 border-t border-slate-900/5">
+            <div className="h-3 w-14 bg-slate-800/15 rounded-full" />
+            <div className="h-6 w-16 bg-primary/20 text-primary rounded-lg" />
           </div>
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop pt-16 pb-24 md:pt-20 md:pb-28 flex flex-col gap-5 items-start">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop pt-8 pb-10 md:pt-10 md:pb-12 flex flex-col gap-3 items-start">
           {/* Badge */}
-          <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">
+          <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm">
             <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
@@ -179,19 +154,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </span>
 
           {/* Main heading */}
-          <h1 className="display-lg text-slate-900 font-extrabold tracking-tight" style={{ maxWidth: "600px" }}>
+          <h1 className="headline-lg text-slate-900 font-extrabold tracking-tight" style={{ maxWidth: "520px" }}>
             {t("home.hero_title", lang)}
           </h1>
 
-          <p className="text-slate-600 text-base md:text-lg font-medium leading-relaxed" style={{ maxWidth: "480px" }}>
+          <p className="text-slate-600 text-sm md:text-base font-medium leading-relaxed" style={{ maxWidth: "420px" }}>
             {t("home.hero_subtitle", lang)}
           </p>
 
           <Link
             href="/post-job"
-            className="mt-2 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white hover:opacity-95 font-bold text-sm px-7 py-3.5 rounded-full transition-all duration-300 shadow-xl shadow-primary/25 hover:scale-105 active:scale-95"
+            className="mt-1 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white hover:opacity-95 font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-lg shadow-primary/25 hover:scale-105 active:scale-95"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
             {t("nav.post_job", lang)}
@@ -201,246 +176,54 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       </section>
 
-      {/* ── FEATURE STRIP ── */}
-      {!useAlgolia && (
-        <section className="relative z-10 bg-white border-b border-blue-100 pt-16 pb-10">
-          <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  icon: (
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  ),
-                  title: "Easy Job Search",
-                  desc: "Search active job vacancies in Mizoram by category and district easily.",
-                },
-                {
-                  icon: (
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  ),
-                  title: "Verified Employers",
-                  desc: "All employers are verified by administrators to ensure listing reliability.",
-                },
-                {
-                  icon: (
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  ),
-                  title: "Daily Updates",
-                  desc: "New vacancies are added daily to keep your search fresh.",
-                },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4 p-5 rounded-2xl hover:bg-blue-50 transition-colors group">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-display font-bold text-base text-on-background mb-1">{item.title}</h3>
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+
 
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
-      {!useAlgolia && (
-        <section
-          className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
-        >
-
-          {/* Section header */}
-          <div className="flex items-center justify-between mb-8">
+      <section
+        className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
+      >
+        {/* Section header */}
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="font-display font-bold text-2xl text-on-background">
-                {isFiltered ? "Search Results" : "Featured Job Listings"}
+                Featured Job Listings
               </h2>
               <p className="text-sm text-slate-500 font-medium mt-0.5">
-                {jobs.length} {jobs.length === 1 ? "job opening" : "job openings"} found
+                {lang === "en" ? (
+                  `${jobs.length} ${jobs.length === 1 ? "job opening" : "job openings"} found`
+                ) : (
+                  `${jobs.length} ${jobs.length === 1 ? "Hna ruak hmuh a ni" : "Hna ruak hmuh a ni"}`
+                )}
               </p>
             </div>
-            {isFiltered && (
-              <Link
-                href="/"
-                className="text-xs font-bold text-primary border border-primary/30 px-4 py-2 rounded-full hover:bg-primary/8 transition-colors"
-              >
-                ✕ Clear Filters
-              </Link>
-            )}
           </div>
+        </div>
 
-          {/* Content columns — Sidebar left + Jobs right */}
-          <div className="flex gap-8 items-start">
+        {/* Content columns — Jobs + Ad Sidebar */}
+        <div className="flex gap-8 items-start">
 
-            {/* ─── Left Sidebar ─── */}
-            <aside className="hidden lg:flex flex-col gap-5 w-52 shrink-0 sticky top-20">
+          {/* ─── Jobs Column ─── */}
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
 
-              {/* Categories */}
-              <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-blue-50 flex items-center gap-2">
-                  <div className="w-1.5 h-4 rounded-full bg-primary" />
-                  <h3 className="font-display font-bold text-xs text-on-background uppercase tracking-wider">Categories</h3>
-                </div>
-                <nav className="flex flex-col py-2">
-                  <Link
-                    href="/"
-                    className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all ${!categoryId ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-blue-50 hover:text-primary"
-                      }`}
-                  >
-                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    All Jobs
-                  </Link>
-                  {categories.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/?categoryId=${cat.id}`}
-                      className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all ${categoryId === cat.id.toString()
-                        ? "bg-primary/10 text-primary"
-                        : "text-slate-500 hover:bg-blue-50 hover:text-primary"
-                        }`}
-                    >
-                      <span className="shrink-0 text-current">
-                        <CategoryIcon name={cat.name} />
-                      </span>
-                      <span className="truncate">{cat.name}</span>
-                    </Link>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Post Job CTA */}
-              <div className="bg-gradient-to-br from-primary to-primary-container rounded-2xl p-5 text-white shadow-xl shadow-primary/20">
-                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            {jobs.length === 0 ? (
+              <div className="py-24 flex flex-col items-center justify-center gap-4 text-center bg-white border border-blue-100 rounded-3xl p-8 shadow-sm">
+                <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center text-primary">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <h3 className="font-display font-bold text-sm mb-1.5">Post a Job</h3>
-                <p className="text-white/80 text-xs font-medium leading-relaxed mb-4">
-                  Reach thousands of job seekers in Mizoram. Starting at ₹299.
-                </p>
-                <Link
-                  href="/post-job"
-                  className="w-full block text-center bg-white text-primary hover:bg-blue-50 font-bold text-xs py-2.5 rounded-xl transition-colors shadow-md"
-                >
-                  {t("nav.post_job", lang)}
-                </Link>
-              </div>
-
-              {/* Districts */}
-              <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-4">
-                <h3 className="font-display font-bold text-xs text-on-background mb-3 uppercase tracking-wider flex items-center gap-2">
-                  <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Districts
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {districts.slice(0, 12).map((d) => (
-                    <Link
-                      key={d.id}
-                      href={`/?locationId=${d.id}`}
-                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all ${locationId === d.id.toString()
-                        ? "bg-primary text-white"
-                        : "bg-blue-50 hover:bg-primary hover:text-white text-slate-500"
-                        }`}
-                    >
-                      {d.name}
-                    </Link>
-                  ))}
+                <div>
+                  <h3 className="font-display font-bold text-lg text-on-background">{t("jobs.no_jobs", lang)}</h3>
                 </div>
               </div>
-            </aside>
+            ) : (
+              <FallbackJobList jobs={jobs} lang={lang} />
+            )}
 
-            {/* ─── Jobs Column ─── */}
-            <div className="flex-1 min-w-0 flex flex-col gap-6">
-
-              {/* Mobile category scroll */}
-              <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
-                <Link
-                  href="/"
-                  className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all ${!categoryId ? "bg-primary text-white shadow-sm" : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
-                    }`}
-                >
-                  All
-                </Link>
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/?categoryId=${cat.id}`}
-                    className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all ${categoryId === cat.id.toString()
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
-                      }`}
-                  >
-                    {cat.name}
-                  </Link>
-                ))}
-              </div>
-
-              {jobs.length === 0 ? (
-                <div className="py-24 flex flex-col items-center justify-center gap-4 text-center bg-white border border-blue-100 rounded-3xl p-8 shadow-sm">
-                  <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center text-primary">
-                    <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-display font-bold text-lg text-on-background">{t("jobs.no_jobs", lang)}</h3>
-                    <p className="text-sm text-slate-500 font-medium mt-2" style={{ maxWidth: "320px" }}>
-                      Please try different keywords or clear the filters to search again.
-                    </p>
-                  </div>
-                  <Link href="/" className="mt-2 text-sm font-bold text-white bg-primary hover:bg-primary-container px-6 py-2.5 rounded-full transition-colors shadow-md">
-                    Reset Search
-                  </Link>
-                </div>
-              ) : (
-                <FallbackJobList jobs={jobs} lang={lang} />
-              )}
-
-              {/* Banner Ads — shown below jobs on mobile / below jobs always */}
-              {advertisements.length > 0 && (
-                <div className="flex flex-col gap-4 mt-4 lg:hidden">
-                  {advertisements.map((ad) => {
-                    const isSlot2 = ad.position === "sidebar_2";
-                    const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
-                    
-                    return (
-                      <a
-                        key={ad.id}
-                        href={ad.targetUrl.startsWith("http") ? ad.targetUrl : `https://${ad.targetUrl}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`block w-full rounded-2xl overflow-hidden border border-blue-100/80 shadow-md hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/15 transition-all duration-300 bg-white cursor-pointer ad-shine-effect ${effectClass}`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={ad.imageUrl}
-                          alt="Advertisement"
-                          className="w-full h-auto object-cover max-h-40"
-                        />
-                      </a>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* ─── Desktop Ad Sidebar (extra column when ads exist) ─── */}
+            {/* Banner Ads — shown below jobs on mobile / below jobs always */}
             {advertisements.length > 0 && (
-              <aside className="hidden xl:flex flex-col gap-4 w-48 shrink-0 sticky top-20">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Sponsored</p>
+              <div className="flex flex-col gap-4 mt-4 lg:hidden">
                 {advertisements.map((ad) => {
                   const isSlot2 = ad.position === "sidebar_2";
                   const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
@@ -457,34 +240,92 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                       <img
                         src={ad.imageUrl}
                         alt="Advertisement"
-                        className="w-full h-auto object-cover max-h-64"
+                        className="w-full h-auto object-cover max-h-40"
                       />
                     </a>
                   );
                 })}
-              </aside>
+              </div>
             )}
-
           </div>
-        </section>
-      )}
 
-      {/* ── Algolia Content (if configured) ── */}
-      {useAlgolia && (
-        <Suspense fallback={
-          <div className="w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop py-12 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          {/* ─── Desktop Ad Sidebar (extra column when ads exist) ─── */}
+          {advertisements.length > 0 && (
+            <aside className="hidden xl:flex flex-col gap-4 w-48 shrink-0 sticky top-20">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Sponsored</p>
+              {advertisements.map((ad) => {
+                const isSlot2 = ad.position === "sidebar_2";
+                const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
+                
+                return (
+                  <a
+                    key={ad.id}
+                    href={ad.targetUrl.startsWith("http") ? ad.targetUrl : `https://${ad.targetUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block w-full rounded-2xl overflow-hidden border border-blue-100/80 shadow-md hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/15 transition-all duration-300 bg-white cursor-pointer ad-shine-effect ${effectClass}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ad.imageUrl}
+                      alt="Advertisement"
+                      className="w-full h-auto object-cover max-h-64"
+                    />
+                  </a>
+                );
+              })}
+            </aside>
+          )}
+
+        </div>
+      </section>
+
+      {/* ── FEATURE STRIP ── */}
+      <section className="relative z-10 bg-white border-t border-blue-100 py-16 pb-10">
+        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                ),
+                title: "Easy Job Search",
+                desc: "Search active job vacancies in Mizoram by category and district easily.",
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                ),
+                title: "Verified Employers",
+                desc: "All employers are verified by administrators to ensure listing reliability.",
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                ),
+                title: "Daily Updates",
+                desc: "New vacancies are added daily to keep your search fresh.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-4 p-5 rounded-2xl hover:bg-blue-50 transition-colors group">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
+                  {item.icon}
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-on-background mb-1">{item.title}</h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        }>
-          <AlgoliaSearchSection
-            categories={categories}
-            districts={districts}
-            advertisements={advertisements}
-            lang={lang}
-          />
-        </Suspense>
-      )}
-
+        </div>
+      </section>
     </div>
   );
 }

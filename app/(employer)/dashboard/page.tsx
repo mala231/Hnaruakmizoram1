@@ -74,6 +74,7 @@ export default async function DashboardPage() {
         status: j.status,
         durationDays: j.durationDays,
         expiresAt: j.expiresAt ? j.expiresAt.toISOString() : null,
+        deadline: j.deadline.toISOString(),
         createdAt: j.createdAt.toISOString(),
         category: { name: j.category.name },
         location: { name: j.location.name },

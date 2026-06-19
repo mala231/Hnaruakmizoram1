@@ -213,154 +213,89 @@ function SearchContent({
         className="pt-8 pb-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
       >
         {/* Section header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="font-display font-bold text-2xl text-on-background">
-              {isFiltered ? "Search Results" : "Featured Job Listings"}
-            </h2>
-            <p className="text-sm text-slate-500 font-medium mt-0.5">
-              {/* Bug #3 fix: use nbHits (total across all pages) not hits.length (current page only) */}
-              {pagination.nbHits} {pagination.nbHits === 1 ? "job opening" : "job openings"} found
-            </p>
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display font-bold text-2xl text-on-background">
+                {isFiltered ? "Search Results" : "Featured Job Listings"}
+              </h2>
+              <p className="text-sm text-slate-500 font-medium mt-0.5">
+                {pagination.nbHits} {pagination.nbHits === 1 ? "job opening" : "job openings"} found
+              </p>
+            </div>
+            {isFiltered && (
+              <button
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 border border-red-200 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-full transition-colors cursor-pointer"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear All
+              </button>
+            )}
           </div>
+
+          {/* Active filter tags */}
           {isFiltered && (
-            <button
-              onClick={handleClearFilters}
-              className="text-xs font-bold text-primary border border-primary/30 px-4 py-2 rounded-full hover:bg-primary/8 transition-colors cursor-pointer"
-            >
-              ✕ Clear Filters
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {urlQuery && (
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (urlCategoryId) params.set("categoryId", urlCategoryId);
+                    if (urlLocationId) params.set("locationId", urlLocationId);
+                    router.push(params.toString() ? `/?${params.toString()}` : "/");
+                  }}
+                  className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors group cursor-pointer"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  &ldquo;{urlQuery}&rdquo;
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              {urlCategoryId && (
+                <button
+                  onClick={() => handleFilterChange("categoryId", "")}
+                  className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 012-2z" />
+                  </svg>
+                  {categories.find(c => c.id.toString() === urlCategoryId)?.name ?? "Category"}
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              {urlLocationId && (
+                <button
+                  onClick={() => handleFilterChange("locationId", "")}
+                  className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {districts.find(d => d.id.toString() === urlLocationId)?.name ?? "District"}
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Content columns - Sidebar left + Jobs right */}
+        {/* Content columns — Jobs + Ad Sidebar */}
         <div className="flex gap-8 items-start">
-          {/* ─── Left Sidebar ─── */}
-          <aside className="hidden lg:flex flex-col gap-5 w-52 shrink-0 sticky top-20">
-            {/* Categories */}
-            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-blue-50 flex items-center gap-2">
-                <div className="w-1.5 h-4 rounded-full bg-primary" />
-                <h3 className="font-display font-bold text-xs text-on-background uppercase tracking-wider">
-                  Categories
-                </h3>
-              </div>
-              <nav className="flex flex-col py-2">
-                <button
-                  onClick={() => handleFilterChange("categoryId", "")}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-left transition-all w-full cursor-pointer ${
-                    !activeCategoryId
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-500 hover:bg-blue-50 hover:text-primary"
-                  }`}
-                >
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  All Jobs
-                </button>
-                {categories.map((cat) => {
-                  const isActive = activeCategoryId === cat.id.toString();
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => handleCategoryClick(cat.id.toString())}
-                      className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-left transition-all w-full cursor-pointer ${
-                        isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-slate-500 hover:bg-blue-50 hover:text-primary"
-                      }`}
-                    >
-                      <span className="shrink-0 text-current">
-                        <CategoryIcon name={cat.name} />
-                      </span>
-                      <span className="truncate">{cat.name}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Post Job CTA */}
-            <div className="bg-gradient-to-br from-primary to-primary-container rounded-2xl p-5 text-white shadow-xl shadow-primary/20">
-              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <h3 className="font-display font-bold text-sm mb-1.5">Post a Job</h3>
-              <p className="text-white/80 text-xs font-medium leading-relaxed mb-4">
-                Reach thousands of job seekers in Mizoram. Starting at ₹299.
-              </p>
-              <Link
-                href="/post-job"
-                className="w-full block text-center bg-white text-primary hover:bg-blue-50 font-bold text-xs py-2.5 rounded-xl transition-colors shadow-md"
-              >
-                {t("nav.post_job", lang)}
-              </Link>
-            </div>
-
-            {/* Districts list tag clouds */}
-            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-4">
-              <h3 className="font-display font-bold text-xs text-on-background mb-3 uppercase tracking-wider flex items-center gap-2">
-                <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Districts
-              </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {districts.map((d) => {
-                  const isActive = activeLocationId === d.id.toString();
-                  return (
-                    <button
-                      key={d.id}
-                      onClick={() => handleLocationClick(d.id.toString())}
-                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-primary text-white"
-                          : "bg-blue-50 hover:bg-primary hover:text-white text-slate-500"
-                      }`}
-                    >
-                      {d.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </aside>
 
           {/* ─── Jobs Column ─── */}
           <div className="flex-1 min-w-0 flex flex-col gap-6">
-            {/* Mobile category scroll bar */}
-            <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
-              <button
-                onClick={() => handleFilterChange("categoryId", "")}
-                className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all cursor-pointer ${
-                  !activeCategoryId
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
-                }`}
-              >
-                All
-              </button>
-              {categories.map((cat) => {
-                const isActive = activeCategoryId === cat.id.toString();
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleCategoryClick(cat.id.toString())}
-                    className={`shrink-0 text-xs font-bold px-3.5 py-2 rounded-full transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-primary text-white shadow-sm"
-                        : "bg-white border border-blue-200 text-slate-500 hover:text-primary"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
 
             {hits.length === 0 ? (
               <div className="py-24 flex flex-col items-center justify-center gap-4 text-center bg-white border border-blue-100 rounded-3xl p-8 shadow-sm">
@@ -389,7 +324,11 @@ function SearchContent({
                 {/* Header bar with total hits count and grid/list view switcher */}
                 <div className="flex items-center justify-between bg-white border border-blue-100 rounded-2xl px-5 py-3 shadow-sm select-none">
                   <span className="text-xs font-bold text-slate-500">
-                    {pagination.nbHits} {pagination.nbHits === 1 ? "Hna ruak hmuh a ni" : "Hna ruak hmuh a ni"}
+                    {lang === "en" ? (
+                      `${pagination.nbHits} ${pagination.nbHits === 1 ? "job opening" : "job openings"} found`
+                    ) : (
+                      `${pagination.nbHits} ${pagination.nbHits === 1 ? "Hna ruak hmuh a ni" : "Hna ruak hmuh a ni"}`
+                    )}
                   </span>
                   <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/60 p-0.5 rounded-lg shrink-0">
                     <button
@@ -491,7 +430,7 @@ function SearchContent({
                               {hit.locationName}
                             </div>
                             <span className="text-[10px] text-slate-400 font-semibold">
-                              {t("jobs.expires", lang)}: {hit.expiresAt ? new Date(hit.expiresAt).toLocaleDateString() : "N/A"}
+                              {t("jobs.deadline", lang)}: {hit.deadline ? new Date(hit.deadline).toLocaleDateString() : "N/A"}
                             </span>
                           </div>
                         </div>
@@ -576,7 +515,7 @@ function SearchContent({
                               {hit.categoryName}
                             </span>
                             <span className="text-[10px] text-slate-400 font-bold shrink-0">
-                              {t("jobs.expires", lang)}: {hit.expiresAt ? new Date(hit.expiresAt).toLocaleDateString() : "N/A"}
+                              {t("jobs.deadline", lang)}: {hit.deadline ? new Date(hit.deadline).toLocaleDateString() : "N/A"}
                             </span>
                           </div>
                         </div>

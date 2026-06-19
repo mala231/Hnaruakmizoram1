@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, Suspense, useRef, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -19,7 +19,71 @@ interface HeaderProps {
   districts: Option[];
 }
 
-export default function Header({
+const SearchContext = createContext<{
+  locationId: string;
+  setLocationId: (id: string) => void;
+  categoryId: string;
+  setCategoryId: (id: string) => void;
+} | null>(null);
+
+function useSearch() {
+  const context = useContext(SearchContext);
+  if (!context) {
+    throw new Error("useSearch must be used within a SearchProvider");
+  }
+  return context;
+}
+
+function SearchProvider({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [locationId, setLocationId] = useState(searchParams?.get("locationId") || "");
+  const [categoryId, setCategoryId] = useState("");
+
+  // Sync state from URL changes caused by external navigation (category pills, clear filters, etc.)
+  useEffect(() => {
+    setLocationId(searchParams?.get("locationId") || "");
+    const match = pathname?.match(/\/categories\/([^/]+)/);
+    if (match && match[1] !== "all") {
+      setCategoryId(match[1]);
+    } else {
+      setCategoryId("");
+    }
+  }, [searchParams, pathname]);
+
+  return (
+    <SearchContext.Provider value={{ locationId, setLocationId, categoryId, setCategoryId }}>
+      {children}
+    </SearchContext.Provider>
+  );
+}
+
+export default function Header(props: HeaderProps) {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={
+      <header className="sticky top-0 z-40 w-full bg-white/96 border-b border-blue-100/70 h-[108px] animate-pulse">
+        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop py-2.5 md:h-16 flex items-center justify-between">
+          <div className="w-24 h-8 bg-slate-100 rounded-lg" />
+          <div className="flex-grow max-w-lg md:mx-4 h-9 bg-slate-100 rounded-xl" />
+          <div className="w-32 h-9 bg-slate-100 rounded-lg" />
+        </div>
+        <div className="w-full bg-slate-50 border-b border-blue-100/40 h-11" />
+      </header>
+    }>
+      <SearchProvider>
+        <HeaderContent {...props} />
+      </SearchProvider>
+    </Suspense>
+  );
+}
+
+function HeaderContent({
   lang,
   isLoggedIn,
   logoUrl,
@@ -43,13 +107,13 @@ export default function Header({
     <header className="sticky top-0 z-40 w-full bg-white/96 backdrop-blur-lg shadow-[0_2px_16px_rgba(79,142,247,0.06)] border-b border-blue-100/70 transition-all duration-300">
       {/* Top Row: Logo, Search Bar, CTAs */}
       <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop py-2.5 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-6">
-        
+
         {/* Logo and Mobile Controls */}
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/30 group-hover:scale-105 transition-transform">
               <svg className="w-4.5 h-4.5 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 6h-2.18c.07-.44.18-.86.18-1a3 3 0 0 0-6 0c0 .14.11.56.18 1H10c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-2a1 1 0 0 1 1 1c0 .14-.15.78-.33 1h-1.34C14.15 5.78 14 5.14 14 5a1 1 0 0 1 1-1z"/>
+                <path d="M20 6h-2.18c.07-.44.18-.86.18-1a3 3 0 0 0-6 0c0 .14.11.56.18 1H10c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-2a1 1 0 0 1 1 1c0 .14-.15.78-.33 1h-1.34C14.15 5.78 14 5.14 14 5a1 1 0 0 1 1-1z" />
               </svg>
             </div>
             <div className="flex flex-col leading-none">
@@ -245,7 +309,7 @@ function HeaderSearchForm({
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(searchParams?.get("query") || "");
-  const [locationId, setLocationId] = useState(searchParams?.get("locationId") || "");
+  const { locationId, setLocationId, categoryId } = useSearch();
 
   // Auto-suggest state
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -256,14 +320,13 @@ function HeaderSearchForm({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const userIsTypingRef = useRef(false);
+  const isInitialMount = useRef(true);
 
-  // Build URL params helper (preserves active categoryId)
+  // Build URL params helper
   const buildParams = (q: string, locId: string) => {
     const params = new URLSearchParams();
     if (q.trim()) params.set("query", q.trim());
     if (locId) params.set("locationId", locId);
-    const activeCategoryId = searchParams?.get("categoryId");
-    if (activeCategoryId) params.set("categoryId", activeCategoryId);
     return params;
   };
 
@@ -283,7 +346,6 @@ function HeaderSearchForm({
   useEffect(() => {
     if (!userIsTypingRef.current) {
       setQuery(searchParams?.get("query") || "");
-      setLocationId(searchParams?.get("locationId") || "");
     }
   }, [searchParams]);
 
@@ -313,12 +375,17 @@ function HeaderSearchForm({
 
   // Debounced instant search — fires 350ms after user stops typing
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     userIsTypingRef.current = true;
     const timer = setTimeout(() => {
       userIsTypingRef.current = false;
       const params = buildParams(query, locationId);
       const searchStr = params.toString();
-      router.replace(searchStr ? `/?${searchStr}` : "/");
+      const targetPath = `/categories/${categoryId || "all"}`;
+      router.replace(searchStr ? `${targetPath}?${searchStr}` : targetPath);
     }, 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -331,7 +398,8 @@ function HeaderSearchForm({
     setShowSuggestions(false);
     const params = buildParams(query, locationId);
     const searchStr = params.toString();
-    router.push(searchStr ? `/?${searchStr}` : "/");
+    const targetPath = `/categories/${categoryId || "all"}`;
+    router.push(searchStr ? `${targetPath}?${searchStr}` : targetPath);
   };
 
   // Handle suggestion click
@@ -343,22 +411,21 @@ function HeaderSearchForm({
       const params = new URLSearchParams();
       if (query.trim()) params.set("query", query.trim());
       if (locationId) params.set("locationId", locationId);
-      params.set("categoryId", s.id.toString());
-      router.push(`/?${params.toString()}`);
+      router.push(`/categories/${s.id}?${params.toString()}`);
     } else if (s.type === "location" && s.id) {
       // Set location filter
       const params = new URLSearchParams();
       if (query.trim()) params.set("query", query.trim());
       params.set("locationId", s.id.toString());
-      const activeCategoryId = searchParams?.get("categoryId");
-      if (activeCategoryId) params.set("categoryId", activeCategoryId);
-      router.push(`/?${params.toString()}`);
+      router.push(`/categories/${categoryId || "all"}?${params.toString()}`);
     } else {
       // Job title — fill input and search
       setQuery(s.label);
       userIsTypingRef.current = false;
       const params = buildParams(s.label, locationId);
-      router.push(`/?${params.toString()}`);
+      const searchStr = params.toString();
+      const targetPath = `/categories/${categoryId || "all"}`;
+      router.push(searchStr ? `${targetPath}?${searchStr}` : targetPath);
     }
     inputRef.current?.blur();
   };
@@ -427,26 +494,21 @@ function HeaderSearchForm({
       >
         {/* District Dropdown Selector */}
         <div className="relative h-full flex items-center bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors shrink-0">
-          <span className="absolute left-2.5 pointer-events-none text-[10px]">📍</span>
           <select
             value={locationId}
             onChange={(e) => {
               const val = e.target.value;
               setLocationId(val);
-              const params = buildParams(query, val);
-              const searchStr = params.toString();
-              router.push(searchStr ? `/?${searchStr}` : "/");
             }}
-            className="appearance-none bg-transparent h-full pl-7 pr-7 text-[11px] font-extrabold text-slate-600 cursor-pointer focus:outline-none"
+            className="appearance-none bg-transparent h-full pl-2.5 pr-5 text-[10px] font-bold text-slate-600 cursor-pointer focus:outline-none"
           >
-            <option value="">{lang === "mz" ? "District tin" : "All Districts"}</option>
+            <option value="">{lang === "mz" ? "District" : "District"}</option>
             {districts.map((d) => (
               <option key={d.id} value={d.id.toString()}>
                 {d.name}
               </option>
             ))}
           </select>
-          <span className="absolute right-2.5 pointer-events-none text-[7px] text-slate-400">▼</span>
         </div>
 
         {/* Text search query — instant search + autocomplete */}
@@ -477,7 +539,8 @@ function HeaderSearchForm({
               setShowSuggestions(false);
               const params = buildParams("", locationId);
               const searchStr = params.toString();
-              router.replace(searchStr ? `/?${searchStr}` : "/");
+              const targetPath = `/categories/${categoryId || "all"}`;
+              router.replace(searchStr ? `${targetPath}?${searchStr}` : targetPath);
             }}
             className="h-full px-2 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
             aria-label="Clear search"
@@ -488,13 +551,13 @@ function HeaderSearchForm({
           </button>
         )}
 
-        {/* Orange search submit button */}
+        {/* Blue search submit button */}
         <button
           type="submit"
-          className="h-full px-4 md:px-5 bg-amber-500 hover:bg-amber-600 text-white transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+          className="h-full px-4 md:px-5 bg-primary hover:bg-primary-container text-white transition-colors flex items-center justify-center shrink-0 cursor-pointer"
           aria-label="Search"
         >
-          <svg className="w-3.5 md:w-4 h-3.5 md:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <svg className="w-3 md:w-3.5 h-3 md:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </button>
@@ -582,7 +645,7 @@ function HeaderSearchForm({
 
 /* ──────────────────────────────────────────────────────────────────────────
    SUB-COMPONENT: CategoryNavStrip
-   Displays "ALL CATEGORIES" blue button and horizontal scroll list of categories
+   Left: dropdown selector. Right: scrollable pills. Both synced via URL.
    ────────────────────────────────────────────────────────────────────────── */
 function CategoryNavStrip({
   categories,
@@ -594,13 +657,12 @@ function CategoryNavStrip({
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeCategoryId = searchParams?.get("categoryId") || "";
+  const { categoryId, setCategoryId } = useSearch();
 
-  // Ref to the scrollable list container
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // Update arrow visibility whenever scroll position or size changes
   const updateScrollState = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -634,85 +696,106 @@ function CategoryNavStrip({
     const locationId = searchParams?.get("locationId");
     if (query) params.set("query", query);
     if (locationId) params.set("locationId", locationId);
-    if (id) params.set("categoryId", id);
     const searchStr = params.toString();
-    router.push(searchStr ? `/?${searchStr}` : "/");
+    const targetPath = `/categories/${id || "all"}`;
+    router.push(searchStr ? `${targetPath}?${searchStr}` : targetPath);
   };
 
   return (
-    <div className="w-full bg-slate-50 border-b border-blue-100/40 relative">
-      <div className="max-w-7xl mx-auto relative flex items-center h-11">
+    <div className="w-full bg-slate-50 border-b border-blue-100/40">
+      <div className="max-w-7xl mx-auto flex items-center h-11 gap-0 px-container-margin-mobile md:px-container-margin-desktop">
 
-        {/* ← Left scroll arrow */}
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 z-10 h-full px-1.5 flex items-center bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
-            aria-label="Scroll categories left"
-          >
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-primary hover:border-primary/30 transition-colors">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </span>
-          </button>
-        )}
-
-        {/* Scrollable pills list */}
-        <div
-          ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto scrollbar-none whitespace-nowrap px-container-margin-mobile md:px-container-margin-desktop h-full"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {/* ALL CATEGORIES Button */}
-          <button
-            onClick={() => handleCategorySelect("")}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              !activeCategoryId
-                ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20"
-                : "bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800"
-            }`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            {lang === "mz" ? "Hna zawng zawng" : "All Categories"}
-          </button>
-
-          {/* Category pills */}
-          {categories.map((cat) => {
-            const isActive = activeCategoryId === cat.id.toString();
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.id.toString())}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border cursor-pointer ${
-                  isActive
-                    ? "bg-primary/10 border-primary/20 text-primary font-bold"
-                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
-                }`}
-              >
-                {cat.name}
-              </button>
-            );
-          })}
+        {/* ── LEFT: Category Dropdown ── */}
+        <div className="relative shrink-0 h-full flex items-center pr-3 mr-2 border-r border-blue-100/60">
+          <div className="relative flex items-center">
+            {categoryId && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary z-10 ring-2 ring-slate-50" />
+            )}
+            <select
+              value={categoryId}
+              onChange={(e) => handleCategorySelect(e.target.value)}
+              className={`appearance-none h-8 pl-3 pr-4 text-[11px] font-bold rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+                categoryId
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-primary/30"
+              }`}
+            >
+              <option value="">{lang === "mz" ? "Hna zawng zawng" : "All Categories"}</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id.toString()}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* → Right scroll arrow */}
-        {canScrollRight && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 z-10 h-full px-1.5 flex items-center bg-gradient-to-l from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
-            aria-label="Scroll categories right"
+        {/* ── RIGHT: Scrollable pills ── */}
+        <div className="relative flex-1 flex items-center h-full overflow-hidden">
+          {canScrollLeft && (
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-0 z-10 h-full px-1 flex items-center bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
+              aria-label="Scroll categories left"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-primary transition-colors">
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </span>
+            </button>
+          )}
+
+          <div
+            ref={scrollRef}
+            className="flex items-center gap-2 overflow-x-auto scrollbar-none whitespace-nowrap h-full pl-1 pr-12 w-full"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-primary hover:border-primary/30 transition-colors">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
-          </button>
-        )}
+            <button
+              onClick={() => handleCategorySelect("")}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border cursor-pointer ${
+                !activeCategoryId
+                  ? "bg-primary/10 border-primary/20 text-primary font-bold"
+                  : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((cat) => {
+              const isActive = activeCategoryId === cat.id.toString();
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategorySelect(cat.id.toString())}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border cursor-pointer ${
+                    isActive
+                      ? "bg-primary/10 border-primary/20 text-primary font-bold"
+                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+
+          {canScrollRight && (
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-0 z-10 h-full px-1 flex items-center bg-gradient-to-l from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
+              aria-label="Scroll categories right"
+            >
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-primary transition-colors">
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
+
