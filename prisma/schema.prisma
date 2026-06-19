@@ -52,6 +52,7 @@ model JobPost {
   status           String    @default("draft") // draft, live, expired, deleted
   durationDays     Int       @map("duration_days")
   expiresAt        DateTime? @map("expires_at")
+  isFeatured       Boolean   @default(false) @map("is_featured")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
   payments         Payment[]

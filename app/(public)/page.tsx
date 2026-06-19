@@ -91,14 +91,45 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     orderByClause = { deadline: "asc" };
   }
 
-  // 2. Fetch live listings
-  const jobs = await prisma.jobPost.findMany({
+  // 2. Fetch manually featured jobs (limit to 10)
+  const featuredJobs = await prisma.jobPost.findMany({
     where: {
       status: "live",
+      isFeatured: true,
       employer: { isDeleted: false },
     },
     include: { employer: true, category: true, location: true },
     orderBy: orderByClause,
+    take: 10,
+  });
+
+  let jobs = [...featuredJobs];
+
+  // If we have fewer than 10 featured jobs, fetch latest live jobs as fallback
+  if (jobs.length < 10) {
+    const fallbackCount = 10 - jobs.length;
+    const featuredIds = featuredJobs.map((j) => j.id);
+
+    const fallbackJobs = await prisma.jobPost.findMany({
+      where: {
+        status: "live",
+        employer: { isDeleted: false },
+        id: { notIn: featuredIds },
+      },
+      include: { employer: true, category: true, location: true },
+      orderBy: orderByClause,
+      take: fallbackCount,
+    });
+
+    jobs = [...jobs, ...fallbackJobs];
+  }
+
+  // Count the total live jobs to determine if "View all" button is needed
+  const totalLiveJobsCount = await prisma.jobPost.count({
+    where: {
+      status: "live",
+      employer: { isDeleted: false },
+    },
   });
 
   return (
@@ -218,7 +249,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 </div>
               </div>
             ) : (
-              <FallbackJobList jobs={jobs} lang={lang} />
+              <>
+                <FallbackJobList jobs={jobs} lang={lang} />
+                {totalLiveJobsCount > jobs.length && (
+                  <div className="flex justify-center mt-4">
+                    <Link
+                      href="/categories/all"
+                      className="inline-flex items-center gap-2 bg-white border-2 border-primary/20 hover:border-primary text-primary font-bold text-sm px-8 py-3 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
+                    >
+                      {lang === "mz" ? "Hna zawng zawng en rawh" : "View all jobs"} →
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Banner Ads — shown below jobs on mobile / below jobs always */}

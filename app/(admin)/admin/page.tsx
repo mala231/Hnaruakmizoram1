@@ -54,7 +54,26 @@ interface ReportItem {
   };
 }
 
-type TabType = "categories" | "locations" | "tickers" | "ads" | "employers" | "reports" | "about_page";
+interface JobPostItem {
+  id: string;
+  title: string;
+  shortDescription: string;
+  isFeatured: boolean;
+  status: string;
+  createdAt: string;
+  employer: {
+    username: string;
+    logoUrl: string;
+  };
+  category: {
+    name: string;
+  };
+  location: {
+    name: string;
+  };
+}
+
+type TabType = "categories" | "locations" | "tickers" | "ads" | "employers" | "reports" | "about_page" | "jobs";
 
 interface WhyUsItem {
   title_en: string;
@@ -87,6 +106,8 @@ export default function AdminDashboard() {
   const [ads, setAds] = useState<AdItem[]>([]);
   const [employers, setEmployers] = useState<EmployerItem[]>([]);
   const [reports, setReports] = useState<ReportItem[]>([]);
+  const [jobs, setJobs] = useState<JobPostItem[]>([]);
+  const [jobSearch, setJobSearch] = useState("");
 
   // Category/Location edit states
   const [newItemName, setNewItemName] = useState("");
@@ -124,7 +145,7 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [catRes, locRes, tickRes, adsRes, empRes, repRes, aboutRes] = await Promise.all([
+      const [catRes, locRes, tickRes, adsRes, empRes, repRes, aboutRes, jobsRes] = await Promise.all([
         fetch("/api/admin/categories"),
         fetch("/api/admin/locations"),
         fetch("/api/admin/tickers"),
@@ -132,6 +153,7 @@ export default function AdminDashboard() {
         fetch("/api/admin/employers"),
         fetch("/api/admin/reports"),
         fetch("/api/admin/settings?key=page_about"),
+        fetch("/api/admin/jobs"),
       ]);
 
       const catData = await catRes.json();
@@ -141,6 +163,7 @@ export default function AdminDashboard() {
       const empData = await empRes.json();
       const repData = await repRes.json();
       const aboutData = await aboutRes.json();
+      const jobsData = await jobsRes.json();
 
       if (catData.success) setCategories(catData.data);
       if (locData.success) setLocations(locData.data);
@@ -148,6 +171,7 @@ export default function AdminDashboard() {
       if (adsData.success) setAds(adsData.data);
       if (empData.success) setEmployers(empData.data);
       if (repData.success) setReports(repData.data);
+      if (jobsData.success) setJobs(jobsData.data);
 
       if (aboutData.success && aboutData.data) {
         try {
@@ -662,6 +686,28 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleFeatureJob = async (jobId: string, currentFeatured: boolean) => {
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/jobs/${jobId}/featured`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFeatured: !currentFeatured }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerAlert("success", "Hna featured status thlak a ni ta.");
+        fetchData();
+      } else {
+        triggerAlert("error", data.error || "Toggle failed.");
+      }
+    } catch (err) {
+      triggerAlert("error", "Server biak pawh a harsat rih e.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/logout", { method: "POST" });
@@ -743,6 +789,7 @@ export default function AdminDashboard() {
             { id: "tickers", label: t("admin.tickers") },
             { id: "ads", label: t("admin.ads") },
             { id: "employers", label: t("admin.employers") },
+            { id: "jobs", label: "Hna Ruak te" },
             { id: "reports", label: t("admin.reports") },
             { id: "about_page", label: "About Us Page" },
           ].map((tab) => (
@@ -752,6 +799,7 @@ export default function AdminDashboard() {
                 setActiveTab(tab.id as TabType);
                 setNewItemName("");
                 setNewTickerText("");
+                setJobSearch("");
                 setEditingId(null);
                 setEditingTickerId(null);
               }}
@@ -1214,6 +1262,114 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* JOBS FEATURED MANAGER TAB */}
+            {activeTab === "jobs" && (
+              <div className="lg:col-span-3 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant/20 pb-4">
+                  <div>
+                    <h3 className="title-md text-primary">Hna Ruakte Moderation & Featured Jobs</h3>
+                    <p className="text-xs text-on-surface-variant font-sans">Feature dynamic jobs on the home page (max 10). If less than 10, newest jobs will automatically show as fallback.</p>
+                  </div>
+                  <div className="bg-primary/5 text-primary border border-primary/20 rounded-xl px-4 py-2 text-xs font-bold font-mono">
+                    Featured: {jobs.filter(j => j.isFeatured).length} / 10
+                  </div>
+                </div>
+
+                {/* Search / filter box */}
+                <div className="w-full max-w-md">
+                  <input
+                    type="text"
+                    value={jobSearch}
+                    onChange={(e) => setJobSearch(e.target.value)}
+                    placeholder="Search by job title or employer..."
+                    className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-primary text-on-background"
+                  />
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm font-medium border-collapse">
+                    <thead>
+                      <tr className="border-b border-outline-variant/20 text-on-surface-variant font-bold text-xs uppercase tracking-wider">
+                        <th className="py-3 px-4">Hna Hming / Employer</th>
+                        <th className="py-3 px-4">Category</th>
+                        <th className="py-3 px-4">District</th>
+                        <th className="py-3 px-4">Posted Date</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-right">Manually Featured</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {jobs.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-on-surface-variant text-sm font-semibold">
+                            Hna ruak active tar a la awm lo.
+                          </td>
+                        </tr>
+                      ) : (
+                        jobs
+                          .filter(
+                            (job) =>
+                              job.title.toLowerCase().includes(jobSearch.toLowerCase()) ||
+                              job.employer.username.toLowerCase().includes(jobSearch.toLowerCase())
+                          )
+                          .map((job) => {
+                            const isFeatured = job.isFeatured;
+                            const totalFeatured = jobs.filter(j => j.isFeatured).length;
+                            const disableFeature = totalFeatured >= 10 && !isFeatured;
+
+                            return (
+                              <tr key={job.id} className="border-b border-outline-variant/10 hover:bg-surface-container-low transition-colors">
+                                <td className="py-4 px-4">
+                                  <div>
+                                    <Link href={`/jobs/${job.id}`} target="_blank" className="font-bold text-primary hover:underline text-sm leading-snug">
+                                      {job.title}
+                                    </Link>
+                                    <div className="text-[10px] text-on-surface-variant font-semibold mt-0.5">
+                                      Employer: {job.employer.username}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-4 px-4 text-xs font-semibold text-on-surface-variant">
+                                  {job.category.name}
+                                </td>
+                                <td className="py-4 px-4 text-xs font-semibold text-on-surface-variant">
+                                  {job.location.name}
+                                </td>
+                                <td className="py-4 px-4 text-xs font-semibold text-on-surface-variant">
+                                  {new Date(job.createdAt).toLocaleDateString()}
+                                </td>
+                                <td className="py-4 px-4 text-center">
+                                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase bg-success-container text-on-success-container">
+                                    {job.status}
+                                  </span>
+                                </td>
+                                <td className="py-4 px-4 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleFeatureJob(job.id, isFeatured)}
+                                    disabled={submitting || disableFeature}
+                                    className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                                      isFeatured
+                                        ? "bg-secondary/10 border-secondary/30 text-secondary hover:bg-secondary/15"
+                                        : disableFeature
+                                        ? "bg-surface-container text-on-surface-variant/40 border-outline-variant/10 cursor-not-allowed"
+                                        : "bg-surface-container hover:bg-surface-container-high border-outline-variant/30 text-on-surface hover:border-primary/30"
+                                    }`}
+                                    title={disableFeature ? "Featured jobs are at maximum (10). Unfeature another job first." : ""}
+                                  >
+                                    {isFeatured ? "⭐ Featured" : "☆ Feature"}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
