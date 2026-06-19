@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { t } from "@/lib/i18n";
 
@@ -23,11 +24,13 @@ export default function Footer({ lang }: FooterProps) {
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/25 group-hover:scale-105 transition-transform">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20 6h-2.18c.07-.44.18-.86.18-1a3 3 0 0 0-6 0c0 .14.11.56.18 1H10c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-2a1 1 0 0 1 1 1c0 .14-.15.78-.33 1h-1.34C14.15 5.78 14 5.14 14 5a1 1 0 0 1 1-1z"/>
-                </svg>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Hnaruak Mizoram Logo"
+                width={36}
+                height={36}
+                className="w-9 h-9 rounded-lg object-contain group-hover:scale-105 transition-transform"
+              />
               <div className="flex flex-col leading-none">
                 <span className="font-display font-extrabold text-lg text-primary tracking-tight">Hnaruak</span>
                 <span className="text-[10px] font-bold text-secondary/70 uppercase tracking-widest">Mizoram</span>
