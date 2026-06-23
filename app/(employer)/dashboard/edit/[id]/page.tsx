@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCachedCategories, getCachedDistricts } from "@/lib/queries";
 import { verifyJWT } from "@/lib/auth";
 import EditJobForm from "./EditJobForm";
 
@@ -40,8 +41,8 @@ export default async function EditJobPage({ params }: EditJobPageProps) {
 
   // 3. Fetch Category and Location Dropdown lists
   const [categories, locations] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.location.findMany({ orderBy: { name: "asc" } }),
+    getCachedCategories(),
+    getCachedDistricts(),
   ]);
 
   return (

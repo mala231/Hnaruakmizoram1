@@ -38,7 +38,10 @@ function SearchProvider({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [locationId, setLocationId] = useState(searchParams?.get("locationId") || "");
-  const [categoryId, setCategoryId] = useState("");
+  const [categoryId, setCategoryId] = useState(() => {
+    const match = pathname?.match(/\/categories\/([^/]+)/);
+    return match && match[1] !== "all" ? match[1] : "";
+  });
 
   // Sync state from URL changes caused by external navigation (category pills, clear filters, etc.)
   useEffect(() => {
@@ -309,9 +312,10 @@ function HeaderSearchForm({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const [query, setQuery] = useState(searchParams?.get("query") || "");
-  const { locationId, setLocationId, categoryId } = useSearch();
+  const { locationId, setLocationId } = useSearch();
 
   // Auto-suggest state
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -381,17 +385,37 @@ function HeaderSearchForm({
       isInitialMount.current = false;
       return;
     }
+
+    // Only allow auto-redirect on category pages or when there's an active query.
+    // If we are on static pages (about, contact, etc.) or home without a query, do nothing.
+    const isCategoryPage = pathname?.startsWith("/categories/");
+    if (!isCategoryPage && !query.trim()) {
+      return;
+    }
+
     userIsTypingRef.current = true;
     const timer = setTimeout(() => {
       userIsTypingRef.current = false;
       const params = buildParams(query, locationId);
       const searchStr = params.toString();
-      const targetPath = `/categories/${categoryId || "all"}`;
-      router.replace(searchStr ? `${targetPath}?${searchStr}` : targetPath);
+      
+      // Synchronously extract active category from pathname to prevent race condition loop
+      const match = pathname?.match(/\/categories\/([^/]+)/);
+      const pathCatId = match ? match[1] : "";
+      const targetPath = `/categories/${pathCatId || "all"}`;
+      const nextURL = searchStr ? `${targetPath}?${searchStr}` : targetPath;
+
+      // Prevent redundant router replacement to avoid reload/infinite loop
+      const currentParams = searchParams?.toString();
+      const currentURL = pathname + (currentParams ? `?${currentParams}` : "");
+
+      if (nextURL !== currentURL) {
+        router.replace(nextURL);
+      }
     }, 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+  }, [query, pathname, locationId]);
 
   // Explicit submit — closes suggestions and pushes to history
   const handleSearch = (e: React.FormEvent) => {
@@ -400,7 +424,10 @@ function HeaderSearchForm({
     setShowSuggestions(false);
     const params = buildParams(query, locationId);
     const searchStr = params.toString();
-    const targetPath = `/categories/${categoryId || "all"}`;
+    
+    const match = pathname?.match(/\/categories\/([^/]+)/);
+    const pathCatId = match ? match[1] : "";
+    const targetPath = `/categories/${pathCatId || "all"}`;
     router.push(searchStr ? `${targetPath}?${searchStr}` : targetPath);
   };
 
@@ -408,6 +435,9 @@ function HeaderSearchForm({
   const handleSuggestionClick = (s: Suggestion) => {
     setShowSuggestions(false);
     setActiveIndex(-1);
+    const match = pathname?.match(/\/categories\/([^/]+)/);
+    const pathCatId = match ? match[1] : "";
+
     if (s.type === "category" && s.id) {
       // Navigate to category filter directly
       const params = new URLSearchParams();
@@ -419,14 +449,14 @@ function HeaderSearchForm({
       const params = new URLSearchParams();
       if (query.trim()) params.set("query", query.trim());
       params.set("locationId", s.id.toString());
-      router.push(`/categories/${categoryId || "all"}?${params.toString()}`);
+      router.push(`/categories/${pathCatId || "all"}?${params.toString()}`);
     } else {
       // Job title — fill input and search
       setQuery(s.label);
       userIsTypingRef.current = false;
       const params = buildParams(s.label, locationId);
       const searchStr = params.toString();
-      const targetPath = `/categories/${categoryId || "all"}`;
+      const targetPath = `/categories/${pathCatId || "all"}`;
       router.push(searchStr ? `${targetPath}?${searchStr}` : targetPath);
     }
     inputRef.current?.blur();
@@ -541,7 +571,9 @@ function HeaderSearchForm({
               setShowSuggestions(false);
               const params = buildParams("", locationId);
               const searchStr = params.toString();
-              const targetPath = `/categories/${categoryId || "all"}`;
+              const match = pathname?.match(/\/categories\/([^/]+)/);
+              const pathCatId = match ? match[1] : "";
+              const targetPath = `/categories/${pathCatId || "all"}`;
               router.replace(searchStr ? `${targetPath}?${searchStr}` : targetPath);
             }}
             className="h-full px-2 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
@@ -658,7 +690,10 @@ function CategoryNavStrip({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeCategoryId = searchParams?.get("categoryId") || "";
+  const pathname = usePathname();
+  const match = pathname?.match(/\/categories\/([^/]+)/);
+  const pathId = match ? match[1] : "";
+  const activeCategoryId = pathId === "all" || pathId === "12" ? "" : pathId;
   const { categoryId, setCategoryId } = useSearch();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -722,7 +757,7 @@ function CategoryNavStrip({
                   : "bg-white border-slate-200 text-slate-600 hover:border-primary/30"
               }`}
             >
-              <option value="">{lang === "mz" ? "Hna zawng zawng" : "All Categories"}</option>
+              <option value="" disabled>{lang === "mz" ? "Category-te" : "Categories"}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id.toString()}>
                   {cat.name}

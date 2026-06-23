@@ -677,8 +677,8 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                 <p style={{ fontSize: "13px", fontWeight: 500, lineHeight: 1.5, opacity: 0.9, margin: 0 }}>
                   I hna puanzar hi he platform tlawh apiangte hmuh theih turin sidebar banner ads ah dah rawh. Contact Admin for pricing.
                 </p>
-                <a
-                  href="mailto:admin@hnaruakmizoram.com"
+                <Link
+                  href="/contact"
                   style={{
                     backgroundColor: "#ffffff",
                     color: "#1c7dfa",
@@ -693,7 +693,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                   }}
                 >
                   Admin Be Rawh
-                </a>
+                </Link>
               </div>
             </div>
 

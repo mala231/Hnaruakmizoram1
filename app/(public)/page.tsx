@@ -3,11 +3,12 @@ import Image from "next/image";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getCachedCategories, getCachedDistricts, getCachedAdvertisements } from "@/lib/queries";
+import { FALLBACK_CATEGORIES, FALLBACK_DISTRICTS } from "@/lib/fallbacks";
 import { t } from "@/lib/i18n";
 import FallbackJobList from "@/components/FallbackJobList";
 
-// ISR: revalidate homepage data every 60 seconds
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface HomePageProps {
   searchParams: Promise<{
@@ -74,15 +75,26 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  // 1. Fetch categories, districts, and active banner advertisements
-  const [categories, districts, advertisements] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.location.findMany({ orderBy: { name: "asc" } }),
-    prisma.advertisement.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  // 1. Fetch cached categories, districts, and active banner advertisements
+  let categories: any[] = [];
+  let districts: any[] = [];
+  let advertisements: any[] = [];
+
+  try {
+    const [cats, dists, ads] = await Promise.all([
+      getCachedCategories(),
+      getCachedDistricts(),
+      getCachedAdvertisements(),
+    ]);
+    categories = cats;
+    districts = dists;
+    advertisements = ads;
+  } catch (error) {
+    console.error("Homepage failed to fetch cached categories/districts/advertisements. Using fallbacks.", error);
+    categories = FALLBACK_CATEGORIES;
+    districts = FALLBACK_DISTRICTS;
+    advertisements = [];
+  }
 
   let orderByClause: any = { createdAt: "desc" };
   if (sortBy === "name") {
@@ -92,45 +104,35 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   // 2. Fetch manually featured jobs (limit to 10)
-  const featuredJobs = await prisma.jobPost.findMany({
-    where: {
-      status: "live",
-      isFeatured: true,
-      employer: { isDeleted: false },
-    },
-    include: { employer: true, category: true, location: true },
-    orderBy: orderByClause,
-    take: 10,
-  });
-
-  let jobs = [...featuredJobs];
-
-  // If we have fewer than 10 featured jobs, fetch latest live jobs as fallback
-  if (jobs.length < 10) {
-    const fallbackCount = 10 - jobs.length;
-    const featuredIds = featuredJobs.map((j) => j.id);
-
-    const fallbackJobs = await prisma.jobPost.findMany({
+  let jobs: any[] = [];
+  try {
+    jobs = await prisma.jobPost.findMany({
       where: {
         status: "live",
+        isFeatured: true,
         employer: { isDeleted: false },
-        id: { notIn: featuredIds },
       },
       include: { employer: true, category: true, location: true },
       orderBy: orderByClause,
-      take: fallbackCount,
+      take: 10,
     });
-
-    jobs = [...jobs, ...fallbackJobs];
+    console.log("DEBUG - Homepage query executed. Jobs count found:", jobs.length);
+  } catch (error) {
+    console.error("Homepage failed to query featured jobs:", error);
   }
 
   // Count the total live jobs to determine if "View all" button is needed
-  const totalLiveJobsCount = await prisma.jobPost.count({
-    where: {
-      status: "live",
-      employer: { isDeleted: false },
-    },
-  });
+  let totalLiveJobsCount = 0;
+  try {
+    totalLiveJobsCount = await prisma.jobPost.count({
+      where: {
+        status: "live",
+        employer: { isDeleted: false },
+      },
+    });
+  } catch (error) {
+    console.error("Homepage failed to count live jobs:", error);
+  }
 
   return (
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
@@ -245,8 +247,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-lg text-on-background">{t("jobs.no_jobs", lang)}</h3>
+                  <h3 className="font-display font-bold text-lg text-on-background">
+                    {lang === "mz" ? "Featured hna ruak thar a awm rih lo e." : "No featured job listings at the moment."}
+                  </h3>
+                  {totalLiveJobsCount > 0 && (
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      {lang === "mz" 
+                        ? "Hna dang te en turin a hnuaia button hi hmet rawh." 
+                        : "Click the button below to view all other available job openings."}
+                    </p>
+                  )}
                 </div>
+                {totalLiveJobsCount > 0 && (
+                  <div className="flex justify-center mt-2">
+                    <Link
+                      href="/categories/all"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white hover:opacity-95 font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-md hover:scale-105 active:scale-95"
+                    >
+                      {lang === "mz" ? "Hna zawng zawng en rawh" : "View all jobs"} →
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : (
               <>

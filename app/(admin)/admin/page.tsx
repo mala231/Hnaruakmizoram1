@@ -696,7 +696,7 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        triggerAlert("success", "Hna featured status thlak a ni ta.");
+        triggerAlert("success", "Featured status changed.");
         fetchData();
       } else {
         triggerAlert("error", data.error || "Toggle failed.");
@@ -789,7 +789,7 @@ export default function AdminDashboard() {
             { id: "tickers", label: t("admin.tickers") },
             { id: "ads", label: t("admin.ads") },
             { id: "employers", label: t("admin.employers") },
-            { id: "jobs", label: "Hna Ruak te" },
+            { id: "jobs", label: "Featured Jobs" },
             { id: "reports", label: t("admin.reports") },
             { id: "about_page", label: "About Us Page" },
           ].map((tab) => (
@@ -1351,13 +1351,12 @@ export default function AdminDashboard() {
                                     type="button"
                                     onClick={() => handleToggleFeatureJob(job.id, isFeatured)}
                                     disabled={submitting || disableFeature}
-                                    className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
-                                      isFeatured
-                                        ? "bg-secondary/10 border-secondary/30 text-secondary hover:bg-secondary/15"
-                                        : disableFeature
+                                    className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${isFeatured
+                                      ? "bg-secondary/10 border-secondary/30 text-secondary hover:bg-secondary/15"
+                                      : disableFeature
                                         ? "bg-surface-container text-on-surface-variant/40 border-outline-variant/10 cursor-not-allowed"
                                         : "bg-surface-container hover:bg-surface-container-high border-outline-variant/30 text-on-surface hover:border-primary/30"
-                                    }`}
+                                      }`}
                                     title={disableFeature ? "Featured jobs are at maximum (10). Unfeature another job first." : ""}
                                   >
                                     {isFeatured ? "⭐ Featured" : "☆ Feature"}

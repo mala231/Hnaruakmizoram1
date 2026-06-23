@@ -58,6 +58,9 @@ model JobPost {
   payments         Payment[]
   reports          Report[]
 
+  @@index([status])
+  @@index([isFeatured])
+  @@index([createdAt])
   @@map("job_posts")
 }
 

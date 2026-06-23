@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { verifyJWT } from "@/lib/auth";
 
 async function verifyAdmin() {
@@ -65,6 +66,8 @@ export async function PUT(
       data: { name: trimmedName },
     });
 
+    revalidateTag("districts", "max");
+
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     console.error("PUT location error:", err);
@@ -116,6 +119,8 @@ export async function DELETE(
     await prisma.location.delete({
       where: { id: locationId },
     });
+
+    revalidateTag("districts", "max");
 
     return NextResponse.json({ success: true });
   } catch (err) {

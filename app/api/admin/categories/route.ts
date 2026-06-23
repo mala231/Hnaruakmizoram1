@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { verifyJWT } from "@/lib/auth";
 
 async function verifyAdmin() {
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
     const category = await prisma.category.create({
       data: { name: trimmedName },
     });
+
+    revalidateTag("categories", "max");
 
     return NextResponse.json({ success: true, data: category }, { status: 201 });
   } catch (err) {

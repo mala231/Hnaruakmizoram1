@@ -104,6 +104,8 @@ body {
   font-family: var(--font-sans);
 }
 
+
+
 /* ── Typography Utilities ── */
 @utility display-lg {
   font-family: var(--font-display);

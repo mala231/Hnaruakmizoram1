@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { verifyJWT } from "@/lib/auth";
 import { uploadImage } from "@/lib/cloudinary";
 
@@ -72,6 +73,8 @@ export async function POST(request: Request) {
         isActive: true,
       },
     });
+
+    revalidateTag("advertisements", "max");
 
     return NextResponse.json({ success: true, data: ad }, { status: 201 });
   } catch (err) {

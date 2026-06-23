@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCachedCategories, getCachedDistricts, getCachedAdvertisements } from "@/lib/queries";
+import { FALLBACK_CATEGORIES, FALLBACK_DISTRICTS } from "@/lib/fallbacks";
 import { t } from "@/lib/i18n";
 import FallbackJobList from "@/components/FallbackJobList";
 
@@ -22,15 +25,37 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  // 1. Fetch categories, locations/districts, and active banner advertisements
-  const [categories, districts, advertisements] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.location.findMany({ orderBy: { name: "asc" } }),
-    prisma.advertisement.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  // 1. Fetch cached categories, locations/districts, and active banner advertisements
+  let categories: any[] = [];
+  let districts: any[] = [];
+  let advertisements: any[] = [];
+
+  try {
+    const [cats, dists, ads] = await Promise.all([
+      getCachedCategories(),
+      getCachedDistricts(),
+      getCachedAdvertisements(),
+    ]);
+    categories = cats;
+    districts = dists;
+    advertisements = ads;
+  } catch (error) {
+    console.error("Categories page failed to fetch cached categories/districts/advertisements. Using fallbacks.", error);
+    categories = FALLBACK_CATEGORIES;
+    districts = FALLBACK_DISTRICTS;
+    advertisements = [];
+  }
+
+  const allCategoriesItem = categories.find((c) => c.name.toLowerCase() === "all categories");
+
+  // Redirect /categories/all to the database category ID for "All Categories"
+  if (id === "all" && allCategoriesItem) {
+    const searchParamsObj = await searchParams;
+    const paramsStr = new URLSearchParams(searchParamsObj).toString();
+    redirect(`/categories/${allCategoriesItem.id}${paramsStr ? `?${paramsStr}` : ""}`);
+  }
+
+  const isAllCategories = id === "all" || (allCategoriesItem && parseInt(id, 10) === allCategoriesItem.id);
 
   // 2. Build where filter clauses
   let categoryName = "";
@@ -39,7 +64,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     employer: { isDeleted: false },
   };
 
-  if (id !== "all") {
+  if (!isAllCategories) {
     const catId = parseInt(id, 10);
     if (!isNaN(catId)) {
       whereClause.categoryId = catId;
@@ -69,17 +94,22 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   }
 
   // 3. Fetch filtered listings
-  const jobs = await prisma.jobPost.findMany({
-    where: whereClause,
-    include: { employer: true, category: true, location: true },
-    orderBy: orderByClause,
-  });
+  let jobs: any[] = [];
+  try {
+    jobs = await prisma.jobPost.findMany({
+      where: whereClause,
+      include: { employer: true, category: true, location: true },
+      orderBy: orderByClause,
+    });
+  } catch (error) {
+    console.error("Categories page failed to query jobs:", error);
+  }
 
-  const isFiltered = !!(query || locationId || id !== "all");
+  const isFiltered = !!(query || locationId || !isAllCategories);
 
   // Determine section title
   let sectionTitle = "Job Listings";
-  if (id === "all") {
+  if (isAllCategories) {
     sectionTitle = query || locationId ? "Search Results" : "All Job Listings";
   } else {
     sectionTitle = categoryName ? `${categoryName} Jobs` : "Category Job Listings";
@@ -112,7 +142,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   href="/categories/all"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 border border-red-200 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-full transition-colors shrink-0"
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   Clear All
@@ -120,7 +150,6 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               )}
             </div>
           </div>
-
           {/* Active filter tags */}
           {isFiltered && (
             <div className="flex flex-wrap gap-2">
@@ -129,25 +158,25 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   href={`/categories/${id}?${new URLSearchParams({ ...(locationId ? { locationId } : {}) }).toString()}`}
                   className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors group"
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   &ldquo;{query}&rdquo;
-                  <svg className="w-3 h-3 group-hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="w-3.5 h-3.5 group-hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </Link>
               )}
-              {id !== "all" && (
+              {!isAllCategories && (
                 <Link
                   href={`/categories/all?${new URLSearchParams({ ...(query ? { query } : {}), ...(locationId ? { locationId } : {}) }).toString()}`}
                   className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors group"
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 012-2z" />
                   </svg>
                   {categoryName || "Category"}
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </Link>
@@ -157,12 +186,12 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   href={`/categories/${id}?${new URLSearchParams({ ...(query ? { query } : {}) }).toString()}`}
                   className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors group"
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   {districts.find((d) => d.id.toString() === locationId)?.name ?? "District"}
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </Link>

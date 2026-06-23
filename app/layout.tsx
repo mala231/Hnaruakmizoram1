@@ -8,6 +8,8 @@ import PWARegistration from "@/components/PWARegistration";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCachedCategories, getCachedDistricts } from "@/lib/queries";
+import { FALLBACK_CATEGORIES, FALLBACK_DISTRICTS } from "@/lib/fallbacks";
 import NextTopLoader from "nextjs-toploader";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -73,20 +75,35 @@ export default async function RootLayout({
     const payload = await verifyJWT(sessionCookie);
     if (payload && payload.role === "employer") {
       isLoggedIn = true;
-      const employer = await prisma.employer.findUnique({
-        where: { id: payload.userId },
-        select: { logoUrl: true },
-      });
-      if (employer) {
-        logoUrl = employer.logoUrl;
+      try {
+        const employer = await prisma.employer.findUnique({
+          where: { id: payload.userId },
+          select: { logoUrl: true },
+        });
+        if (employer) {
+          logoUrl = employer.logoUrl;
+        }
+      } catch (error) {
+        console.error("Layout failed to fetch employer session details:", error);
       }
     }
   }
 
-  const [categories, districts] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.location.findMany({ orderBy: { name: "asc" } }),
-  ]);
+  let categories: any[] = [];
+  let districts: any[] = [];
+
+  try {
+    const [cats, dists] = await Promise.all([
+      getCachedCategories(),
+      getCachedDistricts(),
+    ]);
+    categories = cats;
+    districts = dists;
+  } catch (error) {
+    console.error("Layout failed to fetch categories/districts from database. Using fallbacks.", error);
+    categories = FALLBACK_CATEGORIES;
+    districts = FALLBACK_DISTRICTS;
+  }
 
   return (
     <html

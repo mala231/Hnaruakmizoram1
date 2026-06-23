@@ -126,3 +126,30 @@ export async function verifyResetPasswordJWT(token: string): Promise<ResetPasswo
   }
 }
 
+export interface CaptchaPayload {
+  answer: number;
+}
+
+/**
+ * Signs a short-lived captcha token (5-minute validity window).
+ */
+export async function signCaptchaJWT(payload: CaptchaPayload): Promise<string> {
+  return new SignJWT({ ...payload as any })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("5m") // Challenge is active for 5 minutes
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verifies a captcha token. Returns payload or null if invalid/expired.
+ */
+export async function verifyCaptchaJWT(token: string): Promise<CaptchaPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as CaptchaPayload;
+  } catch (error) {
+    return null;
+  }
+}
+

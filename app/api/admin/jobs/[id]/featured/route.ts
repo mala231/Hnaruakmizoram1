@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
 
@@ -48,6 +49,9 @@ export async function PUT(
         isFeatured: Boolean(isFeatured),
       },
     });
+
+    // Invalidate homepage cache
+    revalidatePath("/");
 
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {

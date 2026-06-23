@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { verifyJWT } from "@/lib/auth";
 
 async function verifyAdmin() {
@@ -67,6 +68,8 @@ export async function PUT(
       data,
     });
 
+    revalidateTag("advertisements", "max");
+
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     console.error("PUT admin ad error:", err);
@@ -103,6 +106,8 @@ export async function DELETE(
     await prisma.advertisement.delete({
       where: { id: adId },
     });
+
+    revalidateTag("advertisements", "max");
 
     return NextResponse.json({ success: true });
   } catch (err) {

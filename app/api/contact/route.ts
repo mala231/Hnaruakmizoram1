@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { sendEmail, validateEmailLegitimacy } from "@/lib/email";
 import { isRateLimited } from "@/lib/rateLimit";
-import { signPendingContactJWT, verifyPendingContactJWT } from "@/lib/auth";
+import { signPendingContactJWT, verifyPendingContactJWT, signCaptchaJWT, verifyCaptchaJWT } from "@/lib/auth";
 
 function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -19,7 +19,7 @@ function getClientIp(request: Request): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, message, lang, token, otp } = body;
+    const { name, email, message, lang, token, otp, captchaToken, captchaAnswer } = body;
     const isMizo = lang === "mz";
 
     // Rate Limiter Check (3 messages max per IP per hour)
@@ -97,12 +97,25 @@ export async function POST(request: Request) {
     }
 
     // Phase 1: Request Verification (Send OTP Code)
-    if (!name || !email || !message) {
+    if (!name || !email || !message || !captchaToken || !captchaAnswer) {
       return NextResponse.json(
         {
           error: isMizo
-            ? "Hming, email leh thuchah ziah vek tur a ni."
-            : "Name, email, and message are required."
+            ? "Hming, email, thuchah leh captcha chhanna chhuah vek tur a ni."
+            : "Name, email, message, and captcha answer are required."
+        },
+        { status: 400 }
+      );
+    }
+
+    // Verify Captcha Challenge
+    const verifiedCaptcha = await verifyCaptchaJWT(captchaToken);
+    if (!verifiedCaptcha || Number(captchaAnswer.trim()) !== verifiedCaptcha.answer) {
+      return NextResponse.json(
+        {
+          error: isMizo
+            ? "Math challenge chhanna i ziak dik lo e. Khawngaihin a thar lo chhang leh rawh le."
+            : "Incorrect math challenge answer. Please try again."
         },
         { status: 400 }
       );
@@ -190,6 +203,23 @@ export async function POST(request: Request) {
     console.error("Contact API error:", error);
     return NextResponse.json(
       { error: "Failed to process request. Please try again later." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const num1 = Math.floor(Math.random() * 9) + 1; // 1 to 9
+    const num2 = Math.floor(Math.random() * 9) + 1; // 1 to 9
+    const text = `Solve this: ${num1} + ${num2} = ?`;
+    const answer = num1 + num2;
+    const token = await signCaptchaJWT({ answer });
+    return NextResponse.json({ text, token });
+  } catch (error) {
+    console.error("GET Contact API error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate challenge" },
       { status: 500 }
     );
   }

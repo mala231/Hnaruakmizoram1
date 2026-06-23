@@ -21,12 +21,17 @@ interface JobDetailPageProps {
  * React cache() ensures only one DB query per request regardless of how
  * many callers invoke this function.
  */
-const getJobById = cache(async (id: string) =>
-  prisma.jobPost.findUnique({
-    where: { id },
-    include: { employer: true, category: true, location: true },
-  })
-);
+const getJobById = cache(async (id: string) => {
+  try {
+    return await prisma.jobPost.findUnique({
+      where: { id },
+      include: { employer: true, category: true, location: true },
+    });
+  } catch (error) {
+    console.error(`Failed to fetch job with ID ${id} from database:`, error);
+    return null;
+  }
+});
 
 export async function generateMetadata({ params }: JobDetailPageProps): Promise<Metadata> {
   const { id } = await params;

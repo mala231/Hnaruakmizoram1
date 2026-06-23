@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
 
 interface ContactFormProps {
@@ -19,6 +19,28 @@ export default function ContactForm({ lang }: ContactFormProps) {
   const [pendingToken, setPendingToken] = useState("");
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
+
+  // Captcha states
+  const [captchaText, setCaptchaText] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+
+  const fetchCaptcha = async () => {
+    try {
+      const res = await fetch("/api/contact");
+      if (res.ok) {
+        const data = await res.json();
+        setCaptchaText(data.text);
+        setCaptchaToken(data.token);
+      }
+    } catch (err) {
+      console.error("Failed to fetch captcha", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,14 +64,18 @@ export default function ContactForm({ lang }: ContactFormProps) {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message, lang }),
+        body: JSON.stringify({ name, email, message, lang, captchaToken, captchaAnswer }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        fetchCaptcha();
+        setCaptchaAnswer("");
         throw new Error(data.error || "Failed to send verification code.");
       }
+
+      setCaptchaAnswer("");
 
       if (data.pendingVerification) {
         setPendingToken(data.token);
@@ -357,6 +383,69 @@ export default function ContactForm({ lang }: ContactFormProps) {
             }}
           />
         </div>
+
+        {/* Math Captcha Challenge */}
+        {captchaText && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 700, color: "#071022", margin: 0 }}>
+                {lang === "mz" ? "Mihring i nih nemnghet rawh (Math Captcha)" : "Prove you are human (Math Captcha)"}
+              </label>
+              <button
+                type="button"
+                onClick={fetchCaptcha}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#1c7dfa",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  padding: 0,
+                  textDecoration: "underline"
+                }}
+              >
+                {lang === "mz" ? "Thar thlang rawh" : "Refresh"}
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <div
+                style={{
+                  backgroundColor: "#f3f4f6",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: "#374151",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {captchaText}
+              </div>
+              <input
+                type="text"
+                required
+                value={captchaAnswer}
+                onChange={(e) => setCaptchaAnswer(e.target.value)}
+                placeholder="?"
+                style={{
+                  flexGrow: 1,
+                  boxSizing: "border-box",
+                  backgroundColor: "#f9fafb",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: "#1f2937",
+                  outline: "none",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+          </div>
+        )}
 
       </div>
 
