@@ -123,7 +123,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   return (
     <div style={{ backgroundColor: "#fafbfc", minHeight: "100vh", padding: "48px 24px", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
       <div style={{ maxWidth: "1120px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "32px" }}>
-        
+
         {/* Back navigation */}
         <Link
           href="/"
@@ -181,7 +181,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             </div>
-            
+
             {/* Title / Info */}
             <div>
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }} className="justify-center md:justify-start">
@@ -205,7 +205,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
         {/* Workspace Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
+
           {/* Main Description */}
           <div style={{
             backgroundColor: "#ffffff",
@@ -218,7 +218,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             gap: "24px"
           }} className="lg:col-span-2">
             <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1c7dfa", borderBottom: "1px solid #f0f9ff", paddingBottom: "12px", margin: 0 }}>
-              Hna Chipchiar (Job Details)
+              Hna chungchang (Job Details)
             </h2>
             <div style={{
               whiteSpace: "pre-wrap",
@@ -234,7 +234,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
           {/* Actions & Maps Sidebar */}
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            
+
             {/* Details Panel */}
             <div style={{
               backgroundColor: "#ffffff",
@@ -249,7 +249,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1c7dfa", borderBottom: "1px solid #f0f9ff", paddingBottom: "10px", margin: 0 }}>
                 Hriattur Pawimawh
               </h3>
-              
+
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px", fontWeight: 600, color: "#374151" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ color: "#6b7280", fontWeight: 500 }}>{t("jobs.deadline", lang)}:</span>
@@ -361,7 +361,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <p style={{ fontSize: "13px", fontWeight: 600, color: "#4b5563", margin: 0, lineHeight: 1.4 }}>
                 {job.address}
               </p>
-              
+
               {/* Map Iframe */}
               <div style={{
                 width: "100%",

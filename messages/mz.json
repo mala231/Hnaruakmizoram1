@@ -13,7 +13,7 @@
     "logout": "Chhuahna"
   },
   "footer": {
-    "copyright": "© 2026 Hnaruak Mizoram. All rights reserverd.",
+    "copyright": "© 2026 Hnaruak Mizoram. All rights reserved.",
     "tagline": "Mizoram a hna awm te zawnna leh puanzarna awlsam ."
   },
   "home": {
@@ -107,8 +107,8 @@
     "success_msg": "I report kan lo dawng e. Kan lo enfiah thuai ang."
   },
   "dashboard": {
-    "my_listings": "Hna Ka Post Te",
-    "payment_history": "Phei Kawn Record",
+    "my_listings": "Hna Post",
+    "payment_history": "Payment Record",
     "account_settings": "Account Settings",
     "edit_btn": "Siamtha rawh",
     "delete_btn": "Delete",

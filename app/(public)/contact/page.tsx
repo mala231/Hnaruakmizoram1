@@ -8,7 +8,7 @@ export default async function ContactPage() {
 
   return (
     <div style={{ background: "#ffffff", minHeight: "100vh", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
-      
+
       {/* ── HERO BANNER ── */}
       <div
         style={{
@@ -26,7 +26,7 @@ export default async function ContactPage() {
           {/* Badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "100px", padding: "6px 18px", marginBottom: "24px" }}>
             <svg width="12" height="12" fill="white" viewBox="0 0 24 24">
-              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
             </svg>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" }}>
               {lang === "mz" ? "Biak Pawhna" : "Contact Us"}
@@ -45,10 +45,10 @@ export default async function ContactPage() {
       {/* ── CONTENT CONTAINER ── */}
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "0 24px 80px", marginTop: "-40px", position: "relative", zIndex: 2 }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
+
           {/* Left Side: Contact Information Cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            
+
             {/* Email Card */}
             <div
               style={{
@@ -84,7 +84,7 @@ export default async function ContactPage() {
                   {t("contact.email", lang)}
                 </h4>
                 <p style={{ fontSize: "16px", color: "#0f1b30", fontWeight: 700, margin: 0 }}>
-                  massti249@gmail.com
+                  {process.env.SMTP_USER || "hnaruakmizoramofficial@gmail.com"}
                 </p>
               </div>
             </div>
@@ -165,7 +165,7 @@ export default async function ContactPage() {
                   {t("contact.address", lang)}
                 </h4>
                 <p style={{ fontSize: "15px", color: "#374151", fontWeight: 600, margin: 0, lineHeight: 1.4 }}>
-                  Chanmari, Aizawl, Mizoram - 796007
+                  Tlangnuam, Aizawl, Mizoram, 796190, India
                 </p>
               </div>
             </div>

@@ -18,10 +18,10 @@ export async function uploadImage(buffer: Buffer): Promise<string> {
 
   if (!isConfigured) {
     console.warn(
-      "Cloudinary environment variables are not set. Falling back to base64 Data URL."
+      "Cloudinary environment variables are not set. Falling back to placeholder image URL."
     );
-    const base64 = buffer.toString("base64");
-    return `data:image/png;base64,${base64}`;
+    // Return the same placeholder used elsewhere in the app — avoids storing large base64 blobs in DB
+    return "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg";
   }
 
   return new Promise((resolve, reject) => {

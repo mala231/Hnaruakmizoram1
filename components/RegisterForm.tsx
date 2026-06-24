@@ -167,9 +167,9 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
       } else {
         setError(
           data.error ||
-            (lang === "mz"
-              ? "Inziahluhna a hlawhchham rih."
-              : "Registration failed.")
+          (lang === "mz"
+            ? "Inziahluhna a hlawhchham rih."
+            : "Registration failed.")
         );
       }
     } catch {
@@ -641,8 +641,8 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
                       ? "Thlalak thlang leh"
                       : "Change Image"
                     : lang === "mz"
-                    ? "Thlalak thlang rawh"
-                    : "Choose Image"}
+                      ? "Thlalak thlang rawh"
+                      : "Choose Image"}
                 </label>
                 <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500 }}>
                   {lang === "mz"
@@ -657,7 +657,7 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div>
               <label style={labelStyle}>
-                {lang === "mz" ? "Username (Mimal Hming)" : "Username (Full Name)"}
+                {lang === "mz" ? "Username (Hming)" : "Username (Full Name)"}
               </label>
               <input
                 type="text"
@@ -695,7 +695,7 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
             </div>
             <div>
               <label style={labelStyle}>
-                {lang === "mz" ? "Password (Hmanletna)" : "Password"}
+                {lang === "mz" ? "Password (Thuruk)" : "Password"}
               </label>
               <div style={{ position: "relative" }}>
                 <input

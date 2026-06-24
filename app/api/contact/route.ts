@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
       // Send the contact email to support/admin
       await sendEmail({
-        to: "massti249@gmail.com",
+        to: process.env.CONTACT_RECIPIENT_EMAIL || process.env.SMTP_USER || "",
         subject: `Hnaruak Mizoram Contact Form: Message from ${pending.name}`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">

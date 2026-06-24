@@ -97,7 +97,7 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
                       </div>
                     )}
                   </div>
-                  <span className="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">
+                  <span className="bg-primary/10 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">
                     {job.category.name}
                   </span>
                 </div>
@@ -113,23 +113,23 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
                         <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     )}
-                    <p className="text-[11px] text-secondary font-bold">{job.employer.username}</p>
+                    <p className="text-[11px] text-blue-700 font-bold">{job.employer.username}</p>
                   </div>
-                  <p className="text-xs text-slate-400 font-medium mt-2 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-slate-500 font-medium mt-2 line-clamp-2 leading-relaxed">
                     {job.shortDescription}
                   </p>
                 </div>
 
                 {/* Footer */}
                 <div className="pt-3 border-t border-blue-50 flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold">
+                  <div className="flex items-center gap-1 text-[10px] text-slate-500 font-semibold">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     {job.location.name}
                   </div>
-                  <span className="text-[10px] text-slate-400 font-semibold">
+                  <span className="text-[10px] text-slate-500 font-semibold">
                     {t("jobs.deadline", lang)}: {job.deadline ? new Date(job.deadline).toLocaleDateString() : "N/A"}
                   </span>
                 </div>
@@ -137,7 +137,7 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
 
               {/* View button */}
               <div className="px-4 pb-4">
-                <div className="w-full bg-blue-50 group-hover:bg-primary text-primary group-hover:text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 text-center">
+                <div className="w-full bg-blue-50 group-hover:bg-primary text-blue-700 group-hover:text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 text-center">
                   {t("jobs.view_details", lang)}
                 </div>
               </div>
@@ -192,7 +192,7 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
                             <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                         )}
-                        <span className="text-secondary">{job.employer.username}</span>
+                        <span className="text-blue-700">{job.employer.username}</span>
                       </div>
                       <span>•</span>
                       <span className="flex items-center gap-0.5">
@@ -203,7 +203,7 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
                         {job.location.name}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-medium mt-1.5 line-clamp-1 hidden md:block" style={{ maxWidth: "420px" }}>
+                    <p className="text-xs text-slate-500 font-medium mt-1.5 line-clamp-1 hidden md:block" style={{ maxWidth: "420px" }}>
                       {job.shortDescription}
                     </p>
                   </div>
@@ -211,10 +211,10 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
 
                 {/* Right Section badges and deadline */}
                 <div className="flex sm:flex-col items-start sm:items-end gap-2 sm:gap-1.5 shrink-0 w-full sm:w-auto justify-between sm:justify-center border-t sm:border-0 border-slate-100 pt-3 sm:pt-0">
-                  <span className="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">
+                  <span className="bg-primary/10 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0">
                     {job.category.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-bold shrink-0">
+                  <span className="text-[10px] text-slate-500 font-bold shrink-0">
                     {t("jobs.deadline", lang)}: {job.deadline ? new Date(job.deadline).toLocaleDateString() : "N/A"}
                   </span>
                 </div>

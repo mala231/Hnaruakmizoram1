@@ -76,11 +76,11 @@ export default async function RefundPage() {
           </svg>
           <div>
             <p style={{ fontSize: "14px", fontWeight: 700, color: "#92400e", margin: "0 0 4px" }}>
-              {lang === "mz" ? "Pawimawh: Hna live tawh hnu refund a ni lo" : "Important: No refunds once job listing goes live"}
+              {lang === "mz" ? "Hriat tur: Hna live tawh hnu refund theih a ni lo." : "Important: No refunds once job listing goes live"}
             </p>
             <p style={{ fontSize: "13px", color: "#b45309", margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
               {lang === "mz"
-                ? "Payment i thlak hnu a, hna i tar tawh hnu refund dil theih a ni lo. Dan kan ziah ang zelin payment hma hian lo ngaih thlap rawh."
+                ? "Payment a fel hnu , hna i tar tawh hnuah refund dil theih a ni lo. Payment hma in dan kan ziah te i en thin dawn nia."
                 : "Once payment is completed and the job is live, no refund requests can be processed. Please read these terms carefully before proceeding."}
             </p>
           </div>

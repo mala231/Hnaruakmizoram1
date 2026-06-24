@@ -14,14 +14,14 @@ const hasSmtpConfig = !!(SMTP_HOST && SMTP_USER && SMTP_PASS);
 
 const transporter = hasSmtpConfig
   ? nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465, // True for port 465, false for other ports
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    })
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465, // True for port 465, false for other ports
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  })
   : null;
 
 /**

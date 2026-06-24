@@ -30,9 +30,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check expiration (10 minutes)
+    // Check expiration (15 minutes — matches JWT token TTL in signResetPasswordJWT)
     const now = Date.now();
-    if (now - payload.otpCreatedAt > 10 * 60 * 1000) {
+    if (now - payload.otpCreatedAt > 15 * 60 * 1000) {
       return NextResponse.json(
         { success: false, error: "OTP a expire tawh e. A thar dil leh rawh." },
         { status: 400 }

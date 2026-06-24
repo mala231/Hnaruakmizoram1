@@ -846,7 +846,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#374151", marginBottom: "8px" }}>
-                      Username (Mimal Hming)
+                      Username (Hming)
                     </label>
                     <input
                       type="text"
@@ -952,7 +952,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            Ka Hmun Hmang Rawh
+                            Location
                           </>
                         )}
                       </button>
@@ -1042,7 +1042,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
               gap: "24px"
             }}>
               <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ef4444", borderBottom: "1px solid #fee2e2", paddingBottom: "16px", margin: 0 }}>
-                Account Hluai Leh Deletion
+                Account Deletion
               </h2>
 
               <div
@@ -1059,10 +1059,10 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
               >
                 <div style={{ maxWidth: "560px" }}>
                   <h3 style={{ fontSize: "15px", color: "#b91c1c", fontWeight: 700, margin: "0 0 6px" }}>
-                    Account Delete Rawh (Soft-Delete Profile)
+                    Account Delete  (Soft-Delete Profile)
                   </h3>
                   <p style={{ fontSize: "13px", color: "#7f1d1d", fontWeight: 500, lineHeight: 1.5, margin: 0 }}>
-                    I account i delete chuan i profile leh hna ruak puanzar zawng zawngte hi public feed atangin thup nghal vek an ni ang. I payments records te erawh financial history tan khek rih an ni thung dawn nia.
+                    I account i delete chuan i profile leh hna ruak puanzar zawng zawngte hi public feed atangin delete nghal vek an ni ang. I payments records te erawh financial history tan khek rih an ni thung dawn nia.
                   </p>
                 </div>
 

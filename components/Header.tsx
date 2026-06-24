@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef, createContext, useContext } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -122,8 +122,8 @@ function HeaderContent({
               className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain group-hover:scale-105 transition-transform"
             />
             <div className="flex flex-col leading-none">
-              <span className="font-display font-extrabold text-base md:text-lg text-primary tracking-tight">Hnaruak</span>
-              <span className="text-[9px] md:text-[10px] font-bold text-secondary/70 uppercase tracking-widest">Mizoram</span>
+              <span className="font-display font-extrabold text-base md:text-lg text-blue-700 tracking-tight">Hnaruak</span>
+              <span className="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-widest">Mizoram</span>
             </div>
           </Link>
 
@@ -190,6 +190,7 @@ function HeaderContent({
             <select
               value={lang}
               onChange={(e) => setLangCookie(e.target.value)}
+              aria-label="Select language"
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             >
               <option value="mz">Mizo</option>
@@ -260,6 +261,7 @@ function HeaderContent({
               <select
                 value={lang}
                 onChange={(e) => setLangCookie(e.target.value)}
+                aria-label="Select language"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               >
                 <option value="mz">Mizo</option>
@@ -532,7 +534,8 @@ function HeaderSearchForm({
               const val = e.target.value;
               setLocationId(val);
             }}
-            className="appearance-none bg-transparent h-full pl-2.5 pr-5 text-[10px] font-bold text-slate-600 cursor-pointer focus:outline-none"
+            aria-label="Filter by district"
+            className="appearance-none bg-transparent h-full pl-2.5 pr-5 text-[10px] font-bold text-slate-700 cursor-pointer focus:outline-none"
           >
             <option value="">{lang === "mz" ? "District" : "District"}</option>
             {districts.map((d) => (
@@ -699,13 +702,19 @@ function CategoryNavStrip({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const rafRef = useRef<number | null>(null);
 
-  const updateScrollState = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  };
+  // Defer layout reads (scrollLeft, clientWidth, scrollWidth) into a rAF to
+  // avoid forced synchronous reflow after DOM mutations.
+  const updateScrollState = useCallback(() => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      setCanScrollLeft(el.scrollLeft > 4);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    });
+  }, []);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -715,11 +724,12 @@ function CategoryNavStrip({
     const ro = new ResizeObserver(updateScrollState);
     ro.observe(el);
     return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       el.removeEventListener("scroll", updateScrollState);
       ro.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [updateScrollState]);
 
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
@@ -751,10 +761,11 @@ function CategoryNavStrip({
             <select
               value={categoryId}
               onChange={(e) => handleCategorySelect(e.target.value)}
+              aria-label="Filter by category"
               className={`appearance-none h-8 pl-3 pr-4 text-[11px] font-bold rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
                 categoryId
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-primary/30"
+                  ? "bg-primary/10 border-primary/30 text-blue-700"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-primary/30"
               }`}
             >
               <option value="" disabled>{lang === "mz" ? "Category-te" : "Categories"}</option>

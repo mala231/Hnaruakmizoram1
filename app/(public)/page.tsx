@@ -276,7 +276,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <div className="flex justify-center mt-4">
                     <Link
                       href="/categories/all"
-                      className="inline-flex items-center gap-2 bg-white border-2 border-primary/20 hover:border-primary text-primary font-bold text-sm px-8 py-3 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
+                      className="inline-flex items-center gap-2 bg-white border-2 border-primary/20 hover:border-primary text-blue-700 font-bold text-sm px-8 py-3 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
                     >
                       {lang === "mz" ? "Hna zawng zawng en rawh" : "View all jobs"} →
                     </Link>
@@ -316,7 +316,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {/* ─── Desktop Ad Sidebar (extra column when ads exist) ─── */}
           {advertisements.length > 0 && (
             <aside className="hidden xl:flex flex-col gap-4 w-48 shrink-0 sticky top-20">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Sponsored</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Sponsored</p>
               {advertisements.map((ad) => {
                 const isSlot2 = ad.position === "sidebar_2";
                 const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";

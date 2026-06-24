@@ -123,7 +123,7 @@ export default async function TermsPage() {
               <>
                 Dan te hi zawhna emaw harsatna i neih chuan{" "}
                 <Link href="/contact" style={{ color: "#1c7dfa", fontWeight: 700 }}>min be pawh rawh</Link>.
-                Hnaruak Mizoram hian a user zawng zawng an thiante tan a kal ngei dawn a ni.
+                Hnaruak Mizoram hian a user zawhna leh harstanate sutkiang sak kan tum ani.
               </>
             ) : (
               <>
