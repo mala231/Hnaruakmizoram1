@@ -117,7 +117,6 @@ export default async function RootLayout({
         • preconnect res.cloudinary.com: establishes TCP+TLS early so employer
           logo images on job listing pages load faster.
       */}
-      <link rel="preload" href="/manifest.json" as="fetch" />
       <link rel="preconnect" href="https://res.cloudinary.com" />
       <body className="min-h-full flex flex-col bg-background text-on-background">
         <NextTopLoader color="#1c7dfa" showSpinner={false} height={3} shadow="0 0 10px #1c7dfa,0 0 5px #1c7dfa" />
