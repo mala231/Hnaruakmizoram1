@@ -51,12 +51,12 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      setPdfError(t("jobs.pdf_upload_hint"));
+      setPdfError("Only PDF files are allowed.");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setPdfError(t("jobs.pdf_upload_hint"));
+    if (file.size > 10 * 1024 * 1024) {
+      setPdfError("File size must be under 10 MB.");
       return;
     }
 
