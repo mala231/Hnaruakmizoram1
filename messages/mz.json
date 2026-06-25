@@ -91,7 +91,12 @@
     "share_title": "He hna hi mi dang lo sem chhawng rawh",
     "report_btn": "He hna post hi report rawh",
     "not_found": "I hna zawn hi hmuh a ni lo emaw a hun a ral tawh a ni.",
-    "view_details": "Chiang zawkin en rawh"
+    "view_details": "Chiang zawkin en rawh",
+    "download_pdf": "Official PDF Download Rawh",
+    "pdf_upload_label": "Official PDF Circular (Duh thlan tur)",
+    "pdf_upload_hint": "PDF file 5MB aia tlem chauh phal a ni",
+    "pdf_uploading": "PDF upload mek a ni...",
+    "pdf_uploaded": "PDF upload hlawhtling a ni ta"
   },
   "report": {
     "title": "Hna Post Report-na",

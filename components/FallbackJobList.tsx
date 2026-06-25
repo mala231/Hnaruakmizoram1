@@ -33,11 +33,10 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
             <button
               type="button"
               onClick={() => setLayout("grid")}
-              className={`p-1.5 rounded-md cursor-pointer transition-colors ${
-                layout === "grid"
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+              className={`p-1.5 rounded-md cursor-pointer transition-colors ${layout === "grid"
+                ? "bg-white text-primary shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+                }`}
               title="Grid View"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,11 +46,10 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
             <button
               type="button"
               onClick={() => setLayout("list")}
-              className={`p-1.5 rounded-md cursor-pointer transition-colors ${
-                layout === "list"
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+              className={`p-1.5 rounded-md cursor-pointer transition-colors ${layout === "list"
+                ? "bg-white text-primary shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+                }`}
               title="List View"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

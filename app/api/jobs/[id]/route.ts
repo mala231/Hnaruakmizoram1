@@ -62,6 +62,7 @@ export async function PUT(
       address,
       deadline,
       interviewTime,
+      pdfUrl,
     } = body;
 
     // Validate input fields
@@ -102,6 +103,7 @@ export async function PUT(
         address: address.trim(),
         deadline: new Date(deadline),
         interviewTime: interviewTime.trim(),
+        pdfUrl: pdfUrl || null,
       },
     });
 

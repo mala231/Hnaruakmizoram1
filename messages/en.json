@@ -91,7 +91,12 @@
     "share_title": "Share this job with others",
     "report_btn": "Report this listing",
     "not_found": "The job listing you are looking for was not found or has expired.",
-    "view_details": "View Details"
+    "view_details": "View Details",
+    "download_pdf": "Download Official PDF",
+    "pdf_upload_label": "Official PDF Circular (Optional)",
+    "pdf_upload_hint": "Only PDF files under 5MB are allowed",
+    "pdf_uploading": "Uploading PDF...",
+    "pdf_uploaded": "PDF uploaded successfully"
   },
   "report": {
     "title": "Report Employer",

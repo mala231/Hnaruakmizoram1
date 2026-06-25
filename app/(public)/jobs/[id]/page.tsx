@@ -277,6 +277,39 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </div>
 
+              {/* PDF Circular Download */}
+              {job.pdfUrl && (
+                <div style={{ marginTop: "8px", paddingTop: "16px", borderTop: "1px solid #f0f9ff" }}>
+                  <a
+                    href={`https://docs.google.com/viewer?url=${encodeURIComponent(job.pdfUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      width: "100%",
+                      boxSizing: "border-box",
+                      background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "13px",
+                      padding: "12px",
+                      borderRadius: "12px",
+                      textAlign: "center",
+                      textDecoration: "none",
+                      boxShadow: "0 4px 12px rgba(239, 68, 68, 0.2)",
+                    }}
+                  >
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    {t("jobs.download_pdf", lang)}
+                  </a>
+                </div>
+              )}
+
               {/* Social Shares */}
               <div style={{ marginTop: "8px", paddingTop: "16px", borderTop: "1px solid #f0f9ff", display: "flex", flexDirection: "column", gap: "12px" }}>
                 <h4 style={{ fontSize: "11px", color: "#1c7dfa", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>

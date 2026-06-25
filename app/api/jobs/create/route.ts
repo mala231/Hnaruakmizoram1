@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       deadline,
       interviewTime,
       durationDays,
+      pdfUrl,
     } = body;
 
     // 2. Validate input fields
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
         interviewTime: interviewTime.trim(),
         status: "draft", // Saved as draft pending checkout payment
         durationDays,
+        pdfUrl: pdfUrl || null,
       },
     });
 

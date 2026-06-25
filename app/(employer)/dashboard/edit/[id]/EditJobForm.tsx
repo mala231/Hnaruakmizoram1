@@ -20,6 +20,7 @@ interface JobData {
   address: string;
   deadline: string | Date;
   interviewTime: string;
+  pdfUrl?: string | null;
 }
 
 interface EditJobFormProps {
@@ -42,6 +43,48 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
     new Date(job.deadline).toISOString().split("T")[0]
   );
   const [interviewTime, setInterviewTime] = useState(job.interviewTime);
+  const [pdfUrl, setPdfUrl] = useState(job.pdfUrl || "");
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+
+  const handlePdfChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setPdfError(t("jobs.pdf_upload_hint"));
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPdfError(t("jobs.pdf_upload_hint"));
+      return;
+    }
+
+    setPdfError("");
+    setPdfUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setPdfUrl(data.url);
+      } else {
+        setPdfError(data.error || "Upload failed.");
+      }
+    } catch (err) {
+      setPdfError("Upload failed.");
+    } finally {
+      setPdfUploading(false);
+    }
+  };
 
   // Status states
   const [submitting, setSubmitting] = useState(false);
@@ -73,6 +116,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
           address,
           deadline,
           interviewTime,
+          pdfUrl,
         }),
       });
 
@@ -158,7 +202,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
 
       {/* Edit Form */}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-        
+
         {/* Job Title */}
         <div>
           <label style={{ fontSize: "13px", fontWeight: 700, color: "#0f1b30", display: "block", marginBottom: "8px" }}>
@@ -396,6 +440,95 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
           </div>
         </div>
 
+        {/* PDF Circular Upload */}
+        <div style={{ paddingTop: "16px", borderTop: "1px solid #f3f4f6" }}>
+          <label style={{ fontSize: "13px", fontWeight: 700, color: "#0f1b30", display: "block", marginBottom: "8px" }}>
+            {t("jobs.pdf_upload_label")}
+          </label>
+          <input
+            id="pdf-file-input"
+            type="file"
+            accept=".pdf"
+            disabled={submitting || pdfUploading}
+            onChange={handlePdfChange}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              backgroundColor: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              padding: "12px 16px",
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "#1f2937",
+              outline: "none",
+              fontFamily: "inherit",
+              cursor: "pointer"
+            }}
+          />
+          <p style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px", marginBottom: 0 }}>
+            {t("jobs.pdf_upload_hint")}
+          </p>
+
+          {pdfUploading && (
+            <p style={{ fontSize: "12px", color: "#1c7dfa", fontWeight: 600, marginTop: "8px", marginBottom: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              {t("jobs.pdf_uploading")}
+            </p>
+          )}
+
+          {pdfUrl && !pdfUploading && (
+            <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <p style={{ fontSize: "12px", color: "#16a34a", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {t("jobs.pdf_uploaded")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPdfUrl("");
+                    const fileInput = document.getElementById("pdf-file-input") as HTMLInputElement;
+                    if (fileInput) fileInput.value = "";
+                  }}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "#dc2626",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    padding: 0,
+                    fontFamily: "inherit"
+                  }}
+                >
+                  Remove PDF
+                </button>
+              </div>
+              <a
+                href={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "11px", color: "#1c7dfa", textDecoration: "underline", fontWeight: 600, alignSelf: "flex-start" }}
+              >
+                View current PDF
+              </a>
+            </div>
+          )}
+
+          {pdfError && (
+            <p style={{ fontSize: "12px", color: "#dc2626", fontWeight: 600, marginTop: "8px", marginBottom: 0 }}>
+              {pdfError}
+            </p>
+          )}
+        </div>
+
         {/* Form Actions */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", paddingTop: "20px", borderTop: "1px solid #f3f4f6" }}>
           <button
@@ -414,7 +547,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
               fontFamily: "inherit"
             }}
           >
-            Kir leh (Cancel)
+            Cancel
           </button>
           <button
             type="submit"
@@ -432,7 +565,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
               fontFamily: "inherit"
             }}
           >
-            {submitting ? "Khek mek..." : "Khek rawh (Save Changes)"}
+            {submitting ? "Saving Changes..." : "Save Changes"}
           </button>
         </div>
 

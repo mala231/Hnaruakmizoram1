@@ -83,6 +83,7 @@ export async function syncJobToAlgolia(jobId: string) {
         employerName: truncate(job.employer.username, 100),
         employerLogoUrl: safeLogoUrl(job.employer.logoUrl),
         employerIsVerified: job.employer.isVerified,
+        pdfUrl: job.pdfUrl,
       },
     });
   } catch (error) {
@@ -156,6 +157,7 @@ export async function rebuildAlgoliaIndex() {
       employerName: truncate(job.employer.username, 100),
       employerLogoUrl: safeLogoUrl(job.employer.logoUrl),
       employerIsVerified: job.employer.isVerified,
+      pdfUrl: job.pdfUrl,
     }));
 
     if (objects.length > 0) {
