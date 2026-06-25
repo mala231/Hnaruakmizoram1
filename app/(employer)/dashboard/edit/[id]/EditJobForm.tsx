@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { t } from "@/lib/i18n";
 import MapSelector from "@/components/MapSelector";
 
 interface Option {
@@ -443,7 +442,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
         {/* PDF Circular Upload */}
         <div style={{ paddingTop: "16px", borderTop: "1px solid #f3f4f6" }}>
           <label style={{ fontSize: "13px", fontWeight: 700, color: "#0f1b30", display: "block", marginBottom: "8px" }}>
-            {t("jobs.pdf_upload_label")}
+            Official PDF Circular (Optional)
           </label>
           <input
             id="pdf-file-input"
@@ -467,7 +466,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
             }}
           />
           <p style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px", marginBottom: 0 }}>
-            {t("jobs.pdf_upload_hint")}
+            Upload the official government PDF circular (max 10 MB).
           </p>
 
           {pdfUploading && (
@@ -476,7 +475,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              {t("jobs.pdf_uploading")}
+              Uploading PDF...
             </p>
           )}
 
@@ -487,7 +486,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  {t("jobs.pdf_uploaded")}
+                  PDF uploaded successfully
                 </p>
                 <button
                   type="button"
