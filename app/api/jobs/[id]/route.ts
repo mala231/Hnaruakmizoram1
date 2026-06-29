@@ -107,8 +107,10 @@ export async function PUT(
       },
     });
 
-    // Sync edited job post to Algolia search index
-    await syncJobToAlgolia(id);
+    // Sync edited job post to Algolia search index in the background
+    syncJobToAlgolia(id).catch((err) =>
+      console.error("[Algolia Sync Error] Failed to sync job after edit:", err)
+    );
 
     return NextResponse.json({ success: true, data: updatedJob });
   } catch (err) {
@@ -162,14 +164,81 @@ export async function DELETE(
       data: { status: "deleted" },
     });
 
-    // Remove deleted job post from Algolia search index
-    await deleteJobFromAlgolia(id);
+    // Remove deleted job post from Algolia search index in the background
+    deleteJobFromAlgolia(id).catch((err) =>
+      console.error("[Algolia Sync Error] Failed to delete job from index:", err)
+    );
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("DELETE job error:", err);
     return NextResponse.json(
       { success: false, error: "Hna delete hi a hlawhchham rih." },
+      { status: 500 }
+    );
+  }
+}
+
+// POST handler as alternative fallback to PUT/DELETE (handles actions like delete)
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { action } = body;
+
+    if (action === "delete") {
+      const employerId = await verifyEmployer();
+      if (!employerId) {
+        return NextResponse.json(
+          { success: false, error: "Thuneihna i nei lo. Lo lut leh rawh." },
+          { status: 401 }
+        );
+      }
+
+      const { id } = await params;
+
+      const job = await prisma.jobPost.findUnique({
+        where: { id },
+      });
+
+      if (!job) {
+        return NextResponse.json(
+          { success: false, error: "Hna puanzar hi hmuh a ni lo." },
+          { status: 404 }
+        );
+      }
+
+      if (job.employerId !== employerId) {
+        return NextResponse.json(
+          { success: false, error: "Hna hi i ta a nih loh avangin i delete thei lo." },
+          { status: 403 }
+        );
+      }
+
+      // Soft-delete
+      await prisma.jobPost.update({
+        where: { id },
+        data: { status: "deleted" },
+      });
+
+      // Remove in background
+      deleteJobFromAlgolia(id).catch((err) =>
+        console.error("[Algolia Sync Error] Failed to delete job from index:", err)
+      );
+
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json(
+      { success: false, error: "Action a dik lo." },
+      { status: 400 }
+    );
+  } catch (err) {
+    console.error("POST job action error:", err);
+    return NextResponse.json(
+      { success: false, error: "Server buaina a awm e." },
       { status: 500 }
     );
   }

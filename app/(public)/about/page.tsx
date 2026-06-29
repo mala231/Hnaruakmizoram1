@@ -2,10 +2,24 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
+import { verifyJWT } from "@/lib/auth";
 
 export default async function AboutPage() {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
+  const sessionCookie = cookieStore.get("employer_session")?.value;
+
+  let isLoggedIn = false;
+  if (sessionCookie) {
+    try {
+      const payload = await verifyJWT(sessionCookie);
+      if (payload && payload.role === "employer") {
+        isLoggedIn = true;
+      }
+    } catch (e) {
+      console.error("About page session verification failed:", e);
+    }
+  }
 
   let dbContent: any = null;
   try {
@@ -285,7 +299,7 @@ export default async function AboutPage() {
           </div>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <Link
-              href="/register"
+              href={isLoggedIn ? "/post-job" : "/login"}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

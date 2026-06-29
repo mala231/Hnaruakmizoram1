@@ -60,6 +60,7 @@ interface JobPostItem {
   shortDescription: string;
   isFeatured: boolean;
   status: string;
+  durationDays: number;
   createdAt: string;
   employer: {
     username: string;
@@ -73,7 +74,7 @@ interface JobPostItem {
   };
 }
 
-type TabType = "categories" | "locations" | "tickers" | "ads" | "employers" | "reports" | "about_page" | "jobs";
+type TabType = "categories" | "locations" | "tickers" | "ads" | "employers" | "reports" | "about_page" | "jobs" | "approvals";
 
 interface WhyUsItem {
   title_en: string;
@@ -789,6 +790,7 @@ export default function AdminDashboard() {
             { id: "tickers", label: t("admin.tickers") },
             { id: "ads", label: t("admin.ads") },
             { id: "employers", label: t("admin.employers") },
+            { id: "approvals", label: `Pending Approvals${jobs.filter(j => j.status === "pending").length > 0 ? ` (${jobs.filter(j => j.status === "pending").length})` : ""}` },
             { id: "jobs", label: "Featured Jobs" },
             { id: "reports", label: t("admin.reports") },
             { id: "about_page", label: "About Us Page" },
@@ -1266,6 +1268,128 @@ export default function AdminDashboard() {
             )}
 
             {/* JOBS FEATURED MANAGER TAB */}
+            {/* PENDING APPROVALS TAB */}
+            {activeTab === "approvals" && (
+              <div className="lg:col-span-3 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant/20 pb-4">
+                  <div>
+                    <h3 className="title-md text-primary">Pending Job Approvals</h3>
+                    <p className="text-xs text-on-surface-variant font-sans">Review and approve or reject job posts submitted by employers. Approved jobs go live immediately.</p>
+                  </div>
+                  <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "12px", padding: "8px 16px", fontSize: "12px", fontWeight: 700, color: "#92400e" }}>
+                    {jobs.filter(j => j.status === "pending").length} Pending
+                  </div>
+                </div>
+
+                {jobs.filter(j => j.status === "pending").length === 0 ? (
+                  <div style={{ padding: "48px 0", textAlign: "center", color: "#6b7280" }}>
+                    <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
+                    <p style={{ fontWeight: 700, fontSize: "15px", color: "#111827" }}>All caught up!</p>
+                    <p style={{ fontSize: "13px", marginTop: "4px" }}>No pending job posts awaiting approval.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {jobs
+                      .filter(j => j.status === "pending")
+                      .map((job) => (
+                        <div key={job.id} style={{
+                          border: "1px solid #fde68a",
+                          borderRadius: "16px",
+                          padding: "20px",
+                          backgroundColor: "#fffbeb",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                        }}>
+                          {/* Job header */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
+                            <div>
+                              <h4 style={{ fontSize: "16px", fontWeight: 800, color: "#111827", margin: 0 }}>{job.title}</h4>
+                              <p style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, marginTop: "4px", marginBottom: 0 }}>
+                                {job.employer.username} • {job.category.name} • {job.location.name}
+                              </p>
+                              <p style={{ fontSize: "11px", color: "#92400e", fontWeight: 700, marginTop: "4px", marginBottom: 0 }}>
+                                Duration: {job.durationDays} day{job.durationDays !== 1 ? "s" : ""} • Submitted: {new Date(job.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span style={{ backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "100px", padding: "4px 12px", fontSize: "11px", fontWeight: 700, color: "#92400e", whiteSpace: "nowrap" }}>
+                              ⏳ Pending
+                            </span>
+                          </div>
+
+                          {/* Short description */}
+                          <p style={{ fontSize: "13px", color: "#374151", margin: 0, lineHeight: 1.6, backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px" }}>
+                            {job.shortDescription}
+                          </p>
+
+                          {/* Approve / Reject buttons */}
+                          <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                            <button
+                              disabled={submitting}
+                              onClick={() => setConfirmDialog({
+                                title: "Reject Job Post",
+                                message: `"${job.title}" hi reject duh i ni em? Employer chuan dashboard-ah "Rejected" a ti ang.`,
+                                onConfirm: async () => {
+                                  setSubmitting(true);
+                                  try {
+                                    const res = await fetch(`/api/admin/jobs/${job.id}/reject`, { method: "POST" });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      triggerAlert("success", "Job post a reject a ni ta.");
+                                      fetchData();
+                                    } else {
+                                      triggerAlert("error", data.error || "Reject a hlawhchham.");
+                                    }
+                                  } catch { triggerAlert("error", "Server error."); }
+                                  finally { setSubmitting(false); }
+                                }
+                              })}
+                              style={{
+                                padding: "10px 20px", borderRadius: "10px",
+                                border: "1px solid #fca5a5", backgroundColor: "#fff5f5",
+                                color: "#dc2626", fontWeight: 700, fontSize: "13px",
+                                cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit",
+                              }}
+                            >
+                              ✕ Reject
+                            </button>
+                            <button
+                              disabled={submitting}
+                              onClick={() => setConfirmDialog({
+                                title: "Approve Job Post",
+                                message: `"${job.title}" hi approve duh i ni em? Approve a ni chuan job hi ${job.durationDays} ni chhung live a ni ang.`,
+                                onConfirm: async () => {
+                                  setSubmitting(true);
+                                  try {
+                                    const res = await fetch(`/api/admin/jobs/${job.id}/approve`, { method: "POST" });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      triggerAlert("success", "Job post a approve a ni ta! Live a ni e.");
+                                      fetchData();
+                                    } else {
+                                      triggerAlert("error", data.error || "Approve a hlawhchham.");
+                                    }
+                                  } catch { triggerAlert("error", "Server error."); }
+                                  finally { setSubmitting(false); }
+                                }
+                              })}
+                              style={{
+                                padding: "10px 20px", borderRadius: "10px",
+                                border: "none", backgroundColor: "#16a34a",
+                                color: "#ffffff", fontWeight: 700, fontSize: "13px",
+                                cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit",
+                              }}
+                            >
+                              ✓ Approve
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === "jobs" && (
               <div className="lg:col-span-3 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-md flex flex-col gap-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant/20 pb-4">

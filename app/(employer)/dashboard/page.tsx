@@ -28,11 +28,11 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // 3. Fetch Job Listings (excluding soft-deleted ones)
+  // 3. Fetch Job Listings (excluding only soft-deleted ones)
   const jobs = await prisma.jobPost.findMany({
     where: {
       employerId: payload.userId,
-      status: { not: "deleted" }, // Hide deleted posts
+      status: { not: "deleted" }, // Show all statuses: live, pending, rejected, expired, draft
     },
     include: {
       category: true,

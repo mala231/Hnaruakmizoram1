@@ -67,7 +67,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
   const sessionCookie = cookieStore.get("employer_session")?.value;
-  
+
   let isLoggedIn = false;
   let logoUrl: string | null = null;
 

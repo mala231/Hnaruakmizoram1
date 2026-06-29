@@ -55,8 +55,8 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setPdfError("File size must be under 10 MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      setPdfError("File size must be under 5 MB.");
       return;
     }
 
@@ -466,7 +466,7 @@ export default function EditJobForm({ job, categories, locations }: EditJobFormP
             }}
           />
           <p style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px", marginBottom: 0 }}>
-            Upload the official government PDF circular (max 10 MB).
+            Upload the official government PDF circular (max 5 MB).
           </p>
 
           {pdfUploading && (

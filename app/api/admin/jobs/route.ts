@@ -12,7 +12,7 @@ async function verifyAdmin() {
   return payload?.role === "admin";
 }
 
-// GET all live job posts (admin only)
+// GET all job posts for admin (all statuses except deleted)
 export async function GET() {
   try {
     const isAdmin = await verifyAdmin();
@@ -25,7 +25,7 @@ export async function GET() {
 
     const items = await prisma.jobPost.findMany({
       where: {
-        status: "live",
+        status: { not: "deleted" },
         employer: { isDeleted: false },
       },
       include: {

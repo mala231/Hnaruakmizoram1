@@ -1,10 +1,10 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model Admin {
@@ -38,24 +38,24 @@ model Employer {
 model JobPost {
   id               String    @id @default(uuid())
   employerId       String    @map("employer_id")
-  employer         Employer  @relation(fields: [employerId], references: [id])
   title            String
   shortDescription String    @map("short_description")
-  description      String    @db.Text
+  description      String
   categoryId       Int       @map("category_id")
-  category         Category  @relation(fields: [categoryId], references: [id])
   locationId       Int       @map("location_id")
-  location         Location  @relation(fields: [locationId], references: [id])
   address          String
   deadline         DateTime
   interviewTime    String    @map("interview_time")
-  status           String    @default("draft") // draft, live, expired, deleted
+  status           String    @default("draft")
   durationDays     Int       @map("duration_days")
   expiresAt        DateTime? @map("expires_at")
   isFeatured       Boolean   @default(false) @map("is_featured")
-  pdfUrl           String?   @map("pdf_url")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
+  pdfUrl           String?   @map("pdf_url")
+  category         Category  @relation(fields: [categoryId], references: [id])
+  employer         Employer  @relation(fields: [employerId], references: [id])
+  location         Location  @relation(fields: [locationId], references: [id])
   payments         Payment[]
   reports          Report[]
 
@@ -86,17 +86,17 @@ model Location {
 model Payment {
   id                String   @id @default(uuid())
   employerId        String   @map("employer_id")
-  employer          Employer @relation(fields: [employerId], references: [id])
   jobPostId         String   @map("job_post_id")
-  jobPost           JobPost  @relation(fields: [jobPostId], references: [id])
   razorpayOrderId   String   @unique @map("razorpay_order_id")
   razorpayPaymentId String?  @unique @map("razorpay_payment_id")
   razorpaySignature String?  @map("razorpay_signature")
   amount            Decimal  @db.Decimal(10, 2)
   durationDays      Int      @map("duration_days")
-  status            String   @default("pending") // pending, confirmed, failed
+  status            String   @default("pending")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
+  employer          Employer @relation(fields: [employerId], references: [id])
+  jobPost           JobPost  @relation(fields: [jobPostId], references: [id])
 
   @@map("payments")
 }
@@ -104,12 +104,12 @@ model Payment {
 model Report {
   id        Int      @id @default(autoincrement())
   jobPostId String   @map("job_post_id")
-  jobPost   JobPost  @relation(fields: [jobPostId], references: [id])
   reason    String
-  details   String?  @db.Text
-  status    String   @default("pending") // pending, reviewed, dismissed
+  details   String?
+  status    String   @default("pending")
   createdAt DateTime @default(now()) @map("created_at")
   ipAddress String?  @map("ip_address")
+  jobPost   JobPost  @relation(fields: [jobPostId], references: [id])
 
   @@map("reports")
 }
@@ -136,9 +136,8 @@ model Advertisement {
 
 model Setting {
   key       String   @id
-  value     String   @db.Text
+  value     String
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("settings")
 }
-

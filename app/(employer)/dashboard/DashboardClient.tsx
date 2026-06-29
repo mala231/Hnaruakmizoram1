@@ -46,12 +46,16 @@ interface DashboardClientProps {
 export default function DashboardClient({ employer, jobs, payments }: DashboardClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"listings" | "billing" | "settings">("listings");
-  const [listingsTab, setListingsTab] = useState<"live" | "expired" | "draft">("live");
+  const [listingsTab, setListingsTab] = useState<"live" | "expired" | "draft" | "pending" | "rejected">("live");
 
   // Extension Modal States
   const [extendingJobId, setExtendingJobId] = useState<string | null>(null);
   const [extendingDuration, setExtendingDuration] = useState<15 | 30>(15);
   const [extendingTitle, setExtendingTitle] = useState("");
+
+  // Delete Confirmation Modal States
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmTitle, setDeleteConfirmTitle] = useState("");
 
   // Alert states
   const [submitting, setSubmitting] = useState(false);
@@ -213,16 +217,27 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
   );
 
   const draftJobs = jobs.filter((j) => j.status === "draft");
+  const pendingJobs = jobs.filter((j) => j.status === "pending");
+  const rejectedJobs = jobs.filter((j) => j.status === "rejected");
 
-  // Delete Listing Action
-  const handleDeleteJob = async (id: string, title: string) => {
-    const confirmMsg = `Hna puanzar "${title}" hi i delete duh takzet em?`;
-    if (!window.confirm(confirmMsg)) return;
+  // Delete Listing Action — opens custom modal instead of window.confirm
+  const handleDeleteJob = (id: string, title: string) => {
+    setDeleteConfirmId(id);
+    setDeleteConfirmTitle(title);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
+    setDeleteConfirmTitle("");
 
     setSubmitting(true);
     try {
       const res = await fetch(`/api/jobs/${id}`, {
-        method: "DELETE",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete" }),
       });
 
       const data = await res.json();
@@ -344,6 +359,80 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
   return (
     <div style={{ backgroundColor: "#fafbfc", minHeight: "100vh", padding: "48px 24px", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "24px",
+        }}>
+          <div style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "20px",
+            padding: "32px",
+            maxWidth: "420px",
+            width: "100%",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            animation: "fadeInUp 0.2s ease",
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: "56px", height: "56px", borderRadius: "50%",
+              backgroundColor: "#fef2f2",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto",
+            }}>
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#ef4444" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            {/* Title */}
+            <div style={{ textAlign: "center" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#111827", margin: "0 0 8px" }}>
+                Hna Puanzar Delete
+              </h3>
+              <p style={{ fontSize: "14px", color: "#6b7280", fontWeight: 500, margin: 0, lineHeight: 1.6 }}>
+                <span style={{ color: "#111827", fontWeight: 700 }}>"{deleteConfirmTitle}"</span> hi i delete duh takzet em? Delete a ni ta chuan a lo chuang leh thei lo.
+              </p>
+            </div>
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                onClick={() => { setDeleteConfirmId(null); setDeleteConfirmTitle(""); }}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: "12px",
+                  border: "1.5px solid #e5e7eb", backgroundColor: "#f9fafb",
+                  color: "#374151", fontWeight: 700, fontSize: "14px",
+                  cursor: "pointer", fontFamily: "inherit",
+                  transition: "background-color 0.2s",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={submitting}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: "12px",
+                  border: "none", backgroundColor: submitting ? "#fca5a5" : "#ef4444",
+                  color: "#ffffff", fontWeight: 700, fontSize: "14px",
+                  cursor: submitting ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                  transition: "background-color 0.2s",
+                }}
+              >
+                {submitting ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ maxWidth: "1120px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "32px" }}>
 
         {/* Dynamic Alerts */}
@@ -506,11 +595,13 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
               {/* Inner Tabs selection */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #eef2ff", paddingBottom: "16px" }}>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   {[
-                    { id: "live", count: liveJobs.length, label: "Live" },
-                    { id: "expired", count: expiredJobs.length, label: "Expired" },
-                    { id: "draft", count: draftJobs.length, label: "Draft" }
+                    { id: "live", count: liveJobs.length, label: "Live", color: "#1c7dfa" },
+                    { id: "pending", count: pendingJobs.length, label: "Pending", color: "#d97706" },
+                    { id: "expired", count: expiredJobs.length, label: "Expired", color: "#6b7280" },
+                    { id: "rejected", count: rejectedJobs.length, label: "Rejected", color: "#dc2626" },
+                    { id: "draft", count: draftJobs.length, label: "Draft", color: "#6b7280" },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -522,7 +613,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                         borderRadius: "100px",
                         border: "none",
                         cursor: "pointer",
-                        backgroundColor: listingsTab === tab.id ? "#1c7dfa" : "#f3f4f6",
+                        backgroundColor: listingsTab === tab.id ? tab.color : "#f3f4f6",
                         color: listingsTab === tab.id ? "#ffffff" : "#4b5563",
                         transition: "all 0.2s",
                         fontFamily: "inherit"
@@ -551,114 +642,131 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
               </div>
 
               {/* Listings Render */}
-              {((listingsTab === "live" ? liveJobs : listingsTab === "expired" ? expiredJobs : draftJobs)).length === 0 ? (
-                <div style={{ padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center" }}>
-                  <div style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af" }}>
-                    <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ margin: "auto" }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
+              {(() => {
+                const currentJobs =
+                  listingsTab === "live" ? liveJobs
+                    : listingsTab === "expired" ? expiredJobs
+                      : listingsTab === "pending" ? pendingJobs
+                        : listingsTab === "rejected" ? rejectedJobs
+                          : draftJobs;
+
+                if (currentJobs.length === 0) return (
+                  <div style={{ padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center" }}>
+                    <div style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af" }}>
+                      <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ margin: "auto" }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111827", margin: 0 }}>
+                        {listingsTab === "live" ? "Hna live i nei lo"
+                          : listingsTab === "pending" ? "Hna pending i nei lo"
+                            : listingsTab === "expired" ? "Hna expire i nei lo"
+                              : listingsTab === "rejected" ? "Hna rejected i nei lo"
+                                : "Hna draft a awm lo"}
+                      </h3>
+                      <p style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500, marginTop: "4px", marginBottom: 0 }}>
+                        {listingsTab === "live" ? "Puanzar active lai i nei lo e."
+                          : listingsTab === "pending" ? "Hna post admin pending confirmation a awm lo."
+                            : listingsTab === "rejected" ? "Admin in i hna post reject a nei lo."
+                              : listingsTab === "expired" ? "Hna post expire tawh a awm lo."
+                                : "Hna draft i nei lo."}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111827", margin: 0 }}>Hna ruak he hmunah hian a awm lo</h3>
-                    <p style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500, marginTop: "4px", marginBottom: 0 }}>
-                      {listingsTab === "live"
-                        ? "Puanzar active lai i nei lo e."
-                        : listingsTab === "expired"
-                          ? "Hna puanzar hun tawp tawh a awm lo."
-                          : "Hna tawlaili / payment la fel lo a awm lo."}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {(listingsTab === "live" ? liveJobs : listingsTab === "expired" ? expiredJobs : draftJobs).map((job) => (
-                    <div
-                      key={job.id}
-                      style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "16px",
-                        padding: "20px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "16px",
-                        backgroundColor: "#ffffff",
-                        transition: "border-color 0.2s"
-                      }}
-                      className="flex-col md:flex-row items-start md:items-center"
-                    >
-                      <div>
-                        <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#111827", margin: 0 }}>{job.title}</h4>
-                        <p style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, marginTop: "4px", marginBottom: 0 }}>
-                          {job.category.name} • District: {job.location.name}
-                        </p>
-                        {job.deadline && (
-                          <p style={{ fontSize: "11px", color: "#1c7dfa", fontWeight: 700, marginTop: "6px", marginBottom: 0 }}>
-                            Deadline: {new Date(job.deadline).toLocaleDateString()}
+                );
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {currentJobs.map((job) => (
+                      <div
+                        key={job.id}
+                        style={{
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "16px",
+                          padding: "20px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "16px",
+                          backgroundColor: "#ffffff",
+                          transition: "border-color 0.2s"
+                        }}
+                        className="flex-col md:flex-row items-start md:items-center"
+                      >
+                        <div>
+                          <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#111827", margin: 0 }}>{job.title}</h4>
+                          <p style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, marginTop: "4px", marginBottom: 0 }}>
+                            {job.category.name} • District: {job.location.name}
                           </p>
-                        )}
-                      </div>
+                          {job.deadline && (
+                            <p style={{ fontSize: "11px", color: "#1c7dfa", fontWeight: 700, marginTop: "6px", marginBottom: 0 }}>
+                              Deadline: {new Date(job.deadline).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }} className="shrink-0 self-end md:self-auto">
-                        <Link
-                          href={`/dashboard/edit/${job.id}`}
-                          style={{
-                            border: "1px solid #d1d5db",
-                            backgroundColor: "#ffffff",
-                            color: "#374151",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            padding: "8px 16px",
-                            borderRadius: "10px",
-                            textDecoration: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {t("dashboard.edit_btn")}
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteJob(job.id, job.title)}
-                          disabled={submitting}
-                          style={{
-                            border: "1px solid #fca5a5",
-                            backgroundColor: "#fff5f5",
-                            color: "#ef4444",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            padding: "8px 16px",
-                            borderRadius: "10px",
-                            cursor: "pointer",
-                            fontFamily: "inherit"
-                          }}
-                        >
-                          {t("dashboard.delete_btn")}
-                        </button>
-
-                        {(listingsTab === "expired" || listingsTab === "draft") && (
-                          <button
-                            onClick={() => {
-                              setExtendingJobId(job.id);
-                              setExtendingTitle(job.title);
-                            }}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }} className="shrink-0 self-end md:self-auto">
+                          <Link
+                            href={`/dashboard/edit/${job.id}`}
                             style={{
-                              backgroundColor: "#1c7dfa",
-                              color: "#ffffff",
+                              border: "1px solid #d1d5db",
+                              backgroundColor: "#ffffff",
+                              color: "#374151",
                               fontSize: "12px",
                               fontWeight: 700,
                               padding: "8px 16px",
                               borderRadius: "10px",
-                              border: "none",
+                              textDecoration: "none",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {t("dashboard.edit_btn")}
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteJob(job.id, job.title)}
+                            disabled={submitting}
+                            style={{
+                              border: "1px solid #fca5a5",
+                              backgroundColor: "#fff5f5",
+                              color: "#ef4444",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              padding: "8px 16px",
+                              borderRadius: "10px",
                               cursor: "pointer",
                               fontFamily: "inherit"
                             }}
                           >
-                            {t("dashboard.extend_btn")}
+                            {t("dashboard.delete_btn")}
                           </button>
-                        )}
+
+                          {(listingsTab === "expired" || listingsTab === "draft") && (
+                            <button
+                              onClick={() => {
+                                setExtendingJobId(job.id);
+                                setExtendingTitle(job.title);
+                              }}
+                              style={{
+                                backgroundColor: "#1c7dfa",
+                                color: "#ffffff",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                padding: "8px 16px",
+                                borderRadius: "10px",
+                                border: "none",
+                                cursor: "pointer",
+                                fontFamily: "inherit"
+                              }}
+                            >
+                              {t("dashboard.extend_btn")}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Quick Stats sidebar panel */}

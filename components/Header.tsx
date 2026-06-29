@@ -95,6 +95,21 @@ function HeaderContent({
 }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const { categoryId, setCategoryId, locationId } = useSearch();
+
+  const handleCategorySelect = (id: string) => {
+    setCategoryId(id);
+    const params = new URLSearchParams();
+    const query = searchParams?.get("query");
+    if (query) params.set("query", query);
+    if (locationId) params.set("locationId", locationId);
+    const searchStr = params.toString();
+    const targetPath = `/categories/${id || "all"}`;
+    router.push(searchStr ? `${targetPath}?${searchStr}` : targetPath);
+  };
 
   if (pathname?.startsWith("/admin")) {
     return null;
@@ -172,12 +187,41 @@ function HeaderContent({
         </div>
 
         {/* Search Bar (centered on desktop, second row on mobile) */}
-        <div className="w-full md:flex-grow md:max-w-lg lg:max-w-xl md:mx-4">
+        <div className="w-full md:flex-grow md:max-w-lg lg:max-w-xl md:mx-4 flex flex-col gap-1.5">
           <Suspense fallback={
             <div className="w-full h-9 md:h-10 bg-slate-100 rounded-xl animate-pulse" />
           }>
             <HeaderSearchForm districts={districts} lang={lang} />
           </Suspense>
+
+          {/* Categories dropdown under search bar on mobile only */}
+          <div className="flex sm:hidden w-full">
+            <select
+              value=""
+              onChange={(e) => handleCategorySelect(e.target.value)}
+              aria-label="Filter by category"
+              className={`appearance-none h-8 pl-2 pr-6 text-[10px] font-bold rounded-xl border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all w-[102px] max-w-[102px] truncate ${(categoryId && categoryId !== "11")
+                  ? "bg-primary/10 border-primary/30 text-blue-700"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-primary/30"
+                }`}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
+                backgroundPosition: "right 6px center",
+                backgroundSize: "8px",
+                backgroundRepeat: "no-repeat"
+              }}
+            >
+              <option value="" disabled hidden>{lang === "mz" ? "Hna" : "Jobs"}</option>
+              <option value="all">{lang === "mz" ? "Hna Zawng Zawng" : "All Categories"}</option>
+              {categories
+                .filter((cat) => cat.id !== 11)
+                .map((cat) => (
+                  <option key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </option>
+                ))}
+            </select>
+          </div>
         </div>
 
         {/* Desktop CTA + Language Toggle */}
@@ -241,11 +285,13 @@ function HeaderContent({
       </div>
 
       {/* Bottom Row (Sub-header): Category Navigation */}
-      <Suspense fallback={
-        <div className="w-full h-11 bg-slate-50 border-b border-blue-100/40 animate-pulse" />
-      }>
-        <CategoryNavStrip categories={categories} lang={lang} />
-      </Suspense>
+      <div className="hidden sm:block">
+        <Suspense fallback={
+          <div className="w-full h-11 bg-slate-50 border-b border-blue-100/40 animate-pulse" />
+        }>
+          <CategoryNavStrip categories={categories} lang={lang} />
+        </Suspense>
+      </div>
 
       {/* Mobile Navigation Drawer */}
       {isOpen && (
@@ -400,7 +446,7 @@ function HeaderSearchForm({
       userIsTypingRef.current = false;
       const params = buildParams(query, locationId);
       const searchStr = params.toString();
-      
+
       // Synchronously extract active category from pathname to prevent race condition loop
       const match = pathname?.match(/\/categories\/([^/]+)/);
       const pathCatId = match ? match[1] : "";
@@ -426,7 +472,7 @@ function HeaderSearchForm({
     setShowSuggestions(false);
     const params = buildParams(query, locationId);
     const searchStr = params.toString();
-    
+
     const match = pathname?.match(/\/categories\/([^/]+)/);
     const pathCatId = match ? match[1] : "";
     const targetPath = `/categories/${pathCatId || "all"}`;
@@ -527,7 +573,7 @@ function HeaderSearchForm({
         className="w-full flex items-center border border-slate-200/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-xl overflow-hidden bg-white shadow-sm transition-all h-9 md:h-10"
       >
         {/* District Dropdown Selector */}
-        <div className="relative h-full flex items-center bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors shrink-0">
+        <div className="relative h-full flex items-center bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors w-[102px] min-w-[102px] max-w-[102px] sm:w-auto sm:min-w-0 sm:max-w-none sm:shrink-0">
           <select
             value={locationId}
             onChange={(e) => {
@@ -535,7 +581,13 @@ function HeaderSearchForm({
               setLocationId(val);
             }}
             aria-label="Filter by district"
-            className="appearance-none bg-transparent h-full pl-2.5 pr-5 text-[10px] font-bold text-slate-700 cursor-pointer focus:outline-none"
+            className="appearance-none bg-transparent h-full pl-2 pr-6 text-[10px] font-bold text-slate-700 cursor-pointer focus:outline-none w-full truncate"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
+              backgroundPosition: "right 6px center",
+              backgroundSize: "8px",
+              backgroundRepeat: "no-repeat"
+            }}
           >
             <option value="">{lang === "mz" ? "District" : "District"}</option>
             {districts.map((d) => (
@@ -750,25 +802,30 @@ function CategoryNavStrip({
 
   return (
     <div className="w-full bg-slate-50 border-b border-blue-100/40">
-      <div className="max-w-7xl mx-auto flex items-center h-11 gap-0 px-container-margin-mobile md:px-container-margin-desktop">
+      <div className="max-w-7xl mx-auto flex items-center h-8 sm:h-11 gap-0 px-container-margin-mobile md:px-container-margin-desktop">
 
         {/* ── LEFT: Category Dropdown ── */}
-        <div className="relative shrink-0 h-full flex items-center pr-3 mr-2 border-r border-blue-100/60">
-          <div className="relative flex items-center">
+        <div className="relative shrink-0 h-full flex items-center pr-0 sm:pr-3 mr-0 sm:mr-2 border-none sm:border-r border-blue-100/60 w-[125px] sm:w-auto">
+          <div className="relative flex items-center w-full">
             {categoryId && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary z-10 ring-2 ring-slate-50" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-primary z-10 ring-2 ring-slate-50" />
             )}
             <select
               value={categoryId}
               onChange={(e) => handleCategorySelect(e.target.value)}
               aria-label="Filter by category"
-              className={`appearance-none h-8 pl-3 pr-4 text-[11px] font-bold rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-                categoryId
-                  ? "bg-primary/10 border-primary/30 text-blue-700"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-primary/30"
-              }`}
+              className={`appearance-none h-[25px] sm:h-8 pl-2.5 pr-7 text-[10px] sm:text-[11px] font-bold rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all w-full min-w-0 truncate ${categoryId
+                ? "bg-primary/10 border-primary/30 text-blue-700"
+                : "bg-white border-slate-200 text-slate-700 hover:border-primary/30"
+                }`}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
+                backgroundPosition: "right 8px center",
+                backgroundSize: "8px sm:10px",
+                backgroundRepeat: "no-repeat"
+              }}
             >
-              <option value="" disabled>{lang === "mz" ? "Category-te" : "Categories"}</option>
+              <option value="" disabled hidden>{lang === "mz" ? "Category-te" : "Categories"}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id.toString()}>
                   {cat.name}
@@ -779,11 +836,11 @@ function CategoryNavStrip({
         </div>
 
         {/* ── RIGHT: Scrollable pills ── */}
-        <div className="relative flex-1 flex items-center h-full overflow-hidden">
+        <div className="relative flex-1 hidden sm:flex items-center h-full overflow-hidden">
           {canScrollLeft && (
             <button
               onClick={() => scroll("left")}
-              className="absolute left-0 z-10 h-full px-1 flex items-center bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
+              className="absolute left-0 z-10 h-full px-1 hidden md:flex items-center bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
               aria-label="Scroll categories left"
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-primary transition-colors">
@@ -796,16 +853,15 @@ function CategoryNavStrip({
 
           <div
             ref={scrollRef}
-            className="flex items-center gap-2 overflow-x-auto scrollbar-none whitespace-nowrap h-full pl-1 pr-12 w-full"
+            className="flex items-center gap-2 overflow-x-auto scrollbar-none whitespace-nowrap h-full pl-1 pr-4 md:pr-12 w-full"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             <button
               onClick={() => handleCategorySelect("")}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border cursor-pointer ${
-                !activeCategoryId
-                  ? "bg-primary/10 border-primary/20 text-primary font-bold"
-                  : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
-              }`}
+              className={`px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[11px] md:text-xs font-semibold transition-all shrink-0 border cursor-pointer ${!activeCategoryId
+                ? "bg-primary/10 border-primary/20 text-primary font-bold"
+                : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
+                }`}
             >
               All
             </button>
@@ -815,11 +871,10 @@ function CategoryNavStrip({
                 <button
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id.toString())}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border cursor-pointer ${
-                    isActive
-                      ? "bg-primary/10 border-primary/20 text-primary font-bold"
-                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
-                  }`}
+                  className={`px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[11px] md:text-xs font-semibold transition-all shrink-0 border cursor-pointer ${isActive
+                    ? "bg-primary/10 border-primary/20 text-primary font-bold"
+                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-primary hover:border-primary/20"
+                    }`}
                 >
                   {cat.name}
                 </button>
@@ -830,7 +885,7 @@ function CategoryNavStrip({
           {canScrollRight && (
             <button
               onClick={() => scroll("right")}
-              className="absolute right-0 z-10 h-full px-1 flex items-center bg-gradient-to-l from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
+              className="absolute right-0 z-10 h-full px-1 hidden md:flex items-center bg-gradient-to-l from-slate-50 via-slate-50/90 to-transparent cursor-pointer"
               aria-label="Scroll categories right"
             >
               <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-primary transition-colors">

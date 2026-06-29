@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import Razorpay from "razorpay";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
 
@@ -50,11 +49,19 @@ export async function POST(request: Request) {
       !locationId ||
       !address || typeof address !== "string" || !address.trim() ||
       !deadline ||
-      !interviewTime || typeof interviewTime !== "string" || !interviewTime.trim() ||
-      (durationDays !== 15 && durationDays !== 30)
+      !interviewTime || typeof interviewTime !== "string" || !interviewTime.trim()
     ) {
       return NextResponse.json(
         { success: false, error: "Khawngaihin hna diltu ziahna tur zawng zawng hi dik takin ziang chhuak rawh." },
+        { status: 400 }
+      );
+    }
+
+    // 3. Validate duration (1–30 days)
+    const parsedDuration = parseInt(durationDays, 10);
+    if (isNaN(parsedDuration) || parsedDuration < 1 || parsedDuration > 30) {
+      return NextResponse.json(
+        { success: false, error: "Listing duration hi 1 aiin tam leh 30 aiin tlem a ni tur a ni." },
         { status: 400 }
       );
     }
@@ -69,7 +76,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Save draft Job Post to database
+    // 4. Save Job Post as "pending" — awaiting admin approval
     const jobPost = await prisma.jobPost.create({
       data: {
         employerId,
@@ -81,70 +88,19 @@ export async function POST(request: Request) {
         address: address.trim(),
         deadline: new Date(deadline),
         interviewTime: interviewTime.trim(),
-        status: "draft", // Saved as draft pending checkout payment
-        durationDays,
+        status: "pending", // Awaiting admin approval — no payment required
+        durationDays: parsedDuration,
         pdfUrl: pdfUrl || null,
-      },
-    });
-
-    // 4. Calculate amount
-    const amount = durationDays === 15 ? 299 : 499;
-    const amountPaise = amount * 100;
-
-    // 5. Check Razorpay settings
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-    if (!keyId || !keySecret) {
-      // Mock bypass fallback when keys are not set
-      console.log("Razorpay credentials not set. Falling back to Mock Payment Mode.");
-      return NextResponse.json({
-        success: true,
-        isMock: true,
-        jobId: jobPost.id,
-        amount,
-        title: jobPost.title,
-      });
-    }
-
-    // Initialize Razorpay Client
-    const razorpay = new Razorpay({
-      key_id: keyId,
-      key_secret: keySecret,
-    });
-
-    // Create Razorpay Order
-    const orderOptions = {
-      amount: amountPaise,
-      currency: "INR",
-      receipt: jobPost.id,
-    };
-
-    const order = await razorpay.orders.create(orderOptions);
-
-    // Save pending Payment record in database
-    await prisma.payment.create({
-      data: {
-        employerId,
-        jobPostId: jobPost.id,
-        razorpayOrderId: order.id,
-        amount,
-        durationDays,
-        status: "pending",
       },
     });
 
     return NextResponse.json({
       success: true,
-      isMock: false,
-      orderId: order.id,
-      amount: amountPaise,
-      keyId,
       jobId: jobPost.id,
     });
 
   } catch (err) {
-    console.error("Create job post / billing error:", err);
+    console.error("Create job post error:", err);
     return NextResponse.json(
       { success: false, error: "Hna thar dah a hlawhchham rih e. Server buaina a awm." },
       { status: 500 }

@@ -11,6 +11,15 @@ interface FallbackJobListProps {
   lang: string;
 }
 
+function formatDate(dateInput: Date | string | number) {
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "N/A";
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
@@ -128,7 +137,7 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
                     {job.location.name}
                   </div>
                   <span className="text-[10px] text-slate-500 font-semibold">
-                    {t("jobs.deadline", lang)}: {job.deadline ? new Date(job.deadline).toLocaleDateString() : "N/A"}
+                    {t("jobs.deadline", lang)}: {job.deadline ? formatDate(job.deadline) : "N/A"}
                   </span>
                 </div>
               </div>
@@ -213,7 +222,7 @@ export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
                     {job.category.name}
                   </span>
                   <span className="text-[10px] text-slate-500 font-bold shrink-0">
-                    {t("jobs.deadline", lang)}: {job.deadline ? new Date(job.deadline).toLocaleDateString() : "N/A"}
+                    {t("jobs.deadline", lang)}: {job.deadline ? formatDate(job.deadline) : "N/A"}
                   </span>
                 </div>
               </div>

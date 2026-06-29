@@ -10,7 +10,13 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_FROM = process.env.SMTP_FROM || "no-reply@hnaruakmizoram.com";
 
 // Check if credentials exist for a real SMTP client
-const hasSmtpConfig = !!(SMTP_HOST && SMTP_USER && SMTP_PASS);
+const hasSmtpConfig = !!(
+  SMTP_HOST &&
+  SMTP_USER &&
+  SMTP_PASS &&
+  SMTP_PASS !== "YOUR_NEW_GMAIL_APP_PASSWORD" &&
+  SMTP_PASS.trim() !== ""
+);
 
 const transporter = hasSmtpConfig
   ? nodemailer.createTransport({
@@ -47,6 +53,15 @@ export async function sendEmail({
       console.log(`[Email Sent] Successfully dispatched email to ${to}`);
     } catch (err) {
       console.error(`[Email Error] Failed to send email to ${to}:`, err);
+      console.log("\n==================================================");
+      console.log("             [SIMULATED EMAIL LOG (SMTP FAILED)]  ");
+      console.log("==================================================");
+      console.log(`From:    ${SMTP_FROM}`);
+      console.log(`To:      ${to}`);
+      console.log(`Subject: ${subject}`);
+      console.log("------------------ Content -----------------------");
+      console.log(html.replace(/<[^>]*>/g, " ").trim());
+      console.log("==================================================\n");
     }
   } else {
     // Console Logging Fallback for local environments
