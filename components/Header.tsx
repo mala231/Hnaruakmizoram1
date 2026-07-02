@@ -100,6 +100,19 @@ function HeaderContent({
 
   const { categoryId, setCategoryId, locationId } = useSearch();
 
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const handleCategorySelect = (id: string) => {
     setCategoryId(id);
     const params = new URLSearchParams();
@@ -187,7 +200,7 @@ function HeaderContent({
         </div>
 
         {/* Search Bar (centered on desktop, second row on mobile) */}
-        <div className="w-full md:flex-grow md:max-w-lg lg:max-w-xl md:mx-4 flex flex-col gap-1.5">
+        <div className="w-full md:flex-grow md:max-w-2xl lg:max-w-4xl md:mx-4 flex flex-col gap-1.5">
           <Suspense fallback={
             <div className="w-full h-9 md:h-10 bg-slate-100 rounded-xl animate-pulse" />
           }>
@@ -195,33 +208,68 @@ function HeaderContent({
           </Suspense>
 
           {/* Categories dropdown under search bar on mobile only */}
-          <div className="flex sm:hidden w-full">
-            <select
-              value={categoryId || ""}
-              onChange={(e) => handleCategorySelect(e.target.value)}
-              aria-label="Filter by category"
-              className={`appearance-none h-9.5 pl-2 pr-6 text-[10px] font-bold rounded-xl border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all w-[105px] max-w-[105px] truncate ${(categoryId && categoryId !== "11")
-                ? "bg-primary/10 border-primary/30 text-blue-700"
-                : "bg-white border-slate-200 text-slate-700 hover:border-primary/30"
-                }`}
-              style={{
-                minHeight: 'unset',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
-                backgroundPosition: "right 6px center",
-                backgroundSize: "8px",
-                backgroundRepeat: "no-repeat"
-              }}
-            >
-              <option value="" disabled hidden>{lang === "mz" ? "Hna" : "Jobs"}</option>
-              <option value="all">{lang === "mz" ? "Hna Zawng Zawng" : "All Categories"}</option>
-              {categories
-                .filter((cat) => cat.id !== 11)
-                .map((cat) => (
-                  <option key={cat.id} value={cat.id.toString()}>
-                    {cat.name}
-                  </option>
-                ))}
-            </select>
+          <div ref={categoryDropdownRef} className="flex sm:hidden w-full relative">
+            <div className="relative w-[105px] max-w-[105px]">
+              <button
+                type="button"
+                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                className={`relative flex items-center justify-center h-[34px] px-3 rounded-md border text-[14px] font-bold transition-all w-full cursor-pointer focus:outline-none ${(categoryId && categoryId !== "11")
+                  ? "bg-primary/10 border-primary/70 text-blue-700"
+                  : "bg-white border-slate-300 text-slate-700 hover:border-primary/30"
+                  }`}
+              >
+                <span className="truncate pr-3.5">
+                  {categoryId === "all"
+                    ? (lang === "mz" ? "Hna Zawng Zawng" : "All Categories")
+                    : (categories.find(c => c.id.toString() === categoryId)?.name || (lang === "mz" ? "Hna" : "Jobs"))
+                  }
+                </span>
+                <span className="absolute right-2 text-[8px] text-slate-500">▼</span>
+              </button>
+
+              {isCategoryOpen && (
+                <div className="absolute top-full left-0 mt-1.5 w-44 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 flex flex-col animate-scaleIn">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCategorySelect("");
+                      setIsCategoryOpen(false);
+                    }}
+                    className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${!categoryId ? "text-primary bg-primary/5" : "text-slate-600"
+                      }`}
+                  >
+                    {lang === "mz" ? "Hna" : "Jobs"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCategorySelect("all");
+                      setIsCategoryOpen(false);
+                    }}
+                    className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${categoryId === "all" ? "text-primary bg-primary/5" : "text-slate-600"
+                      }`}
+                  >
+                    {lang === "mz" ? "Hna Zawng Zawng" : "All Categories"}
+                  </button>
+                  {categories
+                    .filter((cat) => cat.id !== 11)
+                    .map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          handleCategorySelect(cat.id.toString());
+                          setIsCategoryOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${categoryId === cat.id.toString() ? "text-primary bg-primary/5" : "text-slate-600"
+                          }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -397,6 +445,9 @@ function HeaderSearchForm({
   const [query, setQuery] = useState(searchParams?.get("query") || "");
   const { locationId, setLocationId } = useSearch();
 
+  const [isDistrictOpen, setIsDistrictOpen] = useState(false);
+  const districtRef = useRef<HTMLDivElement>(null);
+
   // Auto-suggest state
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -422,6 +473,9 @@ function HeaderSearchForm({
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
         setActiveIndex(-1);
+      }
+      if (districtRef.current && !districtRef.current.contains(e.target as Node)) {
+        setIsDistrictOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -602,18 +656,14 @@ function HeaderSearchForm({
     <div ref={wrapperRef} className="relative w-full">
       <form
         onSubmit={handleSearch}
-        className="w-full flex items-center border border-slate-200/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-xl overflow-hidden bg-white shadow-sm transition-all h-9 md:h-10"
+        className="w-full flex items-center border border-slate-200/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-xl bg-white shadow-sm transition-all h-9 md:h-10"
       >
         {/* District Dropdown Selector */}
-        <div className="relative h-full flex items-center bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors w-[105px] min-w-[105px] max-w-[105px] sm:w-auto sm:min-w-0 sm:max-w-none sm:shrink-0">
-          <select
-            value={locationId}
-            onChange={(e) => {
-              const val = e.target.value;
-              setLocationId(val);
-            }}
-            aria-label="Filter by district"
-            className="appearance-none bg-transparent h-full pl-2 pr-6 text-[10px] font-bold text-slate-700 cursor-pointer focus:outline-none w-full truncate"
+        <div ref={districtRef} className="relative h-full shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsDistrictOpen(!isDistrictOpen)}
+            className="h-full bg-slate-50 border-r border-slate-300 hover:bg-slate-200 transition-colors w-[105px] min-w-[105px] max-w-[105px] sm:w-[150px] flex items-center justify-center pl-2 pr-6 text-[14px] font-bold text-slate-700 cursor-pointer focus:outline-none rounded-l-xl"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
               backgroundPosition: "right 6px center",
@@ -621,13 +671,43 @@ function HeaderSearchForm({
               backgroundRepeat: "no-repeat"
             }}
           >
-            <option value="">{lang === "mz" ? "District" : "District"}</option>
-            {districts.map((d) => (
-              <option key={d.id} value={d.id.toString()}>
-                {d.name}
-              </option>
-            ))}
-          </select>
+            <span className="truncate pr-1">
+              {locationId
+                ? (districts.find(d => d.id.toString() === locationId)?.name || "District")
+                : (lang === "mz" ? "District" : "District")
+              }
+            </span>
+          </button>
+
+          {isDistrictOpen && (
+            <div className="absolute top-full left-0 mt-1.5 w-44 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 flex flex-col animate-scaleIn">
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationId("");
+                  setIsDistrictOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${!locationId ? "text-primary bg-primary/5" : "text-slate-600"
+                  }`}
+              >
+                {lang === "mz" ? "District zawng zawng" : "All Districts"}
+              </button>
+              {districts.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => {
+                    setLocationId(d.id.toString());
+                    setIsDistrictOpen(false);
+                  }}
+                  className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${locationId === d.id.toString() ? "text-primary bg-primary/5" : "text-slate-600"
+                    }`}
+                >
+                  {d.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Text search query — instant search + autocomplete */}
@@ -675,7 +755,7 @@ function HeaderSearchForm({
         {/* Blue search submit button */}
         <button
           type="submit"
-          className="h-full px-4 md:px-5 bg-primary hover:bg-primary-container text-white transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+          className="h-full px-4 md:px-5 bg-primary hover:bg-primary-container text-white transition-colors flex items-center justify-center shrink-0 cursor-pointer rounded-r-xl"
           aria-label="Search"
         >
           <svg className="w-3 md:w-3.5 h-3 md:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

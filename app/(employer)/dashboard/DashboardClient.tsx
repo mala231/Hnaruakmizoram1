@@ -1327,7 +1327,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                     fontFamily: "inherit"
                   }}
                 >
-                  Tawp rawh
+                  Cancel
                 </button>
                 <button
                   type="submit"

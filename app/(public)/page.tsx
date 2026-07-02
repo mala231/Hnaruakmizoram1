@@ -252,8 +252,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   </h3>
                   {totalLiveJobsCount > 0 && (
                     <p className="text-xs text-slate-500 font-medium mt-1">
-                      {lang === "mz" 
-                        ? "Hna dang te en turin a hnuaia button hi hmet rawh." 
+                      {lang === "mz"
+                        ? "Hna dang te en turin a hnuaia button hi hmet rawh."
                         : "Click the button below to view all other available job openings."}
                     </p>
                   )}
@@ -291,7 +291,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 {advertisements.map((ad) => {
                   const isSlot2 = ad.position === "sidebar_2";
                   const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
-                  
+
                   return (
                     <a
                       key={ad.id}
@@ -320,7 +320,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               {advertisements.map((ad) => {
                 const isSlot2 = ad.position === "sidebar_2";
                 const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
-                
+
                 return (
                   <a
                     key={ad.id}

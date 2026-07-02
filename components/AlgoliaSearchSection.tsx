@@ -141,7 +141,7 @@ function SearchContent({
   const urlCategoryId = searchParams?.get("categoryId") || "";
 
   // Layout view state (grid or list)
-  const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [layout, setLayout] = useState<"grid" | "list">("list");
 
   const activeCategoryId = urlCategoryId;
   const activeLocationId = urlLocationId;
@@ -334,11 +334,10 @@ function SearchContent({
                     <button
                       type="button"
                       onClick={() => setLayout("grid")}
-                      className={`p-1.5 rounded-md cursor-pointer transition-colors ${
-                        layout === "grid"
+                      className={`p-1.5 rounded-md cursor-pointer transition-colors ${layout === "grid"
                           ? "bg-white text-primary shadow-sm"
                           : "text-slate-400 hover:text-slate-600"
-                      }`}
+                        }`}
                       title="Grid View"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -348,11 +347,10 @@ function SearchContent({
                     <button
                       type="button"
                       onClick={() => setLayout("list")}
-                      className={`p-1.5 rounded-md cursor-pointer transition-colors ${
-                        layout === "list"
+                      className={`p-1.5 rounded-md cursor-pointer transition-colors ${layout === "list"
                           ? "bg-white text-primary shadow-sm"
                           : "text-slate-400 hover:text-slate-600"
-                      }`}
+                        }`}
                       title="List View"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -597,11 +595,10 @@ function SearchContent({
                             <button
                               key={`page-${p}`}
                               onClick={() => { pagination.refine(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                              className={`w-9 h-9 rounded-xl font-bold text-sm transition-all cursor-pointer ${
-                                current === p
+                              className={`w-9 h-9 rounded-xl font-bold text-sm transition-all cursor-pointer ${current === p
                                   ? "bg-primary text-white shadow-md shadow-primary/25 scale-110"
                                   : "border border-blue-100 bg-white text-slate-600 hover:bg-blue-50 hover:text-primary hover:border-primary/30"
-                              }`}
+                                }`}
                             >
                               {(p as number) + 1}
                             </button>

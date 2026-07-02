@@ -37,10 +37,12 @@ export async function sendEmail({
   to,
   subject,
   html,
+  replyTo,
 }: {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }) {
   if (transporter) {
     try {
@@ -49,6 +51,7 @@ export async function sendEmail({
         to,
         subject,
         html,
+        replyTo,
       });
       console.log(`[Email Sent] Successfully dispatched email to ${to}`);
     } catch (err) {
@@ -56,9 +59,10 @@ export async function sendEmail({
       console.log("\n==================================================");
       console.log("             [SIMULATED EMAIL LOG (SMTP FAILED)]  ");
       console.log("==================================================");
-      console.log(`From:    ${SMTP_FROM}`);
-      console.log(`To:      ${to}`);
-      console.log(`Subject: ${subject}`);
+      console.log(`From:      ${SMTP_FROM}`);
+      console.log(`To:        ${to}`);
+      if (replyTo) console.log(`Reply-To:  ${replyTo}`);
+      console.log(`Subject:   ${subject}`);
       console.log("------------------ Content -----------------------");
       console.log(html.replace(/<[^>]*>/g, " ").trim());
       console.log("==================================================\n");
@@ -70,6 +74,7 @@ export async function sendEmail({
     console.log("==================================================");
     console.log(`From:    ${SMTP_FROM}`);
     console.log(`To:      ${to}`);
+    if (replyTo) console.log(`Reply-To: ${replyTo}`);
     console.log(`Subject: ${subject}`);
     console.log("------------------ Content -----------------------");
     // Strip HTML tags roughly for console presentation

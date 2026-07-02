@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { t } from "@/lib/i18n";
 
 interface Item {
@@ -721,28 +722,24 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex-grow bg-background">
-      {/* Admin Top Bar */}
       <header className="sticky top-0 z-40 w-full border-b border-outline-variant/30 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold text-lg shadow-md">
-              A
-            </span>
-            <span className="font-display font-extrabold text-xl text-primary tracking-tight">
-              Hnaruak Mizoram <span className="text-secondary font-medium text-xs border border-secondary/20 bg-secondary/5 rounded-full px-2 py-0.5 ml-1">Admin Panel</span>
-            </span>
-          </div>
+          <Link href="/" className="flex items-center gap-2 group shrink-0 no-underline">
+            <Image
+              src="/logo.png"
+              alt="Hnaruak Mizoram Logo"
+              width={36}
+              height={36}
+              className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain group-hover:scale-105 transition-transform"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="font-display font-extrabold text-base md:text-lg text-blue-700 tracking-tight">Hnaruak</span>
+              <span className="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-widest">Mizoram</span>
+            </div>
+            <span className="text-secondary font-medium text-xs border border-secondary/20 bg-secondary/5 rounded-full px-2 py-0.5 ml-2">Admin Panel</span>
+          </Link>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="bg-surface-container hover:bg-surface-container-high border border-outline/20 text-primary font-bold text-xs px-5 py-2.5 rounded-full transition-all duration-200 flex items-center gap-1.5 shadow-sm no-underline"
-            >
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11v11a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Home
-            </Link>
             <button
               onClick={handleLogout}
               className="bg-primary hover:bg-primary-container text-white font-bold text-xs px-5 py-2.5 rounded-full transition-colors shadow-sm cursor-pointer border-none"
@@ -889,7 +886,7 @@ export default function AdminDashboard() {
                           <td className="py-3 px-4 text-right">
                             {editingId === item.id ? (
                               <div className="flex items-center justify-end gap-2">
-                                <button onClick={() => handleSaveCatLocEdit(item.id)} className="bg-primary text-on-primary text-xs font-bold px-3 py-1 rounded-lg cursor-pointer">Khawl</button>
+                                <button onClick={() => handleSaveCatLocEdit(item.id)} className="bg-primary text-on-primary text-xs font-bold px-3 py-1 rounded-lg cursor-pointer">Cancel</button>
                                 <button onClick={() => setEditingId(null)} className="bg-surface-container text-on-surface text-xs font-bold px-3 py-1 rounded-lg cursor-pointer">Cancel</button>
                               </div>
                             ) : (
@@ -980,8 +977,8 @@ export default function AdminDashboard() {
                             <div className="flex gap-4">
                               {editingTickerId === item.id ? (
                                 <>
-                                  <button onClick={() => handleSaveTickerEdit(item.id)} className="text-secondary hover:underline cursor-pointer">Khawl</button>
-                                  <button onClick={() => setEditingTickerId(null)} className="text-on-surface-variant hover:underline cursor-pointer">Tawp</button>
+                                  <button onClick={() => handleSaveTickerEdit(item.id)} className="text-secondary hover:underline cursor-pointer">Confirm</button>
+                                  <button onClick={() => setEditingTickerId(null)} className="text-on-surface-variant hover:underline cursor-pointer">Cancel</button>
                                 </>
                               ) : (
                                 <>

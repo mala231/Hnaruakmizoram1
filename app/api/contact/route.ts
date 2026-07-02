@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error: isMizo
-              ? "Verification session a tawp tawh hmel. Khawngaihin thawn nawn leh rawh."
+              ? "Verification session a tawp tawh. Khawngaihin thawn nawn leh rawh."
               : "Verification session expired. Please request a new code."
           },
           { status: 400 }
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
       // Send the contact email to support/admin
       await sendEmail({
         to: process.env.CONTACT_RECIPIENT_EMAIL || process.env.SMTP_USER || "",
+        replyTo: pending.email,
         subject: `Hnaruak Mizoram Contact Form: Message from ${pending.name}`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
@@ -163,21 +164,19 @@ export async function POST(request: Request) {
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
           <h2 style="color: #1c7dfa; margin-bottom: 20px; border-bottom: 2px solid #1c7dfa; padding-bottom: 10px;">Contact Verification Code</h2>
           <p>Hello,</p>
-          <p>${
-            isMizo
-              ? "Hnaruak Mizoram Contact Form message thawn tur hian verification code a hnuaia mi hi hmang rawh le:"
-              : "Please use the following OTP code to verify and complete your Contact Form submission on Hnaruak Mizoram:"
-          }</p>
+          <p>${isMizo
+          ? "Hnaruak Mizoram Contact Form message thawn tur hian verification code a hnuaia mi hi hmang rawh le:"
+          : "Please use the following OTP code to verify and complete your Contact Form submission on Hnaruak Mizoram:"
+        }</p>
           <div style="text-align: center; margin: 30px 0;">
             <span style="font-size: 32px; font-weight: 800; color: #1c7dfa; letter-spacing: 5px; padding: 10px 20px; background-color: #f0f7ff; border-radius: 8px; border: 1px solid #1c7dfa;">
               ${otpCode}
             </span>
           </div>
-          <p>${
-            isMizo
-              ? "Verification OTP code hi <strong>minute 10</strong> chhung chauh a nung ang."
-              : "This verification code will expire in <strong>10 minutes</strong>."
-          }</p>
+          <p>${isMizo
+          ? "Verification OTP code hi <strong>minute 10</strong> chhung chauh a nung ang."
+          : "This verification code will expire in <strong>10 minutes</strong>."
+        }</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
           <p style="font-size: 12px; color: #777; text-align: center;">© ${new Date().getFullYear()} Hnaruak Mizoram.</p>
         </div>

@@ -21,7 +21,7 @@ function formatDate(dateInput: Date | string | number) {
 }
 
 export default function FallbackJobList({ jobs, lang }: FallbackJobListProps) {
-  const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [layout, setLayout] = useState<"grid" | "list">("list");
 
   return (
     <div className="flex flex-col gap-6">
