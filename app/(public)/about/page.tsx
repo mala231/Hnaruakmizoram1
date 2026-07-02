@@ -150,8 +150,10 @@ export default async function AboutPage() {
             {pageDesc}
           </p>
 
-          {/* Stats row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", maxWidth: "520px" }}>
+          {/* Stats row — 2×2 on mobile, 4-col on sm+ */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "12px", maxWidth: "520px" }}
+            className="sm:grid-cols-4"
+          >
             {stats.map((s) => (
               <div key={s.label} style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "14px", padding: "14px 10px", textAlign: "center" }}>
                 <div style={{ fontSize: "22px", fontWeight: 800, color: "white", lineHeight: 1 }}>{s.value}</div>

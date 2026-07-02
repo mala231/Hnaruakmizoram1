@@ -509,7 +509,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
                     padding: 0, fontFamily: "inherit"
                   }}
                 >
-                  {lang === "mz" ? "Sut Rawh" : "Remove PDF"}
+                  {lang === "mz" ? "Let Rawh" : "Remove PDF"}
                 </button>
               </div>
             )}

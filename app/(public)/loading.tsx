@@ -1,7 +1,7 @@
 export default function Loading() {
   return (
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
-      <section className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col gap-6">
+      <section className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-full mx-auto w-full flex-grow flex flex-col gap-6">
         
         {/* Header bar placeholder */}
         <div className="h-14 bg-white border border-blue-100/60 rounded-2xl animate-pulse shadow-sm flex items-center justify-between px-5 py-3">

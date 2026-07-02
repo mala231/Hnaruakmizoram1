@@ -210,7 +210,7 @@ function SearchContent({
     <>
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
       <section
-        className="pt-8 pb-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
+        className="pt-8 pb-12 px-container-margin-mobile md:px-container-margin-desktop max-w-full mx-auto w-full flex-grow flex flex-col"
       >
         {/* Section header */}
         <div className="flex flex-col gap-3 mb-6">
@@ -690,7 +690,7 @@ function SearchContent({
 
       {/* ── FEATURE STRIP (below results for better mobile UX) ── */}
       <section className="relative z-10 bg-white border-t border-blue-100 py-10 w-full">
-        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
+        <div className="max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {

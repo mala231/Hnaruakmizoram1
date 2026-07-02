@@ -104,6 +104,15 @@ body {
   font-family: var(--font-sans);
 }
 
+/* ── Mobile tap highlight — themed to site's primary blue ── */
+a,
+button,
+select,
+[role="button"],
+[role="option"] {
+  -webkit-tap-highlight-color: rgba(79, 142, 247, 0.14);
+}
+
 
 
 /* ── Typography Utilities ── */

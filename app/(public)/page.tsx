@@ -177,7 +177,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop pt-8 pb-10 md:pt-10 md:pb-12 flex flex-col gap-3 items-start">
+        <div className="relative z-10 w-full max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop pt-8 pb-10 md:pt-10 md:pb-12 flex flex-col gap-3 items-start">
           {/* Badge */}
           <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm">
             <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
@@ -213,7 +213,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
       <section
-        className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
+        className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-full mx-auto w-full flex-grow flex flex-col"
       >
         {/* Section header */}
         <div className="flex flex-col gap-3 mb-6">
@@ -346,7 +346,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* ── FEATURE STRIP ── */}
       <section className="relative z-10 bg-white border-t border-blue-100 py-16 pb-10">
-        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
+        <div className="max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {

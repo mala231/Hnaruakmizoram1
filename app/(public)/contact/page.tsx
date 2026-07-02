@@ -83,7 +83,7 @@ export default async function ContactPage() {
                 <h4 style={{ fontSize: "12px", color: "#6b7280", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
                   {t("contact.email", lang)}
                 </h4>
-                <p style={{ fontSize: "16px", color: "#0f1b30", fontWeight: 700, margin: 0 }}>
+                <p style={{ fontSize: "15px", color: "#0f1b30", fontWeight: 700, margin: 0, wordBreak: "break-all", overflowWrap: "anywhere" }}>
                   {process.env.SMTP_USER || "hnaruakmizoramofficial@gmail.com"}
                 </p>
               </div>

@@ -18,7 +18,7 @@ export default function Footer({ lang }: FooterProps) {
 
   return (
     <footer className="bg-white border-t-2 border-blue-100 text-on-surface py-14 mt-auto">
-      <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
+      <div className="max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
           {/* Column 1: Brand */}

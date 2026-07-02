@@ -119,7 +119,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
       <section
-        className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-7xl mx-auto w-full flex-grow flex flex-col"
+        className="py-12 px-container-margin-mobile md:px-container-margin-desktop max-w-full mx-auto w-full flex-grow flex flex-col"
       >
         {/* Section header */}
         <div className="flex flex-col gap-3 mb-6">
@@ -288,7 +288,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
       {/* ── FEATURE STRIP ── */}
       <section className="relative z-10 bg-white border-t border-blue-100 py-16 pb-10">
-        <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop">
+        <div className="max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
