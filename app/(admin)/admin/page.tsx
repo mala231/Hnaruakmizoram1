@@ -1048,7 +1048,7 @@ export default function AdminDashboard() {
                       disabled={submitting || !newAdImage || !newAdTargetUrl.trim()}
                       className="w-full bg-primary hover:bg-primary-container disabled:bg-surface-dim disabled:text-on-surface-variant text-on-primary font-bold text-xs py-3 rounded-xl transition-all shadow-sm cursor-pointer"
                     >
-                      {submitting ? "Upload mek..." : "Upload & Siam"}
+                      {submitting ? "Uploading..." : "Upload "}
                     </button>
                   </form>
                 </div>

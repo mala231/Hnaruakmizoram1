@@ -77,7 +77,7 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
 
       {/* Modal Container */}
       <div className="relative w-full max-w-lg bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-2xl z-10 animate-scaleIn">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4 mb-4">
           <h2 className="title-md text-primary flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            
+
             {error && (
               <div className="p-3 rounded-xl bg-error-container border border-error/20 text-on-error-container text-xs font-semibold">
                 {error}
@@ -162,7 +162,7 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
                 disabled={submitting}
                 className="bg-primary hover:bg-primary-container text-on-primary text-xs font-bold px-6 py-2.5 rounded-full shadow-md transition-colors cursor-pointer"
               >
-                {submitting ? "Thawn mek..." : t("report.submit_btn")}
+                {submitting ? "Submitting ..." : t("report.submit_btn")}
               </button>
             </div>
 
