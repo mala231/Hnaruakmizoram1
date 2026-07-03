@@ -1039,6 +1039,7 @@ export default function AdminDashboard() {
                       >
                         <option value="sidebar">Sidebar Slot 1</option>
                         <option value="sidebar_2">Sidebar Slot 2</option>
+                        <option value="hero">Hero Slot (Right Side)</option>
                       </select>
                     </div>
 

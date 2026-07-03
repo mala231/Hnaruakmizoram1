@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Suspense } from "react";
+import { Suspense, Fragment } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getCachedCategories, getCachedDistricts, getCachedAdvertisements } from "@/lib/queries";
@@ -96,6 +96,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     advertisements = [];
   }
 
+  // Split ads by position
+  const heroAd = advertisements.find((ad) => ad.position === "hero") ?? null;
+  const sidebarAds = advertisements.filter((ad) => ad.position !== "hero");
+
   let orderByClause: any = { createdAt: "desc" };
   if (sortBy === "name") {
     orderByClause = { title: "asc" };
@@ -123,93 +127,158 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   // Count the total live jobs to determine if "View all" button is needed
   let totalLiveJobsCount = 0;
+  let totalEmployersCount = 0;
   try {
-    totalLiveJobsCount = await prisma.jobPost.count({
-      where: {
-        status: "live",
-        employer: { isDeleted: false },
-      },
-    });
+    [totalLiveJobsCount, totalEmployersCount] = await Promise.all([
+      prisma.jobPost.count({
+        where: {
+          status: "live",
+          employer: { isDeleted: false },
+        },
+      }),
+      prisma.employer.count({
+        where: { isDeleted: false },
+      }),
+    ]);
   } catch (error) {
-    console.error("Homepage failed to count live jobs:", error);
+    console.error("Homepage failed to count live jobs or employers:", error);
   }
+
+  // Fake site visit count — replace with real analytics when deployed
+  const fakeVisitCount = 15_830;
 
   return (
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative" style={{
+      <section className="relative overflow-hidden" style={{
         background: "radial-gradient(at 0% 0%, rgba(147, 197, 253, 0.45) 0px, transparent 60%), radial-gradient(at 100% 0%, rgba(122, 179, 250, 0.35) 0px, transparent 60%), radial-gradient(at 50% 100%, rgba(245, 248, 255, 1) 0px, transparent 50%), linear-gradient(135deg, #f0f6ff 0%, #ffffff 100%)"
       }}>
 
-        {/* Background animations container (safely clips background blobs without clipping overlapping search bar) */}
+        {/* Background blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-6 right-[10%] w-48 h-48 rounded-full bg-gradient-to-tr from-secondary/20 to-tertiary/20 blur-3xl animate-float-a" />
+          <div className="absolute top-6 left-[30%] w-48 h-48 rounded-full bg-gradient-to-tr from-secondary/20 to-tertiary/20 blur-3xl animate-float-a" />
           <div className="absolute left-[5%] bottom-4 w-36 h-36 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 blur-2xl animate-float-b" />
         </div>
 
-        {/* Floating Glassmorphic UI Card */}
-        <div className="absolute right-[8%] top-1/2 -translate-y-1/2 w-56 h-52 rounded-2xl border border-white/50 bg-white/10 backdrop-blur-xl shadow-2xl shadow-blue-500/5 hidden xl:flex flex-col p-4 gap-3 animate-float-c" style={{ transform: "rotate(2deg)" }}>
-          <div className="flex items-center justify-between">
-            <span className="bg-primary/20 text-primary text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Featured vacancy
+        {/* ── Two-column layout ── */}
+        <div className="relative z-10 flex items-stretch w-full">
+
+          {/* LEFT — Text content + stats */}
+          <div className="flex-1 min-w-0 flex flex-col px-container-margin-mobile md:px-container-margin-desktop pt-8 pb-8 md:pt-10 md:pb-10">
+
+            {/* Badge */}
+            <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm w-fit">
+              <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              Mizoram Job Board
             </span>
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-          </div>
-          <div className="flex gap-2.5 items-center">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center font-extrabold text-primary text-xs shadow-sm">
-              M
+
+            {/* Heading */}
+            <h1 className="headline-lg text-slate-900 font-extrabold tracking-tight mt-3" style={{ maxWidth: "520px" }}>
+              {t("home.hero_title", lang)}
+            </h1>
+
+            <p className="text-slate-600 text-sm md:text-base font-medium leading-relaxed mt-2" style={{ maxWidth: "420px" }}>
+              {t("home.hero_subtitle", lang)}
+            </p>
+
+            <Link
+              href="/post-job"
+              className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white hover:opacity-95 font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 w-fit"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              {t("nav.post_job", lang)}
+            </Link>
+
+            {/* Stats Bar (desktop only) */}
+            <div className="hidden lg:block mt-auto pt-8">
+              <div className="inline-flex items-center gap-0 bg-white/70 backdrop-blur-xl border border-white/60 rounded-2xl shadow-xl shadow-blue-200/30 overflow-hidden">
+                {[
+                  {
+                    id: "stat-jobs",
+                    value: totalLiveJobsCount,
+                    suffix: "+",
+                    label: lang === "mz" ? "Hna ruak awm" : "Live Jobs",
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: "stat-visits",
+                    value: fakeVisitCount,
+                    suffix: "+",
+                    label: lang === "mz" ? "Site en tawh" : "Site Visits",
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: "stat-employers",
+                    value: totalEmployersCount,
+                    suffix: "+",
+                    label: lang === "mz" ? "Employer register" : "Employers",
+                    icon: (
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    ),
+                  },
+                ].map((stat, i) => (
+                  <Fragment key={stat.id}>
+                    <div id={stat.id} className="flex items-center gap-3 px-8 py-4 group hover:bg-primary/5 transition-colors duration-200">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary flex items-center justify-center shrink-0 group-hover:from-primary group-hover:to-primary-container group-hover:text-white transition-all duration-300">
+                        {stat.icon}
+                      </div>
+                      <div>
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-2xl font-extrabold text-slate-900 tabular-nums leading-none">
+                            {stat.value.toLocaleString()}
+                          </span>
+                          <span className="text-base font-extrabold text-primary">{stat.suffix}</span>
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                          {stat.label}
+                        </p>
+                      </div>
+                    </div>
+                    {i < 2 && <div className="w-px self-stretch bg-slate-200/80 my-3" />}
+                  </Fragment>
+                ))}
+              </div>
             </div>
-            <div className="flex-grow flex flex-col gap-1">
-              <div className="h-2.5 w-24 bg-slate-800/20 rounded-full" />
-              <div className="h-1.5 w-16 bg-slate-800/10 rounded-full" />
+          </div>
+
+          {/* RIGHT — Ad slot (desktop only) */}
+          {heroAd && (
+            <div className="hidden lg:flex items-center py-4 pr-4 shrink-0" style={{ width: "720px" }}>
+              <a
+                href={heroAd.targetUrl.startsWith("http") ? heroAd.targetUrl : `https://${heroAd.targetUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full overflow-hidden rounded-2xl shadow-2xl shadow-blue-300/20 hover:opacity-95 transition-opacity duration-300 ad-shine-effect cursor-pointer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={heroAd.imageUrl}
+                  alt="Advertisement"
+                  className="w-full h-auto block"
+                  style={{ maxHeight: "400px", objectFit: "contain" }}
+                />
+              </a>
             </div>
-          </div>
-          <div className="space-y-1.5 mt-1">
-            <div className="h-1.5 w-full bg-slate-800/10 rounded-full" />
-            <div className="h-1.5 w-11/12 bg-slate-800/10 rounded-full" />
-            <div className="h-1.5 w-4/5 bg-slate-800/10 rounded-full" />
-          </div>
-          <div className="flex justify-between items-center mt-auto pt-2.5 border-t border-slate-900/5">
-            <div className="h-3 w-14 bg-slate-800/15 rounded-full" />
-            <div className="h-6 w-16 bg-primary/20 text-primary rounded-lg" />
-          </div>
+          )}
+
         </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop pt-8 pb-10 md:pt-10 md:pb-12 flex flex-col gap-3 items-start">
-          {/* Badge */}
-          <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm">
-            <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            Mizoram Job Board
-          </span>
-
-          {/* Main heading */}
-          <h1 className="headline-lg text-slate-900 font-extrabold tracking-tight" style={{ maxWidth: "520px" }}>
-            {t("home.hero_title", lang)}
-          </h1>
-
-          <p className="text-slate-600 text-sm md:text-base font-medium leading-relaxed" style={{ maxWidth: "420px" }}>
-            {t("home.hero_subtitle", lang)}
-          </p>
-
-          <Link
-            href="/post-job"
-            className="mt-1 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white hover:opacity-95 font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-lg shadow-primary/25 hover:scale-105 active:scale-95"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            {t("nav.post_job", lang)}
-          </Link>
-        </div>
-
-
       </section>
-
-
 
       {/* ── MAIN CONTENT: Sidebar + Jobs ── */}
       <section
@@ -286,9 +355,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             )}
 
             {/* Banner Ads — shown below jobs on mobile / below jobs always */}
-            {advertisements.length > 0 && (
+            {sidebarAds.length > 0 && (
               <div className="flex flex-col gap-4 mt-4 lg:hidden">
-                {advertisements.map((ad) => {
+                {sidebarAds.map((ad) => {
                   const isSlot2 = ad.position === "sidebar_2";
                   const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
 
@@ -314,10 +383,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           {/* ─── Desktop Ad Sidebar (extra column when ads exist) ─── */}
-          {advertisements.length > 0 && (
+          {sidebarAds.length > 0 && (
             <aside className="hidden xl:flex flex-col gap-4 w-48 shrink-0 sticky top-20">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Sponsored</p>
-              {advertisements.map((ad) => {
+              {sidebarAds.map((ad) => {
                 const isSlot2 = ad.position === "sidebar_2";
                 const effectClass = isSlot2 ? "animate-ad-slot-2" : "animate-ad-slot-1";
 
