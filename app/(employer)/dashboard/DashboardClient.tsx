@@ -62,6 +62,9 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Delete Account Confirmation Modal State
+  const [deleteAccountConfirm, setDeleteAccountConfirm] = useState(false);
+
   // Profile settings state
   const [profileUsername, setProfileUsername] = useState(employer.username);
   const [profileEmail, setProfileEmail] = useState(employer.email);
@@ -331,11 +334,13 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
     }
   };
 
-  // Delete Account Action
-  const handleDeleteAccount = async () => {
-    const confirmMsg = t("dashboard.delete_account_warn");
-    if (!window.confirm(confirmMsg)) return;
+  // Delete Account Action — opens custom modal
+  const handleDeleteAccount = () => {
+    setDeleteAccountConfirm(true);
+  };
 
+  const confirmDeleteAccount = async () => {
+    setDeleteAccountConfirm(false);
     setSubmitting(true);
     try {
       const res = await fetch("/api/employer/delete-account", {
@@ -344,7 +349,6 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
       const data = await res.json();
       if (data.success) {
-        alert("Account delete a ni ta.");
         router.push("/login");
         router.refresh();
       } else {
@@ -360,7 +364,78 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
   return (
     <div style={{ backgroundColor: "#fafbfc", minHeight: "100vh", padding: "48px 24px", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
 
-      {/* Custom Delete Confirmation Modal */}
+      {/* Custom Delete Account Confirmation Modal */}
+      {deleteAccountConfirm && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "24px",
+        }}>
+          <div style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "20px",
+            padding: "32px",
+            maxWidth: "440px",
+            width: "100%",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            animation: "fadeInUp 0.2s ease",
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: "56px", height: "56px", borderRadius: "50%",
+              backgroundColor: "#fef2f2",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto",
+            }}>
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#ef4444" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            {/* Title & Message */}
+            <div style={{ textAlign: "center" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#111827", margin: "0 0 8px" }}>
+                {t("dashboard.delete_account_btn")}
+              </h3>
+              <p style={{ fontSize: "14px", color: "#6b7280", fontWeight: 500, margin: 0, lineHeight: 1.6 }}>
+                {t("dashboard.delete_account_warn")}
+              </p>
+            </div>
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                onClick={() => setDeleteAccountConfirm(false)}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: "12px",
+                  border: "1.5px solid #e5e7eb", backgroundColor: "#f9fafb",
+                  color: "#374151", fontWeight: 700, fontSize: "14px",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAccount}
+                disabled={submitting}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: "12px",
+                  border: "none", backgroundColor: submitting ? "#fca5a5" : "#ef4444",
+                  color: "#ffffff", fontWeight: 700, fontSize: "14px",
+                  cursor: submitting ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                {submitting ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Job Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 9999,

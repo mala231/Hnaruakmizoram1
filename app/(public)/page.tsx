@@ -120,7 +120,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       orderBy: orderByClause,
       take: 10,
     });
-    console.log("DEBUG - Homepage query executed. Jobs count found:", jobs.length);
   } catch (error) {
     console.error("Homepage failed to query featured jobs:", error);
   }
@@ -144,8 +143,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     console.error("Homepage failed to count live jobs or employers:", error);
   }
 
-  // Fake site visit count — replace with real analytics when deployed
-  const fakeVisitCount = 15_830;
+  // Placeholder site visit count — replace with real analytics when deploying to production
+  const siteVisitCount = 15_830;
 
   return (
     <div className="flex-grow flex flex-col" style={{ background: "linear-gradient(160deg, #e8f1ff 0%, #f3f7ff 45%, #fafcff 100%)" }}>
@@ -211,7 +210,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   },
                   {
                     id: "stat-visits",
-                    value: fakeVisitCount,
+                    value: siteVisitCount,
                     suffix: "+",
                     label: lang === "mz" ? "Site en tawh" : "Site Visits",
                     icon: (

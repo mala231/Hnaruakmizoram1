@@ -475,7 +475,6 @@ export default function AdminDashboard() {
   };
 
   const handleToggleAd = async (item: AdItem) => {
-    console.log("handleToggleAd called for item:", item);
     setSubmitting(true);
     try {
       const res = await fetch(`/api/admin/ads/${item.id}`, {
@@ -484,7 +483,6 @@ export default function AdminDashboard() {
         body: JSON.stringify({ isActive: !item.isActive }),
       });
       const data = await res.json();
-      console.log("handleToggleAd response:", data);
       if (data.success) {
         triggerAlert("success", "Ad status thlak a ni.");
         fetchData();
@@ -500,7 +498,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteAd = (id: number) => {
-    console.log("handleDeleteAd called for id:", id);
     setConfirmDialog({
       title: "Delete Ad Banner",
       message: "Ad banner hi i delete duh takzet em?",
@@ -509,7 +506,6 @@ export default function AdminDashboard() {
         try {
           const res = await fetch(`/api/admin/ads/${id}`, { method: "DELETE" });
           const data = await res.json();
-          console.log("handleDeleteAd response:", data);
           if (data.success) {
             triggerAlert("success", "Ad delete a ni.");
             fetchData();

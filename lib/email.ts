@@ -112,9 +112,9 @@ export async function sendActivationEmail(
 export async function sendPreExpiryWarnings(): Promise<number> {
   try {
     const now = new Date();
-    // 3 days from now range (approximate window check of exactly day 3)
-    const threeDaysFromNowStart = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
-    const threeDaysFromNowEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    // Catch jobs expiring in the next 3–4 day window (cron runs daily at midnight)
+    const threeDaysFromNowStart = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysFromNowEnd = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
 
     const expiringJobs = await prisma.jobPost.findMany({
       where: {

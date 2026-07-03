@@ -6,38 +6,120 @@ export default async function TermsPage() {
   const cookieStore = await cookies();
   const lang = cookieStore.get("lang")?.value || "mz";
 
-  const sections = [
+  const jobSeekerSections = [
     {
       num: "01",
-      title: t("terms.section_1_title", lang),
+      key: "section_1",
       icon: (
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      content: t("terms.section_1_desc", lang),
     },
     {
       num: "02",
-      title: t("terms.section_2_title", lang),
+      key: "section_2",
       icon: (
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       ),
-      content: t("terms.section_2_desc", lang),
     },
     {
       num: "03",
-      title: t("terms.section_3_title", lang),
+      key: "section_3",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+        </svg>
+      ),
+    },
+    {
+      num: "04",
+      key: "section_4",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+    },
+  ];
+
+  const employerSections = [
+    {
+      num: "05",
+      key: "section_5",
       icon: (
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
       ),
-      content: t("terms.section_3_desc", lang),
+    },
+    {
+      num: "06",
+      key: "section_6",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      num: "07",
+      key: "section_7",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+      ),
+    },
+    {
+      num: "08",
+      key: "section_8",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+    {
+      num: "09",
+      key: "section_9",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
     },
   ];
+
+  const SectionCard = ({ section, accentColor }: { section: typeof jobSeekerSections[0]; accentColor: string }) => (
+    <div
+      id={`section-${section.num}`}
+      style={{
+        background: "white",
+        borderRadius: "20px",
+        boxShadow: "0 4px 20px rgba(28,125,250,0.08)",
+        border: "1px solid rgba(28,125,250,0.08)",
+        padding: "28px 32px",
+        marginBottom: "16px",
+        display: "flex",
+        gap: "20px",
+        alignItems: "flex-start",
+      }}
+    >
+      <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: `linear-gradient(135deg,${accentColor}22,${accentColor}44)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: accentColor }}>
+        {section.icon}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+          <span style={{ fontSize: "11px", fontWeight: 800, color: accentColor, letterSpacing: "0.1em" }}>{section.num}</span>
+          <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#0f1b30", margin: 0 }}>{t(`terms.${section.key}_title`, lang)}</h2>
+        </div>
+        <p style={{ fontSize: "15px", color: "#4b5563", lineHeight: 1.8, margin: 0, fontWeight: 400 }}>{t(`terms.${section.key}_desc`, lang)}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ background: "linear-gradient(180deg,#f0f9ff 0%,#ffffff 400px)", minHeight: "100vh", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
@@ -54,7 +136,7 @@ export default async function TermsPage() {
           <h1 style={{ fontSize: "clamp(28px,5vw,46px)", fontWeight: 800, color: "white", margin: "0 0 16px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             {t("terms.title", lang)}
           </h1>
-          <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.8)", margin: 0, fontWeight: 500, lineHeight: 1.7, maxWidth: "560px" }}>
+          <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.8)", margin: 0, fontWeight: 500, lineHeight: 1.7, maxWidth: "600px" }}>
             {t("terms.subtitle", lang)}
           </p>
           <div style={{ marginTop: "24px", display: "flex", alignItems: "center", gap: "8px" }}>
@@ -75,43 +157,43 @@ export default async function TermsPage() {
             {lang === "mz" ? "Dan zawng zawng" : "All Sections"}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {sections.map((s) => (
+            {[...jobSeekerSections, ...employerSections].map((s) => (
               <a key={s.num} href={`#section-${s.num}`} style={{ fontSize: "13px", fontWeight: 600, color: "#1c7dfa", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "100px", padding: "5px 14px", textDecoration: "none" }}>
-                {s.title}
+                {t(`terms.${s.key}_title`, lang)}
               </a>
             ))}
           </div>
         </div>
 
-        {/* Sections */}
-        {sections.map((section, i) => (
-          <div
-            key={section.num}
-            id={`section-${section.num}`}
-            style={{
-              background: "white",
-              borderRadius: "20px",
-              boxShadow: "0 4px 20px rgba(28,125,250,0.08)",
-              border: "1px solid rgba(28,125,250,0.08)",
-              padding: "28px 32px",
-              marginBottom: "20px",
-              display: "flex",
-              gap: "20px",
-              alignItems: "flex-start",
-            }}
-          >
-            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "linear-gradient(135deg,#e0f2fe,#bae6fd)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#1c7dfa" }}>
-              {section.icon}
+        {/* For Job Seekers */}
+        <div style={{ marginBottom: "32px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+            <div style={{ height: "2px", flex: 1, background: "linear-gradient(90deg,#10b981,transparent)" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg,#ecfdf5,#d1fae5)", border: "1px solid #6ee7b7", borderRadius: "100px", padding: "8px 20px" }}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#10b981"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              <span style={{ fontSize: "13px", fontWeight: 800, color: "#065f46", letterSpacing: "0.04em", textTransform: "uppercase" }}>{t("terms.job_seekers_title", lang)}</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "#0a84ff", letterSpacing: "0.1em" }}>{section.num}</span>
-                <h2 style={{ fontSize: "17px", fontWeight: 700, color: "#0f1b30", margin: 0 }}>{section.title}</h2>
-              </div>
-              <p style={{ fontSize: "15px", color: "#4b5563", lineHeight: 1.8, margin: 0, fontWeight: 400 }}>{section.content}</p>
-            </div>
+            <div style={{ height: "2px", flex: 1, background: "linear-gradient(90deg,transparent,#10b981)" }} />
           </div>
-        ))}
+          {jobSeekerSections.map((section) => (
+            <SectionCard key={section.num} section={section} accentColor="#10b981" />
+          ))}
+        </div>
+
+        {/* For Employers */}
+        <div style={{ marginBottom: "32px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+            <div style={{ height: "2px", flex: 1, background: "linear-gradient(90deg,#1c7dfa,transparent)" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg,#eff6ff,#dbeafe)", border: "1px solid #93c5fd", borderRadius: "100px", padding: "8px 20px" }}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1c7dfa"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              <span style={{ fontSize: "13px", fontWeight: 800, color: "#1e3a8a", letterSpacing: "0.04em", textTransform: "uppercase" }}>{t("terms.employers_title", lang)}</span>
+            </div>
+            <div style={{ height: "2px", flex: 1, background: "linear-gradient(90deg,transparent,#1c7dfa)" }} />
+          </div>
+          {employerSections.map((section) => (
+            <SectionCard key={section.num} section={section} accentColor="#1c7dfa" />
+          ))}
+        </div>
 
         {/* Footer note */}
         <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "16px", padding: "20px 24px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
@@ -138,3 +220,4 @@ export default async function TermsPage() {
     </div>
   );
 }
+
