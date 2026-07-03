@@ -361,7 +361,7 @@ function SearchContent({
                 </div>
 
                 {layout === "grid" ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {hits.map((hit: any, i) => (
                       <Link
                         key={hit.objectID}

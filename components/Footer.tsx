@@ -22,7 +22,7 @@ export default function Footer({ lang }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
           {/* Column 1: Brand */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 items-start text-left">
             <Link href="/" className="flex items-center gap-2.5 group">
               <Image
                 src="/logo.png"
@@ -46,11 +46,11 @@ export default function Footer({ lang }: FooterProps) {
           </div>
 
           {/* Column 2: Quick Links */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:items-center text-left md:text-center">
             <h4 className="font-display font-bold text-sm text-blue-700 uppercase tracking-wider">
               About Us
             </h4>
-            <nav className="flex flex-col gap-2.5">
+            <nav className="flex flex-col gap-2.5 md:items-center">
               {[
                 { href: "/about", label: t("nav.about", lang) },
                 { href: "/contact", label: t("nav.contact", lang) },
@@ -69,11 +69,11 @@ export default function Footer({ lang }: FooterProps) {
           </div>
 
           {/* Column 3: Legal */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:items-end text-left md:text-right">
             <h4 className="font-display font-bold text-sm text-blue-700 uppercase tracking-wider">
               Legal & Terms
             </h4>
-            <nav className="flex flex-col gap-2.5">
+            <nav className="flex flex-col gap-2.5 md:items-end">
               {[
                 { href: "/terms", label: t("nav.terms", lang) },
                 { href: "/refund", label: t("nav.refund", lang) },
@@ -81,7 +81,7 @@ export default function Footer({ lang }: FooterProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-slate-500 hover:text-primary transition-colors font-medium flex items-center gap-2 group"
+                  className="text-sm text-slate-500 hover:text-primary transition-colors font-medium flex items-center gap-2 group md:flex-row-reverse"
                 >
                   <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
                   {link.label}
@@ -90,7 +90,7 @@ export default function Footer({ lang }: FooterProps) {
             </nav>
 
             {/* Employer CTA */}
-            <div className="mt-2 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+            <div className="mt-2 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-left md:text-right">
               <p className="text-xs font-semibold text-slate-600 mb-2">Want to post a job vacancy?</p>
               <Link
                 href="/register"

@@ -4,7 +4,7 @@
     "about": "About Us",
     "contact": "Contact Us",
     "privacy": "Privacy Policy",
-    "terms": "Terms of Service",
+    "terms": "Terms and condition",
     "refund": "Refund Policy",
     "post_job": "Post a Job",
     "employer_login": "Login",
@@ -62,8 +62,8 @@
     "section_5_desc": "When an employer deletes their account, all associated job listings are hidden from public view. However, certain records may be retained in our database as required for transaction history, legal compliance, or fraud prevention purposes."
   },
   "terms": {
-    "title": "Terms of Service",
-    "subtitle": "This Terms of Service is a binding contract between Hnaruak Mizoram and its users (employers and job seekers). By using this platform, you agree to the following terms.",
+    "title": "Terms and condition",
+    "subtitle": "This Terms and condition is a binding contract between Hnaruak Mizoram and its users (employers and job seekers). By using this platform, you agree to the following terms.",
     "job_seekers_title": "For Job Seekers",
     "section_1_title": "1. No Charge for Application",
     "section_1_desc": "Job seekers are never charged to search or apply for jobs on this platform. All job search and application features are completely free of charge.",

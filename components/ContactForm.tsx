@@ -219,7 +219,7 @@ export default function ContactForm({ lang }: ContactFormProps) {
         >
           {verifying
             ? lang === "mz"
-              ? "En dik mek..."
+              ? "Verifying ..."
               : "Verifying..."
             : lang === "mz"
               ? "Nemnghetin Thawn Rawh"
@@ -301,7 +301,7 @@ export default function ContactForm({ lang }: ContactFormProps) {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-        
+
         {/* Name Input */}
         <div>
           <label style={{ fontSize: "13px", fontWeight: 700, color: "#071022", display: "block", marginBottom: "8px" }}>
@@ -469,7 +469,7 @@ export default function ContactForm({ lang }: ContactFormProps) {
       >
         {loading
           ? lang === "mz"
-            ? "Tih mek..."
+            ? "Sending ..."
             : "Sending..."
           : t("contact.form_submit", lang)}
       </button>
