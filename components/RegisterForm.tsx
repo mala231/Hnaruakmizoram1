@@ -19,6 +19,7 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const router = useRouter();
 
   // OTP Verification hooks
@@ -111,6 +112,16 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (!agreed) {
+      setError(
+        lang === "mz"
+          ? "Khawngaihin Terms and Conditions hi i pawm tih tick rawh le."
+          : "Please agree to the Terms and Conditions to proceed."
+      );
+      setLoading(false);
+      return;
+    }
 
     // 1. Email format validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -792,22 +803,77 @@ export default function RegisterForm({ lang }: RegisterFormProps) {
             )}
           </div>
 
+          {/* Terms & Conditions Agreement Checkbox */}
+          <div style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+            marginTop: "10px",
+            padding: "12px 16px",
+            backgroundColor: "#f9fafb",
+            border: "1.5px solid #e5e7eb",
+            borderRadius: "12px",
+            cursor: "pointer",
+          }} onClick={() => setAgreed(!agreed)}>
+            <input
+              type="checkbox"
+              id="terms-agreement-checkbox"
+              required
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "6px",
+                borderColor: "#d1d5db",
+                color: "#1c7dfa",
+                cursor: "pointer",
+                marginTop: "2px",
+                appearance: "auto" as any,
+                WebkitAppearance: "auto" as any,
+              }}
+            />
+            <label
+              htmlFor="terms-agreement-checkbox"
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#374151",
+                cursor: "pointer",
+                lineHeight: 1.4,
+                userSelect: "none"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {lang === "mz" ? (
+                <>
+                  Inziahluh hma hian platform <Link href="/terms" target="_blank" style={{ color: "#1c7dfa", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>Terms and Conditions</Link> hi ka pawm tih ka nemnghet e.
+                </>
+              ) : (
+                <>
+                  I agree to the <Link href="/terms" target="_blank" style={{ color: "#1c7dfa", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>Terms and Conditions</Link> before registering.
+                </>
+              )}
+            </label>
+          </div>
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !agreed}
             style={{
               width: "100%",
               padding: "14px",
               marginTop: "4px",
-              background: loading ? "#dbeafe" : "linear-gradient(135deg,#1c7dfa,#0a84ff)",
-              color: loading ? "#6b7280" : "#ffffff",
+              background: (loading || !agreed) ? "#cbd5e1" : "linear-gradient(135deg,#1c7dfa,#0a84ff)",
+              color: (loading || !agreed) ? "#64748b" : "#ffffff",
               fontSize: "14px",
               fontWeight: 700,
               border: "none",
               borderRadius: "12px",
-              cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading ? "none" : "0 4px 14px rgba(28,125,250,0.35)",
+              cursor: (loading || !agreed) ? "not-allowed" : "pointer",
+              boxShadow: (loading || !agreed) ? "none" : "0 4px 14px rgba(28,125,250,0.35)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
