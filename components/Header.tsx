@@ -141,14 +141,14 @@ function HeaderContent({
 
         {/* Logo and Mobile Controls */}
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
-          <Link href="/" className="flex items-center justify-center group shrink-0 h-12 md:h-16 overflow-hidden">
+          <Link href="/" className="flex items-center justify-center group shrink-0 h-14 md:h-16 overflow-hidden">
             <Image
               src="/logohnaruakmizoram.png"
               alt="Hnaruak Mizoram Logo"
               width={180}
               height={120}
               priority
-              className="h-20 w-auto md:h-28 object-contain group-hover:scale-102 transition-transform"
+              className="h-24 w-auto md:h-28 object-contain group-hover:scale-102 transition-transform"
             />
           </Link>
 
