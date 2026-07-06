@@ -290,7 +290,7 @@ export default async function AboutPage() {
           }}
         >
           <div>
-            <h3 style={{ fontSize: "20px", fontWeight: 800, color: "white", margin: "0 0 8px" }}>
+            <h3 style={{ fontSize: "30px", fontWeight: 800, color: "white", margin: "0 0 8px" }}>
               {lang === "mz" ? "I hna ruak dah duh em?" : "Want to post a job vacancy?"}
             </h3>
             <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.8)", margin: 0, fontWeight: 500 }}>

@@ -122,6 +122,7 @@ select,
   line-height: 44px;
   font-weight: 800;
   letter-spacing: -0.02em;
+
   @media (min-width: 768px) {
     font-size: 52px;
     line-height: 60px;
@@ -133,6 +134,7 @@ select,
   font-size: 24px;
   line-height: 32px;
   font-weight: 700;
+
   @media (min-width: 768px) {
     font-size: 32px;
     line-height: 40px;
@@ -176,8 +178,13 @@ select,
 
 /* ── Marquee ── */
 @keyframes marquee {
-  0%   { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee {
@@ -193,8 +200,15 @@ select,
 
 /* ── FadeInUp ── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in-up {
@@ -203,8 +217,15 @@ select,
 
 /* ── ScaleIn for modals ── */
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .animate-scaleIn {
@@ -213,36 +234,88 @@ select,
 
 /* ── Hero floating blob animations ── */
 @keyframes floatA {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33%       { transform: translateY(-18px) rotate(4deg); }
-  66%       { transform: translateY(-8px) rotate(-3deg); }
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  33% {
+    transform: translateY(-18px) rotate(4deg);
+  }
+
+  66% {
+    transform: translateY(-8px) rotate(-3deg);
+  }
 }
 
 @keyframes floatB {
-  0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-  40%       { transform: translateY(-24px) rotate(-5deg) scale(1.05); }
-  80%       { transform: translateY(-10px) rotate(3deg) scale(0.97); }
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+
+  40% {
+    transform: translateY(-24px) rotate(-5deg) scale(1.05);
+  }
+
+  80% {
+    transform: translateY(-10px) rotate(3deg) scale(0.97);
+  }
 }
 
 @keyframes floatC {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50%       { transform: translateY(-14px) scale(1.06); }
+
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-14px) scale(1.06);
+  }
 }
 
 @keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.animate-float-a { animation: floatA 7s ease-in-out infinite; will-change: transform; }
-.animate-float-b { animation: floatB 9s ease-in-out infinite; will-change: transform; }
-.animate-float-c { animation: floatC 6s ease-in-out infinite; will-change: transform; }
-.animate-spin-slow { animation: spinSlow 20s linear infinite; will-change: transform; }
+.animate-float-a {
+  animation: floatA 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-b {
+  animation: floatB 9s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-c {
+  animation: floatC 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 20s linear infinite;
+  will-change: transform;
+}
 
 /* ── Shimmer for skeleton loaders ── */
 @keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
 }
 
 .animate-shimmer {
@@ -313,13 +386,27 @@ button {
 
 /* ── Ad Slot Custom Effects ── */
 @keyframes adFloat1 {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 @keyframes adFloat2 {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .animate-ad-slot-1 {
@@ -344,12 +431,10 @@ button {
   left: -150%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%);
   transform: skewX(-25deg);
   transition: 0.75s;
 }
@@ -357,4 +442,3 @@ button {
 .ad-shine-effect:hover::after {
   left: 150%;
 }
-

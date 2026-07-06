@@ -17,40 +17,56 @@ export default function Footer({ lang }: FooterProps) {
   }
 
   return (
-    <footer className="bg-white border-t-2 border-blue-100 text-on-surface py-14 mt-auto">
-      <div className="max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <footer className="relative bg-gradient-to-b from-slate-50 via-blue-50/20 to-blue-100/40 text-slate-600 border-t border-blue-100/80 py-16 mt-auto overflow-hidden">
+      {/* Decorative top ambient glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-blue-200/50 to-transparent" />
+      
+      <div className="max-w-full mx-auto px-container-margin-mobile md:px-container-margin-desktop relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
 
-          {/* Column 1: Brand */}
-          <div className="flex flex-col gap-4 items-start text-left">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <Image
-                src="/logo.png"
-                alt="Hnaruak Mizoram Logo"
-                width={36}
-                height={36}
-                className="w-9 h-9 rounded-lg object-contain group-hover:scale-105 transition-transform"
-              />
+          {/* Column 1: Brand & Logo */}
+          <div className="flex flex-col gap-5 items-start">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative p-1 bg-white rounded-xl border border-blue-100/80 shadow-sm group-hover:scale-105 transition-all duration-300">
+                <Image
+                  src="/logo.png"
+                  alt="Hnaruak Mizoram Logo"
+                  width={38}
+                  height={38}
+                  className="w-9 h-9 rounded-lg object-contain"
+                />
+              </div>
               <div className="flex flex-col leading-none">
-                <span className="font-display font-extrabold text-lg text-blue-700 tracking-tight">Hnaruak</span>
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Mizoram</span>
+                <span className="font-display font-extrabold text-xl text-blue-700 tracking-tight group-hover:text-blue-600 transition-colors">
+                  Hnaruak
+                </span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                  Mizoram
+                </span>
               </div>
             </Link>
+            
             <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-xs">
               {t("footer.tagline", lang)}
             </p>
-            <div className="flex items-center gap-2 pt-1">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs text-green-700 font-bold">Live Job Board</span>
+            
+            <div className="flex items-center gap-2.5 px-3 py-1.5 bg-emerald-50/80 rounded-full border border-emerald-100 shadow-sm w-fit">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] text-emerald-700 font-bold tracking-wider uppercase">
+                Live Job Board
+              </span>
             </div>
           </div>
 
-          {/* Column 2: Quick Links */}
-          <div className="flex flex-col gap-4 md:items-center text-left md:text-center">
-            <h4 className="font-display font-bold text-sm text-blue-700 uppercase tracking-wider">
-              About Us
+          {/* Column 2: About Us */}
+          <div className="flex flex-col gap-5">
+            <h4 className="font-display font-bold text-xs text-blue-900 uppercase tracking-wider">
+              {lang === "mz" ? "Kan Chanchin" : "About Us"}
             </h4>
-            <nav className="flex flex-col gap-2.5 md:items-center">
+            <nav className="flex flex-col gap-3">
               {[
                 { href: "/about", label: t("nav.about", lang) },
                 { href: "/contact", label: t("nav.contact", lang) },
@@ -59,21 +75,21 @@ export default function Footer({ lang }: FooterProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-slate-500 hover:text-primary transition-colors font-medium flex items-center gap-2 group"
+                  className="text-sm text-slate-500 hover:text-blue-600 transition-all duration-300 font-medium flex items-center gap-2.5 group hover:translate-x-1.5"
                 >
-                  <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500/20 group-hover:bg-blue-500 group-hover:scale-125 transition-all duration-300" />
                   {link.label}
                 </Link>
               ))}
             </nav>
           </div>
 
-          {/* Column 3: Legal */}
-          <div className="flex flex-col gap-4 md:items-end text-left md:text-right">
-            <h4 className="font-display font-bold text-sm text-blue-700 uppercase tracking-wider">
-              Legal & Terms
+          {/* Column 3: Legal & Terms */}
+          <div className="flex flex-col gap-5">
+            <h4 className="font-display font-bold text-xs text-blue-900 uppercase tracking-wider">
+              {lang === "mz" ? "Dan leh Kaidawn" : "Legal & Terms"}
             </h4>
-            <nav className="flex flex-col gap-2.5 md:items-end">
+            <nav className="flex flex-col gap-3">
               {[
                 { href: "/terms", label: t("nav.terms", lang) },
                 { href: "/refund", label: t("nav.refund", lang) },
@@ -81,34 +97,65 @@ export default function Footer({ lang }: FooterProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-slate-500 hover:text-primary transition-colors font-medium flex items-center gap-2 group md:flex-row-reverse"
+                  className="text-sm text-slate-500 hover:text-blue-600 transition-all duration-300 font-medium flex items-center gap-2.5 group hover:translate-x-1.5"
                 >
-                  <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500/20 group-hover:bg-blue-500 group-hover:scale-125 transition-all duration-300" />
                   {link.label}
                 </Link>
               ))}
             </nav>
+          </div>
 
-            {/* Employer CTA */}
-            <div className="mt-2 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-left md:text-right">
-              <p className="text-xs font-semibold text-slate-600 mb-2">Want to post a job vacancy?</p>
+          {/* Column 4: Employer CTA Card */}
+          <div className="flex flex-col gap-5">
+            <div className="relative group/card p-5 rounded-2xl bg-white/80 border border-blue-100/85 backdrop-blur-sm shadow-[0_8px_30px_rgba(79,142,247,0.03)] flex flex-col gap-4 overflow-hidden transition-all duration-300 hover:border-blue-200/80 hover:shadow-[0_8px_30px_rgba(79,142,247,0.06)]">
+              {/* Subtle card radial gradient hover effect */}
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover/card:bg-blue-500/10 transition-all duration-500 pointer-events-none" />
+              
+              <div className="flex flex-col gap-1.5">
+                <h5 className="text-sm font-bold text-slate-800 tracking-wide">
+                  {lang === "mz" ? "Hnathawk i mamawh em?" : "Are you hiring?"}
+                </h5>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  {lang === "mz" 
+                    ? "I hnaruak te tlawm takin tar chhuak la, hna zawngtu thalaiten an lo hmu nghal dawn a ni." 
+                    : "Post your job vacancies affordably and connect with talented job seekers across Mizoram."}
+                </p>
+              </div>
+              
               <Link
                 href="/register"
-                className="inline-block text-xs font-bold text-primary hover:text-white bg-primary/10 hover:bg-primary px-4 py-2 rounded-xl transition-all"
+                className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 px-4 py-2.5 rounded-xl transition-all duration-300 shadow-md shadow-blue-500/10 hover:scale-[1.02] active:scale-[0.98]"
               >
-                Register as Employer →
+                {lang === "mz" ? "Employer register-na →" : "Register as Employer →"}
               </Link>
             </div>
           </div>
+
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 pt-6 border-t border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500 font-medium">
-            {t("footer.copyright", lang)}
-          </p>
-          <div className="flex items-center gap-6 text-xs text-slate-400">
-            <Link href="/admin/login" className="hover:text-primary transition-colors font-semibold text-slate-500">
+        <div className="mt-16 pt-8 border-t border-blue-100/60 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-center sm:text-left">
+            <p className="text-xs text-slate-400 font-medium">
+              {t("footer.copyright", lang)}
+            </p>
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium select-none">
+              <span className="text-slate-400/70">Powered by</span>
+              <Image
+                src="/lush-ai-tech-logo.png"
+                alt="LushAI Tech Logo"
+                width={120}
+                height={32}
+                className="h-6.5 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link 
+              href="/admin/login" 
+              className="text-xs text-slate-400 hover:text-blue-600 transition-colors font-semibold"
+            >
               {t("nav.admin_login", lang)}
             </Link>
           </div>
