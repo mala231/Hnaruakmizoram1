@@ -148,6 +148,7 @@ function HeaderContent({
               width={180}
               height={120}
               priority
+              loading="eager"
               className="h-24 w-auto md:h-28 object-contain group-hover:scale-102 transition-transform"
             />
           </Link>
