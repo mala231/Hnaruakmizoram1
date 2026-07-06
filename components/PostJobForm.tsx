@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { t } from "@/lib/i18n";
 import MapSelector from "./MapSelector";
 
@@ -49,6 +50,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
   const [pdfUrl, setPdfUrl] = useState("");
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfError, setPdfError] = useState("");
+  const [agreed, setAgreed] = useState(false);
 
   const handlePdfChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -137,6 +139,15 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
+
+    if (!agreed) {
+      setErrorMsg(
+        lang === "mz"
+          ? "Khawngaihin Terms and Conditions hi i pawm tih tick rawh le."
+          : "Please agree to the Terms and Conditions to proceed."
+      );
+      return;
+    }
 
     if (!categoryId || !locationId) {
       setErrorMsg(
@@ -263,7 +274,7 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
           </h1>
           <p style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, marginTop: "6px", marginBottom: 0 }}>
             {lang === "mz"
-              ? "Hna ruak tlangzarhna. Khawngaihin a hnuaia form hi fel takin hmang rawh. Submit hnuah admin confirmation ngaiin."
+              ? "Hna ruak tlangzarhna. Khawngaihin a hnuaia form hi fill kim rawh. Submit hnuah admin confirmation nghah a ngai."
               : "Publish a new job vacancy. Complete the form below. After submission, your listing will be reviewed by the admin."}
           </p>
 
@@ -619,21 +630,76 @@ export default function PostJobForm({ lang }: PostJobFormProps) {
             </div>
           </div>
 
+          {/* Terms & Conditions Agreement Checkbox */}
+          <div style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+            marginTop: "20px",
+            padding: "12px 16px",
+            backgroundColor: "#f9fafb",
+            border: "1.5px solid #e5e7eb",
+            borderRadius: "12px",
+            cursor: "pointer",
+          }} onClick={() => setAgreed(!agreed)}>
+            <input
+              type="checkbox"
+              id="terms-agreement-checkbox"
+              required
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "6px",
+                borderColor: "#d1d5db",
+                color: "#1c7dfa",
+                cursor: "pointer",
+                marginTop: "2px",
+                appearance: "auto" as any,
+                WebkitAppearance: "auto" as any,
+              }}
+            />
+            <label
+              htmlFor="terms-agreement-checkbox"
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#374151",
+                cursor: "pointer",
+                lineHeight: 1.4,
+                userSelect: "none"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {lang === "mz" ? (
+                <>
+                  Hna ka post hma hian platform <Link href="/terms" target="_blank" style={{ color: "#1c7dfa", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>Terms and Conditions</Link> hi ka pawm tih ka nemnghet e.
+                </>
+              ) : (
+                <>
+                  I agree to the <Link href="/terms" target="_blank" style={{ color: "#1c7dfa", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>Terms and Conditions</Link> before submitting this job listing.
+                </>
+              )}
+            </label>
+          </div>
+
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !agreed}
             style={{
               width: "100%",
-              background: "linear-gradient(135deg,#1c7dfa,#0a84ff)",
-              color: "#ffffff",
+              background: (!submitting && agreed) ? "linear-gradient(135deg,#1c7dfa,#0a84ff)" : "#cbd5e1",
+              color: (!submitting && agreed) ? "#ffffff" : "#64748b",
               fontWeight: 700,
               fontSize: "14px",
               padding: "16px 0",
               borderRadius: "12px",
               border: "none",
-              cursor: submitting ? "not-allowed" : "pointer",
-              boxShadow: "0 4px 12px rgba(28,125,250,0.2)",
+              cursor: (submitting || !agreed) ? "not-allowed" : "pointer",
+              boxShadow: (!submitting && agreed) ? "0 4px 12px rgba(28,125,250,0.2)" : "none",
               marginTop: "16px",
               display: "flex",
               alignItems: "center",

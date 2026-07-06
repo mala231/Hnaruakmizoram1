@@ -359,7 +359,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
               {/* Report Widget */}
               <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0f9ff" }}>
-                <ReportTrigger jobId={job.id} />
+                <ReportTrigger jobId={job.id} lang={lang} />
               </div>
             </div>
 

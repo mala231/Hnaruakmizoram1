@@ -141,18 +141,15 @@ function HeaderContent({
 
         {/* Logo and Mobile Controls */}
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
+          <Link href="/" className="flex items-center justify-center group shrink-0 h-12 md:h-16 overflow-hidden">
             <Image
-              src="/logo.png"
+              src="/logohnaruakmizoram.png"
               alt="Hnaruak Mizoram Logo"
-              width={36}
-              height={36}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain group-hover:scale-105 transition-transform"
+              width={180}
+              height={120}
+              priority
+              className="h-20 w-auto md:h-28 object-contain group-hover:scale-102 transition-transform"
             />
-            <div className="flex flex-col leading-none">
-              <span className="font-display font-extrabold text-base md:text-lg text-blue-700 tracking-tight">Hnaruak</span>
-              <span className="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-widest">Mizoram</span>
-            </div>
           </Link>
 
           {/* Mobile Profile + Hamburger Menu Button */}
@@ -214,13 +211,13 @@ function HeaderContent({
                 type="button"
                 onClick={() => setIsCategoryOpen(!isCategoryOpen)}
                 className={`relative flex items-center justify-center h-[34px] px-3 rounded-md border text-[14px] font-bold transition-all w-full cursor-pointer focus:outline-none ${(categoryId && categoryId !== "11")
-                  ? "bg-primary/10 border-primary/70 text-blue-700"
-                  : "bg-white border-slate-300 text-slate-700 hover:border-primary/30"
+                  ? "bg-primary/10 border-primary/70 text-blue-700 hover:bg-primary/15"
+                  : "bg-white border-slate-300 text-slate-700 hover:border-primary/30 hover:bg-slate-50"
                   }`}
               >
                 <span className="truncate pr-3.5">
                   {categoryId === "all"
-                    ? (lang === "mz" ? "Hna Zawng Zawng" : "All Categories")
+                    ? (lang === "mz" ? "All Categories" : "All Categories")
                     : (categories.find(c => c.id.toString() === categoryId)?.name || (lang === "mz" ? "Hna" : "Jobs"))
                   }
                 </span>
@@ -663,10 +660,10 @@ function HeaderSearchForm({
           <button
             type="button"
             onClick={() => setIsDistrictOpen(!isDistrictOpen)}
-            className="h-full bg-slate-50 border-r border-slate-300 hover:bg-slate-200 transition-colors w-[105px] min-w-[105px] max-w-[105px] sm:w-[150px] flex items-center justify-center pl-2 pr-6 text-[14px] font-bold text-slate-700 cursor-pointer focus:outline-none rounded-l-xl"
+            className="h-full bg-slate-50 border-r border-slate-300 hover:bg-slate-200 transition-colors w-[105px] min-w-[105px] max-w-[105px] sm:w-[150px] flex items-center justify-start pl-2.5 pr-7 sm:pl-3.5 sm:pr-8 text-[14px] font-bold text-slate-700 cursor-pointer focus:outline-none rounded-l-xl"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
-              backgroundPosition: "right 6px center",
+              backgroundPosition: "right 8px center",
               backgroundSize: "8px",
               backgroundRepeat: "no-repeat"
             }}
@@ -680,14 +677,14 @@ function HeaderSearchForm({
           </button>
 
           {isDistrictOpen && (
-            <div className="absolute top-full left-0 mt-1.5 w-44 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 flex flex-col animate-scaleIn">
+            <div className="absolute top-full left-0 mt-1.5 w-44 sm:w-56 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 flex flex-col animate-scaleIn">
               <button
                 type="button"
                 onClick={() => {
                   setLocationId("");
                   setIsDistrictOpen(false);
                 }}
-                className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${!locationId ? "text-primary bg-primary/5" : "text-slate-600"
+                className={`w-full text-left px-3.5 py-2 sm:py-2.5 text-[10px] sm:text-sm font-bold sm:font-medium transition-colors cursor-pointer hover:bg-slate-50 ${!locationId ? "text-primary bg-primary/5 sm:font-bold" : "text-slate-600 sm:text-slate-700"
                   }`}
               >
                 {lang === "mz" ? "District zawng zawng" : "All Districts"}
@@ -700,7 +697,7 @@ function HeaderSearchForm({
                     setLocationId(d.id.toString());
                     setIsDistrictOpen(false);
                   }}
-                  className={`w-full text-left px-3.5 py-2 text-[10px] font-bold transition-colors cursor-pointer hover:bg-slate-50 ${locationId === d.id.toString() ? "text-primary bg-primary/5" : "text-slate-600"
+                  className={`w-full text-left px-3.5 py-2 sm:py-2.5 text-[10px] sm:text-sm font-bold sm:font-medium transition-colors cursor-pointer hover:bg-slate-50 ${locationId === d.id.toString() ? "text-primary bg-primary/5 sm:font-bold" : "text-slate-600 sm:text-slate-700"
                     }`}
                 >
                   {d.name}
@@ -863,6 +860,19 @@ function CategoryNavStrip({
   const activeCategoryId = pathId === "all" || pathId === "12" ? "" : pathId;
   const { categoryId, setCategoryId } = useSearch();
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -917,33 +927,64 @@ function CategoryNavStrip({
       <div className="max-w-full mx-auto flex items-center h-8 sm:h-11 gap-0 px-container-margin-mobile md:px-container-margin-desktop">
 
         {/* ── LEFT: Category Dropdown ── */}
-        <div className="relative shrink-0 h-full flex items-center pr-0 sm:pr-3 mr-0 sm:mr-2 border-none sm:border-r border-blue-100/60 w-[125px] sm:w-auto">
+        <div ref={dropdownRef} className="relative shrink-0 h-full flex items-center pr-0 sm:pr-3 mr-0 sm:mr-2 border-none sm:border-r border-blue-100/60 w-[125px] sm:w-[150px]">
           <div className="relative flex items-center w-full">
             {categoryId && (
               <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-primary z-10 ring-2 ring-slate-50" />
             )}
-            <select
-              value={categoryId}
-              onChange={(e) => handleCategorySelect(e.target.value)}
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               aria-label="Filter by category"
-              className={`appearance-none h-[25px] sm:h-8 pl-2.5 pr-7 text-[10px] sm:text-[11px] font-bold rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all w-full min-w-0 truncate ${categoryId
-                ? "bg-primary/10 border-primary/30 text-blue-700"
-                : "bg-white border-slate-200 text-slate-700 hover:border-primary/30"
+              className={`appearance-none h-[25px] sm:h-8 pl-2.5 pr-7 text-[10px] sm:text-[11px] font-bold rounded-lg border cursor-pointer focus:outline-none transition-all w-full min-w-0 truncate text-left flex items-center justify-between ${isDropdownOpen || (categoryId && categoryId !== "11")
+                ? "bg-primary/10 border-primary/30 text-blue-700 focus:ring-2 focus:ring-primary/20 hover:bg-primary/15"
+                : "bg-white border-slate-200 text-slate-700 hover:border-primary/30 hover:bg-slate-50"
                 }`}
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`,
                 backgroundPosition: "right 8px center",
-                backgroundSize: "8px sm:10px",
+                backgroundSize: "8px",
                 backgroundRepeat: "no-repeat"
               }}
             >
-              <option value="" disabled hidden>{lang === "mz" ? "Category-te" : "Categories"}</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id.toString()}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+              <span className="truncate pr-1">
+                {categoryId === "all" || !categoryId
+                  ? (lang === "mz" ? " Categories" : "All Categories")
+                  : (categories.find((c) => c.id.toString() === categoryId)?.name || (lang === "mz" ? "Category-te" : "Categories"))}
+              </span>
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1.5 w-44 sm:w-56 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 flex flex-col animate-scaleIn">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCategorySelect("all");
+                    setIsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3.5 py-2 text-xs font-bold sm:font-medium transition-colors cursor-pointer hover:bg-slate-50 ${categoryId === "all" || !categoryId ? "text-primary bg-primary/5 sm:font-bold" : "text-slate-600 sm:text-slate-700"
+                    }`}
+                >
+                  {lang === "mz" ? "Hna Zawng Zawng" : "All Categories"}
+                </button>
+                {categories
+                  .filter((cat) => cat.id !== 11)
+                  .map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        handleCategorySelect(cat.id.toString());
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 text-xs font-bold sm:font-medium transition-colors cursor-pointer hover:bg-slate-50 ${categoryId === cat.id.toString() ? "text-primary bg-primary/5 sm:font-bold" : "text-slate-600 sm:text-slate-700"
+                        }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
 

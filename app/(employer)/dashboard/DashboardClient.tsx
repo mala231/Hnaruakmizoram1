@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { t } from "@/lib/i18n";
+import { t as translate } from "@/lib/i18n";
 
 interface JobPost {
   id: string;
@@ -41,16 +41,19 @@ interface DashboardClientProps {
   employer: Employer;
   jobs: JobPost[];
   payments: Payment[];
+  lang: string;
 }
 
-export default function DashboardClient({ employer, jobs, payments }: DashboardClientProps) {
+export default function DashboardClient({ employer, jobs, payments, lang }: DashboardClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"listings" | "billing" | "settings">("listings");
+  const t = (key: string) => translate(key, lang);
+  const [activeTab, setActiveTab] = useState<"listings" | "settings">("listings");
   const [listingsTab, setListingsTab] = useState<"live" | "expired" | "draft" | "pending" | "rejected">("live");
 
   // Extension Modal States
   const [extendingJobId, setExtendingJobId] = useState<string | null>(null);
-  const [extendingDuration, setExtendingDuration] = useState<15 | 30>(15);
+  const [durationMode, setDurationMode] = useState<"15" | "30" | "custom">("15");
+  const [customDays, setCustomDays] = useState("15");
   const [extendingTitle, setExtendingTitle] = useState("");
 
   // Delete Confirmation Modal States
@@ -258,6 +261,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
   };
 
   // Extend Checkout Trigger
+  // Extend Checkout Trigger
   const handleExtendSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!extendingJobId) return;
@@ -266,71 +270,33 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
     setErrorMsg("");
     setSuccessMsg("");
 
+    const finalDuration = durationMode === "custom" ? parseInt(customDays, 10) : parseInt(durationMode, 10);
+    if (isNaN(finalDuration) || finalDuration < 1 || finalDuration > 30) {
+      triggerAlert("error", "Puanzar chhung tur hi 1 leh 30 inkar a ni tur a ni.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/jobs/${extendingJobId}/extend`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ durationDays: extendingDuration }),
+        body: JSON.stringify({ durationDays: finalDuration }),
       });
 
       const data = await res.json();
 
-      if (!data.success) {
-        triggerAlert("error", data.error || "Extension request failed.");
-        setSubmitting(false);
+      if (data.success) {
+        triggerAlert("success", "Listing extend/renew a hlawhtling ta!");
         setExtendingJobId(null);
-        return;
-      }
-
-      if (data.isMock) {
-        triggerAlert("success", "Razorpay Setup a awm loh vangin payment lem kalpui a ni dawn e...");
-
-        const mockRes = await fetch("/api/payments/mock-success", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jobId: data.jobId }),
-        });
-
-        const mockData = await mockRes.json();
-        if (mockData.success) {
-          triggerAlert("success", "Listing extend/renew a hlawhtling ta!");
-          setExtendingJobId(null);
-          router.refresh();
-        } else {
-          triggerAlert("error", mockData.error || "Simulated confirmation failed.");
-        }
+        router.refresh();
       } else {
-        // Razorpay checkout
-        const options = {
-          key: data.keyId,
-          amount: data.amount,
-          currency: "INR",
-          name: "Hnaruak Mizoram",
-          description: `Extend Listing: ${extendingTitle}`,
-          order_id: data.orderId,
-          handler: function () {
-            triggerAlert("success", "Pekna a hlawhtling e! Extend a ni ta.");
-            setExtendingJobId(null);
-            router.refresh();
-          },
-          modal: {
-            ondismiss: function () {
-              triggerAlert("error", "Payment cancel a ni.");
-              setSubmitting(false);
-              setExtendingJobId(null);
-            }
-          },
-          theme: { color: "#1c7dfa" }
-        };
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.open();
+        triggerAlert("error", data.error || "Pawtsei a hlawhchham rih.");
+        setSubmitting(false);
       }
-
     } catch (err) {
       triggerAlert("error", "Server biak pawh a harsat rih e.");
       setSubmitting(false);
-      setExtendingJobId(null);
     }
   };
 
@@ -628,7 +594,6 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
         <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", gap: "8px", overflowX: "auto" }}>
           {[
             { id: "listings", label: t("dashboard.my_listings") },
-            { id: "billing", label: t("dashboard.payment_history") },
             { id: "settings", label: t("dashboard.account_settings") }
           ].map((tab) => (
             <button
@@ -820,6 +785,8 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                               onClick={() => {
                                 setExtendingJobId(job.id);
                                 setExtendingTitle(job.title);
+                                setDurationMode("15");
+                                setCustomDays("15");
                               }}
                               style={{
                                 backgroundColor: "#1c7dfa",
@@ -883,69 +850,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
           </div>
         )}
 
-        {activeTab === "billing" && (
-          <div style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid rgba(28,125,250,0.1)",
-            borderRadius: "24px",
-            padding: "32px",
-            boxShadow: "0 10px 30px rgba(28,125,250,0.06)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px"
-          }}>
-            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1c7dfa", borderBottom: "1px solid #f0f9ff", paddingBottom: "16px", margin: 0 }}>
-              {t("dashboard.payment_history")}
-            </h2>
-
-            {payments.length === 0 ? (
-              <div style={{ padding: "48px 0", textAlign: "center", color: "#6b7280", fontSize: "14px", fontWeight: 600 }}>
-                Pawisa pek tawh record hmuh tur a awm rih lo.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table style={{ width: "100%", textAlign: "left", fontSize: "14px", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1.5px solid #e5e7eb", color: "#6b7280", fontWeight: 700, fontSize: "12px", textTransform: "uppercase" }}>
-                      <th style={{ padding: "12px 16px" }}>Job Title</th>
-                      <th style={{ padding: "12px 16px" }}>{t("dashboard.amount")}</th>
-                      <th style={{ padding: "12px 16px" }}>Duration</th>
-                      <th style={{ padding: "12px 16px" }}>{t("dashboard.date")}</th>
-                      <th style={{ padding: "12px 16px" }}>{t("dashboard.transaction_id")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((p) => (
-                      <tr
-                        key={p.id}
-                        style={{ borderBottom: "1px solid #f3f4f6", transition: "background-color 0.2s" }}
-                        className="hover:bg-gray-50"
-                      >
-                        <td style={{ padding: "16px", fontWeight: 700, color: "#111827" }}>
-                          {p.jobPost?.title || "Deleted Job Listing"}
-                        </td>
-                        <td style={{ padding: "16px", fontWeight: 700, color: "#1c7dfa" }}>
-                          ₹{p.amount}
-                        </td>
-                        <td style={{ padding: "16px", fontWeight: 600, color: "#4b5563" }}>
-                          {p.durationDays} Days
-                        </td>
-                        <td style={{ padding: "16px", color: "#4b5563" }}>
-                          {new Date(p.createdAt).toLocaleDateString()}
-                        </td>
-                        <td style={{ padding: "16px", fontSize: "12px", fontFamily: "monospace", userSelect: "all", color: "#6b7280" }}>
-                          {p.razorpayPaymentId || p.razorpayOrderId}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "settings" && (
+{activeTab === "settings" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
             {/* Profile Edit Panel */}
             <div style={{
@@ -1335,56 +1240,99 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
 
             <form onSubmit={handleExtendSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <p style={{ fontSize: "13px", fontWeight: 500, color: "#4b5563", margin: 0, lineHeight: 1.4 }}>
-                Hna ruak <strong>&ldquo;{extendingTitle}&rdquo;</strong> puanzarna hi a hnuaia mite thlang hian pawtsei rawh le.
+                {lang === "mz" ? (
+                  <>
+                    Hna ruak <strong>&ldquo;{extendingTitle}&rdquo;</strong> Hna post hi a hnuaia mite thlang hian pawhsei theih e.
+                    <br />
+                    <span style={{ fontSize: "12px", color: "#6b7280", display: "inline-block", marginTop: "4px" }}>
+                      (Hriattur: Hna deadline hi Hna Postu profile ah edit tur ani)
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Extend the listing for the job <strong>&ldquo;{extendingTitle}&rdquo;</strong> by selecting one of the options below.
+                    <br />
+                    <span style={{ fontSize: "12px", color: "#6b7280", display: "inline-block", marginTop: "4px" }}>
+                      (Note: The job application deadline can be edited in your employer profile)
+                    </span>
+                  </>
+                )}
               </p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <button
-                  type="button"
-                  onClick={() => setExtendingDuration(15)}
-                  style={{
-                    padding: "16px",
-                    borderRadius: "12px",
-                    border: extendingDuration === 15 ? "2px solid #1c7dfa" : "1px solid #d1d5db",
-                    backgroundColor: extendingDuration === 15 ? "#f0f9ff" : "#ffffff",
-                    color: extendingDuration === 15 ? "#1c7dfa" : "#4b5563",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontFamily: "inherit",
-                    fontWeight: extendingDuration === 15 ? 700 : 500,
-                  }}
-                >
-                  <span style={{ fontSize: "11px", textTransform: "uppercase" }}>Ni 15 (15 Days)</span>
-                  <span style={{ fontSize: "18px", fontWeight: 800 }}>₹299</span>
-                </button>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "4px" }}>
+                {(["15", "30"] as const).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => setDurationMode(d)}
+                    style={{
+                      flex: 1,
+                      padding: "14px 16px",
+                      borderRadius: "14px",
+                      border: durationMode === d ? "2px solid #1c7dfa" : "1.5px solid #e5e7eb",
+                      backgroundColor: durationMode === d ? "#eff6ff" : "#f9fafb",
+                      color: durationMode === d ? "#1c7dfa" : "#4b5563",
+                      fontWeight: durationMode === d ? 800 : 600,
+                      fontSize: "15px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {lang === "mz" ? `Ni ${d}` : `${d} Days`}
+                  </button>
+                ))}
 
                 <button
                   type="button"
-                  onClick={() => setExtendingDuration(30)}
+                  disabled={submitting}
+                  onClick={() => setDurationMode("custom")}
                   style={{
-                    padding: "16px",
-                    borderRadius: "12px",
-                    border: extendingDuration === 30 ? "2px solid #1c7dfa" : "1px solid #d1d5db",
-                    backgroundColor: extendingDuration === 30 ? "#f0f9ff" : "#ffffff",
-                    color: extendingDuration === 30 ? "#1c7dfa" : "#4b5563",
-                    textAlign: "center",
+                    flex: 1,
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    border: durationMode === "custom" ? "2px solid #1c7dfa" : "1.5px solid #e5e7eb",
+                    backgroundColor: durationMode === "custom" ? "#eff6ff" : "#f9fafb",
+                    color: durationMode === "custom" ? "#1c7dfa" : "#4b5563",
+                    fontWeight: durationMode === "custom" ? 800 : 600,
+                    fontSize: "15px",
                     cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "4px",
                     fontFamily: "inherit",
-                    fontWeight: extendingDuration === 30 ? 700 : 500,
+                    transition: "all 0.15s",
                   }}
                 >
-                  <span style={{ fontSize: "11px", textTransform: "uppercase" }}>Ni 30 (30 Days)</span>
-                  <span style={{ fontSize: "18px", fontWeight: 800 }}>₹499</span>
+                  {lang === "mz" ? "Dang" : "Custom"}
                 </button>
               </div>
+
+              {durationMode === "custom" && (
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    required
+                    disabled={submitting}
+                    value={customDays}
+                    onChange={(e) => setCustomDays(e.target.value)}
+                    placeholder={lang === "mz" ? "1–30 ziah rawh..." : "Enter 1–30..."}
+                    style={{
+                      width: "100%",
+                      boxSizing: "border-box",
+                      padding: "12px 16px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#111827",
+                      background: "#f9fafb",
+                      border: "1.5px solid #e5e7eb",
+                      borderRadius: "12px",
+                      outline: "none",
+                      fontFamily: "inherit"
+                    }}
+                  />
+                </div>
+              )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "16px", borderTop: "1px solid #f3f4f6" }}>
                 <button
@@ -1420,7 +1368,7 @@ export default function DashboardClient({ employer, jobs, payments }: DashboardC
                     fontFamily: "inherit"
                   }}
                 >
-                  {submitting ? "Payment..." : "Pay & Extend"}
+                  {submitting ? (lang === "mz" ? "Pawtsei mek..." : "Extending...") : (lang === "mz" ? "Pawtsei Rawh" : "Extend")}
                 </button>
               </div>
 

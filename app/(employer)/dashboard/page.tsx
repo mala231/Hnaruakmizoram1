@@ -8,6 +8,7 @@ export default async function DashboardPage() {
   // 1. Verify Employer Session Auth
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("employer_session")?.value;
+  const lang = cookieStore.get("lang")?.value || "mz";
 
   if (!sessionCookie) {
     redirect("/login");
@@ -59,6 +60,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
+      lang={lang}
       employer={{
         username: employer.username,
         email: employer.email,

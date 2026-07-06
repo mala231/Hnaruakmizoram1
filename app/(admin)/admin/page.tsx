@@ -722,16 +722,12 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-container-margin-mobile md:px-container-margin-desktop h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group shrink-0 no-underline">
             <Image
-              src="/logo.png"
+              src="/logohnaruakmizoram.png"
               alt="Hnaruak Mizoram Logo"
-              width={36}
-              height={36}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain group-hover:scale-105 transition-transform"
+              width={180}
+              height={120}
+              className="h-20 w-auto md:h-28 object-contain group-hover:scale-102 transition-transform"
             />
-            <div className="flex flex-col leading-none">
-              <span className="font-display font-extrabold text-base md:text-lg text-blue-700 tracking-tight">Hnaruak</span>
-              <span className="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-widest">Mizoram</span>
-            </div>
             <span className="text-secondary font-medium text-xs border border-secondary/20 bg-secondary/5 rounded-full px-2 py-0.5 ml-2">Admin Panel</span>
           </Link>
 

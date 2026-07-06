@@ -7,9 +7,10 @@ interface ReportModalProps {
   jobId: string;
   isOpen: boolean;
   onClose: () => void;
+  lang?: string;
 }
 
-export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps) {
+export default function ReportModal({ jobId, isOpen, onClose, lang }: ReportModalProps) {
   const [reason, setReason] = useState("");
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -84,7 +85,7 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
             <svg className="w-5 h-5 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            {t("report.title")}
+            {t("report.title", lang)}
           </h2>
           <button
             onClick={onClose}
@@ -103,7 +104,7 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
               ✓
             </div>
             <p className="text-sm font-semibold text-on-background">
-              {t("report.success_msg")}
+              {t("report.success_msg", lang)}
             </p>
           </div>
         ) : (
@@ -118,7 +119,7 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
             {/* Reason Select */}
             <div>
               <label className="label-md text-on-background/90 mb-1.5 block">
-                {t("report.reason_label")}
+                {t("report.reason_label", lang)}
               </label>
               <select
                 required
@@ -126,24 +127,24 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-primary transition-colors text-on-background cursor-pointer"
               >
-                <option value="">{t("report.reason_placeholder")}</option>
-                <option value="Spam / Bum">{t("report.reason_spam")}</option>
-                <option value="Offensive / Mawi lo">{t("report.reason_offensive")}</option>
-                <option value="Other">{t("report.reason_other")}</option>
+                <option value="">{t("report.reason_placeholder", lang)}</option>
+                <option value="Spam / Bum">{t("report.reason_spam", lang)}</option>
+                <option value="Offensive / Mawi lo">{t("report.reason_offensive", lang)}</option>
+                <option value="Other">{t("report.reason_other", lang)}</option>
               </select>
             </div>
 
             {/* Details Area */}
             <div>
               <label className="label-md text-on-background/90 mb-1.5 block">
-                {t("report.details_label")}
+                {t("report.details_label", lang)}
               </label>
               <textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={4}
                 className="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-primary transition-colors text-on-background placeholder-on-surface-variant/50"
-                placeholder={t("report.details_placeholder")}
+                placeholder={t("report.details_placeholder", lang)}
               />
             </div>
 
@@ -155,14 +156,14 @@ export default function ReportModal({ jobId, isOpen, onClose }: ReportModalProps
                 disabled={submitting}
                 className="bg-surface-container border border-outline/25 hover:bg-surface-container-high text-on-surface text-xs font-bold px-5 py-2.5 rounded-full transition-colors cursor-pointer"
               >
-                {t("report.cancel_btn")}
+                {t("report.cancel_btn", lang)}
               </button>
               <button
                 type="submit"
                 disabled={submitting}
                 className="bg-primary hover:bg-primary-container text-on-primary text-xs font-bold px-6 py-2.5 rounded-full shadow-md transition-colors cursor-pointer"
               >
-                {submitting ? "Submitting ..." : t("report.submit_btn")}
+                {submitting ? "Submitting ..." : t("report.submit_btn", lang)}
               </button>
             </div>
 

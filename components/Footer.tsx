@@ -17,7 +17,7 @@ export default function Footer({ lang }: FooterProps) {
   }
 
   return (
-    <footer className="relative bg-gradient-to-b from-slate-50 via-blue-50/20 to-blue-100/40 text-slate-600 border-t border-blue-100/80 py-16 mt-auto overflow-hidden">
+    <footer className="relative bg-gradient-to-b from-slate-50 via-blue-50/20 to-blue-100/40 text-slate-600 border-t border-blue-100/80 pt-10 pb-16 mt-auto overflow-hidden">
       {/* Decorative top ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-blue-200/50 to-transparent" />
       
@@ -26,24 +26,14 @@ export default function Footer({ lang }: FooterProps) {
 
           {/* Column 1: Brand & Logo */}
           <div className="flex flex-col gap-5 items-start">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative p-1 bg-white rounded-xl border border-blue-100/80 shadow-sm group-hover:scale-105 transition-all duration-300">
-                <Image
-                  src="/logo.png"
-                  alt="Hnaruak Mizoram Logo"
-                  width={38}
-                  height={38}
-                  className="w-9 h-9 rounded-lg object-contain"
-                />
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-display font-extrabold text-xl text-blue-700 tracking-tight group-hover:text-blue-600 transition-colors">
-                  Hnaruak
-                </span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
-                  Mizoram
-                </span>
-              </div>
+            <Link href="/" className="flex items-center justify-start group h-14 overflow-hidden">
+              <Image
+                src="/logohnaruakmizoram.png"
+                alt="Hnaruak Mizoram Logo"
+                width={180}
+                height={120}
+                className="h-24 w-auto object-contain hover:scale-[1.02] transition-transform"
+              />
             </Link>
             
             <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-xs">
@@ -142,13 +132,20 @@ export default function Footer({ lang }: FooterProps) {
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-400 font-medium select-none">
               <span className="text-slate-400/70">Powered by</span>
-              <Image
-                src="/lush-ai-tech-logo.png"
-                alt="LushAI Tech Logo"
-                width={120}
-                height={32}
-                className="h-6.5 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
-              />
+              <a
+                href="https://www.lushaitech.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center"
+              >
+                <Image
+                  src="/lush-ai-tech-logo.png"
+                  alt="LushAI Tech Logo"
+                  width={120}
+                  height={32}
+                  className="h-6.5 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
+                />
+              </a>
             </div>
           </div>
           <div className="flex items-center gap-6">

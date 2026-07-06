@@ -368,6 +368,8 @@ input[type="radio"] {
   min-height: 16px;
   padding: 0;
   border-radius: 4px;
+  appearance: auto;
+  -webkit-appearance: auto;
 }
 
 select {

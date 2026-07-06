@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import Razorpay from "razorpay";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
+import { syncJobToAlgolia } from "@/lib/algolia";
 
 async function verifyEmployer() {
   const cookieStore = await cookies();
@@ -52,73 +52,44 @@ export async function POST(
     }
 
     const { durationDays } = await request.json();
-    if (durationDays !== 15 && durationDays !== 30) {
+    const duration = parseInt(durationDays, 10);
+    if (isNaN(duration) || duration < 1 || duration > 30) {
       return NextResponse.json(
-        { success: false, error: "Puanzar chhung thlan tur hi a dik lo." },
+        { success: false, error: "Puanzar chhung thlan tur hi a dik lo (Ni 1 atanga 30 inkar a ni tur a ni)." },
         { status: 400 }
       );
     }
 
-    // Amount mapping
-    const amount = durationDays === 15 ? 299 : 499;
-    const amountPaise = amount * 100;
-
-    // Check Razorpay config
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-    if (!keyId || !keySecret) {
-      // Mock bypass fallback
-      console.log("Razorpay credentials not set for Extension. Mock Mode active.");
-      return NextResponse.json({
-        success: true,
-        isMock: true,
-        jobId: job.id,
-        amount,
-        title: `${job.title} Extension`,
-      });
+    // Calculate new expiration date
+    let baseDate = new Date();
+    if (job.status === "live" && job.expiresAt && new Date(job.expiresAt) > new Date()) {
+      baseDate = new Date(job.expiresAt);
     }
+    const newExpiresAt = new Date(baseDate);
+    newExpiresAt.setDate(newExpiresAt.getDate() + duration);
 
-    // Initialize Razorpay Client
-    const razorpay = new Razorpay({
-      key_id: keyId,
-      key_secret: keySecret,
-    });
-
-    // Create Razorpay Order
-    const orderOptions = {
-      amount: amountPaise,
-      currency: "INR",
-      receipt: job.id,
-    };
-
-    const order = await razorpay.orders.create(orderOptions);
-
-    // Save pending Payment record in database
-    await prisma.payment.create({
+    // Update job post in database
+    await prisma.jobPost.update({
+      where: { id },
       data: {
-        employerId,
-        jobPostId: job.id,
-        razorpayOrderId: order.id,
-        amount,
-        durationDays,
-        status: "pending",
+        status: "live",
+        expiresAt: newExpiresAt,
       },
     });
 
+    // Sync job post to Algolia search index
+    await syncJobToAlgolia(id);
+
     return NextResponse.json({
       success: true,
-      isMock: false,
-      orderId: order.id,
-      amount: amountPaise,
-      keyId,
-      jobId: job.id,
+      message: "Hna puanzar pawtsei a ni ta.",
+      expiresAt: newExpiresAt,
     });
 
   } catch (err) {
-    console.error("Job extension billing error:", err);
+    console.error("Job extension error:", err);
     return NextResponse.json(
-      { success: false, error: "Extension process hi a hlawhchham rih. Server buaina a awm." },
+      { success: false, error: "Pawtsei tura hmalakna hi a hlawhchham rih. Server buaina a awm." },
       { status: 500 }
     );
   }
