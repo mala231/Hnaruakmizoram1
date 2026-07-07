@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { deleteMultipleJobsFromAlgolia } from "@/lib/algolia";
+import { deleteR2ObjectsByUrls } from "@/lib/r2";
 
 async function verifyEmployer() {
   const cookieStore = await cookies();
@@ -26,12 +27,22 @@ export async function POST() {
       );
     }
 
-    // Get all job IDs of this employer to remove them from Algolia index
-    const employerJobs = await prisma.jobPost.findMany({
-      where: { employerId },
-      select: { id: true }
-    });
-    const jobIds = employerJobs.map(j => j.id);
+    const [employer, employerJobs] = await Promise.all([
+      prisma.employer.findUnique({
+        where: { id: employerId },
+        select: { logoUrl: true },
+      }),
+      prisma.jobPost.findMany({
+        where: { employerId },
+        select: { id: true, pdfUrl: true },
+      }),
+    ]);
+
+    const jobIds = employerJobs.map((j) => j.id);
+    const mediaUrls = [
+      employer?.logoUrl,
+      ...employerJobs.map((job) => job.pdfUrl),
+    ];
 
     // Perform atomic transaction: Soft-delete Employer + soft-delete their JobPosts
     await prisma.$transaction([
@@ -49,6 +60,8 @@ export async function POST() {
     if (jobIds.length > 0) {
       await deleteMultipleJobsFromAlgolia(jobIds);
     }
+
+    await deleteR2ObjectsByUrls(mediaUrls);
 
     const response = NextResponse.json({ success: true });
     

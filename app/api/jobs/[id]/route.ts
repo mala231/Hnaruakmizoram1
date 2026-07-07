@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { syncJobToAlgolia, deleteJobFromAlgolia } from "@/lib/algolia";
+import { deleteR2ObjectByUrl } from "@/lib/r2";
 
 async function verifyEmployer() {
   const cookieStore = await cookies();
@@ -92,6 +93,8 @@ export async function PUT(
       );
     }
 
+    const nextPdfUrl = pdfUrl || null;
+
     const updatedJob = await prisma.jobPost.update({
       where: { id },
       data: {
@@ -103,9 +106,13 @@ export async function PUT(
         address: address.trim(),
         deadline: new Date(deadline),
         interviewTime: interviewTime.trim(),
-        pdfUrl: pdfUrl || null,
+        pdfUrl: nextPdfUrl,
       },
     });
+
+    if (job.pdfUrl && job.pdfUrl !== nextPdfUrl) {
+      await deleteR2ObjectByUrl(job.pdfUrl);
+    }
 
     // Sync edited job post to Algolia search index in the background
     syncJobToAlgolia(id).catch((err) =>
@@ -163,6 +170,8 @@ export async function DELETE(
       where: { id },
       data: { status: "deleted" },
     });
+
+    await deleteR2ObjectByUrl(job.pdfUrl);
 
     // Remove deleted job post from Algolia search index in the background
     deleteJobFromAlgolia(id).catch((err) =>
@@ -222,6 +231,8 @@ export async function POST(
         where: { id },
         data: { status: "deleted" },
       });
+
+      await deleteR2ObjectByUrl(job.pdfUrl);
 
       // Remove in background
       deleteJobFromAlgolia(id).catch((err) =>

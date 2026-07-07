@@ -59,6 +59,19 @@ export const viewport = {
   themeColor: "#1c7dfa",
 };
 
+const r2PreconnectUrl = (() => {
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (!publicUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(publicUrl).origin;
+  } catch {
+    return null;
+  }
+})();
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -114,10 +127,10 @@ export default async function RootLayout({
         Resource hints — React 19 hoists these <link> tags to <head> automatically.
         • preload manifest.json: starts the fetch in parallel with HTML parse,
           removing it from the critical path chain (was 340 ms penalty).
-        • preconnect res.cloudinary.com: establishes TCP+TLS early so employer
+        • preconnect R2 public host: establishes TCP+TLS early so employer
           logo images on job listing pages load faster.
       */}
-      <link rel="preconnect" href="https://res.cloudinary.com" />
+      {r2PreconnectUrl && <link rel="preconnect" href={r2PreconnectUrl} />}
       <body className="min-h-full flex flex-col bg-background text-on-background">
         <NextTopLoader color="#1c7dfa" showSpinner={false} height={3} shadow="0 0 10px #1c7dfa,0 0 5px #1c7dfa" />
         <PWARegistration />

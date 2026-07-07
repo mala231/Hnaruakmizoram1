@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { verifyJWT } from "@/lib/auth";
-import { uploadImage } from "@/lib/cloudinary";
+import { uploadImage } from "@/lib/r2";
 
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
     const arrayBuffer = await image.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Cloudinary / mock fallback
-    const imageUrl = await uploadImage(buffer);
+    // Upload to R2 / fallback
+    const imageUrl = await uploadImage(buffer, image.type || "application/octet-stream");
 
     // Save to DB
     const ad = await prisma.advertisement.create({

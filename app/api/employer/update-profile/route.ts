@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { uploadImage } from "@/lib/cloudinary";
+import { deleteR2ObjectByUrl, uploadImage } from "@/lib/r2";
 import { syncJobToAlgolia } from "@/lib/algolia";
 
 async function verifyEmployer() {
@@ -24,6 +24,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "Thuneihna i nei lo. Lo lut leh rawh." },
         { status: 401 }
+      );
+    }
+
+    const currentEmployer = await prisma.employer.findUnique({
+      where: { id: employerId },
+      select: { logoUrl: true },
+    });
+    if (!currentEmployer) {
+      return NextResponse.json(
+        { success: false, error: "Employer hi hmuh a ni lo." },
+        { status: 404 }
       );
     }
 
@@ -85,7 +96,7 @@ export async function POST(request: Request) {
       try {
         const arrayBuffer = await logoFile.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        logoUrl = await uploadImage(buffer);
+        logoUrl = await uploadImage(buffer, logoFile.type || "application/octet-stream");
       } catch (uploadError) {
         console.error("Logo upload failed during profile update:", uploadError);
         return NextResponse.json(
@@ -106,6 +117,14 @@ export async function POST(request: Request) {
         ...(logoUrl !== undefined && { logoUrl }),
       },
     });
+
+    if (
+      logoUrl &&
+      currentEmployer.logoUrl &&
+      currentEmployer.logoUrl !== logoUrl
+    ) {
+      await deleteR2ObjectByUrl(currentEmployer.logoUrl);
+    }
 
     // Sync employer's active (live) job listings to Algolia
     const liveJobs = await prisma.jobPost.findMany({

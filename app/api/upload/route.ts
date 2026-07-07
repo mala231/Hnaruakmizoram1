@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/auth";
-import { uploadPdf } from "@/lib/cloudinary";
+import { uploadPdf } from "@/lib/r2";
 
 async function verifyEmployer() {
   const cookieStore = await cookies();
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Upload to Cloudinary
+    // 4. Upload to R2
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const pdfUrl = await uploadPdf(buffer, file.name);

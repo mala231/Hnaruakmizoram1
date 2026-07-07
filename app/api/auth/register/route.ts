@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { uploadImage } from "@/lib/cloudinary";
+import { uploadImage } from "@/lib/r2";
 import { signPendingRegisterJWT } from "@/lib/auth";
 import { sendOtpEmail } from "@/lib/email";
 import { sendOtpSms } from "@/lib/sms";
@@ -61,12 +61,12 @@ export async function POST(request: Request) {
     }
 
     // 3. Process Logo Upload
-    let logoUrl = "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg"; // Default fallback
+    let logoUrl = "/icon-512.png"; // Default fallback
     if (logoFile && logoFile.size > 0) {
       try {
         const arrayBuffer = await logoFile.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        logoUrl = await uploadImage(buffer);
+        logoUrl = await uploadImage(buffer, logoFile.type || "application/octet-stream");
       } catch (uploadError) {
         console.error("Logo upload failed:", uploadError);
         return NextResponse.json(

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { verifyJWT } from "@/lib/auth";
+import { deleteR2ObjectByUrl } from "@/lib/r2";
 
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -103,9 +104,16 @@ export async function DELETE(
       );
     }
 
+    const existingAd = await prisma.advertisement.findUnique({
+      where: { id: adId },
+      select: { imageUrl: true },
+    });
+
     await prisma.advertisement.delete({
       where: { id: adId },
     });
+
+    await deleteR2ObjectByUrl(existingAd?.imageUrl);
 
     revalidateTag("advertisements", "max");
 

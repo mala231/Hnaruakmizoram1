@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { deleteMultipleJobsFromAlgolia } from "@/lib/algolia";
+import { deleteR2ObjectsByUrls } from "@/lib/r2";
 
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -71,7 +72,10 @@ export async function DELETE(
     const permanent = searchParams.get("permanent") === "true";
 
     // Check if employer exists
-    const employer = await prisma.employer.findUnique({ where: { id } });
+    const employer = await prisma.employer.findUnique({
+      where: { id },
+      select: { logoUrl: true },
+    });
     if (!employer) {
       return NextResponse.json(
         { success: false, error: "Employer hi hmuh a ni lo." },
@@ -82,9 +86,13 @@ export async function DELETE(
     // Find all job IDs for this employer to remove them from Algolia index
     const employerJobs = await prisma.jobPost.findMany({
       where: { employerId: id },
-      select: { id: true }
+      select: { id: true, pdfUrl: true }
     });
-    const jobIds = employerJobs.map(j => j.id);
+    const jobIds = employerJobs.map((j) => j.id);
+    const mediaUrls = [
+      employer.logoUrl,
+      ...employerJobs.map((job) => job.pdfUrl),
+    ];
 
     if (permanent) {
       // Hard delete — remove all associated data then the employer row
@@ -116,6 +124,8 @@ export async function DELETE(
         await deleteMultipleJobsFromAlgolia(jobIds);
       }
 
+      await deleteR2ObjectsByUrls(mediaUrls);
+
       return NextResponse.json({ success: true, permanent: true });
     }
 
@@ -135,6 +145,8 @@ export async function DELETE(
     if (jobIds.length > 0) {
       await deleteMultipleJobsFromAlgolia(jobIds);
     }
+
+    await deleteR2ObjectsByUrls(mediaUrls);
 
     return NextResponse.json({ success: true, permanent: false });
   } catch (err) {
