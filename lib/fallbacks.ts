@@ -11,7 +11,7 @@ export interface FallbackLocation {
 }
 
 export const FALLBACK_CATEGORIES: FallbackCategory[] = [
-  { id: -99, name: "Categories", createdAt: new Date() },
+  { id: -99, name: "All Categories", createdAt: new Date() },
   { id: 1, name: "Sorkar Hna (Government Job)", createdAt: new Date() },
   { id: 2, name: "Private Sector", createdAt: new Date() },
   { id: 3, name: "Office Assistant / Clerk", createdAt: new Date() },
